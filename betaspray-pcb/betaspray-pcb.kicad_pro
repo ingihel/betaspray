@@ -613,6 +613,10 @@
     [
       "5d34c70f-469d-43be-b671-484e3b695429",
       "Root"
+    ],
+    [
+      "c23c5d08-23d8-4f2f-89d6-52f4411af7c3",
+      "vision_subsystem"
     ]
   ],
   "text_variables": {}
