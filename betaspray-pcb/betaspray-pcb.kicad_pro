@@ -440,7 +440,6 @@
       "single_global_label": "ignore",
       "unannotated": "error",
       "unconnected_wire_endpoint": "warning",
-      "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
       "wire_dangling": "error"
@@ -617,6 +616,10 @@
     [
       "c23c5d08-23d8-4f2f-89d6-52f4411af7c3",
       "vision_subsystem"
+    ],
+    [
+      "48241481-8c99-4c08-b4b7-9ff4b52e25cf",
+      "power_subsystem"
     ]
   ],
   "text_variables": {}

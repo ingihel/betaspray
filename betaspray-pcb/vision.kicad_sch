@@ -7787,7 +7787,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "0eaa5249-0b9b-4fdc-a2a4-ed04fcef5720")
-		(property "Reference" "J?"
+		(property "Reference" "J8"
 			(at 217.424 72.644 0)
 			(effects
 				(font
@@ -7884,7 +7884,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "e2b8a9ce-def8-407f-9a9c-65b81d1e8064")
-		(property "Reference" "J?"
+		(property "Reference" "J10"
 			(at 276.606 68.834 0)
 			(effects
 				(font
