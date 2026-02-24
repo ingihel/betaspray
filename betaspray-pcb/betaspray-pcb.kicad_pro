@@ -440,6 +440,7 @@
       "single_global_label": "ignore",
       "unannotated": "error",
       "unconnected_wire_endpoint": "warning",
+      "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
       "wire_dangling": "error"
@@ -620,6 +621,10 @@
     [
       "48241481-8c99-4c08-b4b7-9ff4b52e25cf",
       "power_subsystem"
+    ],
+    [
+      "4a1c4786-b2e3-40ac-8072-dc4e90a79445",
+      "servo_subsystem"
     ]
   ],
   "text_variables": {}
