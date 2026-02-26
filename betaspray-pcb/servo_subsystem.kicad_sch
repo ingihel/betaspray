@@ -5,7 +5,7 @@
 	(uuid "4303d33c-514a-466a-9b2e-8990a9373c8e")
 	(paper "A4")
 	(lib_symbols
-		(symbol "betaspray_Connector:+3.3V"
+		(symbol "betaspray_MCU_Espressif:+3.3V"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -130,7 +130,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "betaspray_Connector:Conn_01x03_Pin"
+		(symbol "betaspray_MCU_Espressif:Conn_01x03_Pin"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -334,7 +334,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "betaspray_Connector:GND"
+		(symbol "betaspray_MCU_Espressif:GND"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -917,7 +917,7 @@
 		(uuid "efb57aec-5577-462d-92cd-60504e05c7a6")
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 60.96 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -988,7 +988,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1059,7 +1059,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 88.9 93.98 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1130,7 +1130,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 102.87 104.14 180)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1196,7 +1196,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 81.28 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1262,7 +1262,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 88.9 60.96 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1333,7 +1333,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 93.98 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1404,7 +1404,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1475,7 +1475,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 88.9 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1546,7 +1546,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x03_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 88.9 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1617,7 +1617,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 109.22 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1683,7 +1683,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 74.93 104.14 180)
 		(unit 1)
 		(exclude_from_sim no)

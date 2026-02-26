@@ -5,146 +5,7 @@
 	(uuid "5d34c70f-469d-43be-b671-484e3b695429")
 	(paper "A4")
 	(lib_symbols
-		(symbol "Device:C"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "C"
-				(at 0.635 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "C"
-				(at 0.635 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 0.9652 -3.81 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Unpolarized capacitor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "cap capacitor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "C_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "C_0_1"
-				(polyline
-					(pts
-						(xy -2.032 0.762) (xy 2.032 0.762)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.032 -0.762) (xy 2.032 -0.762)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "C_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 2.794)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 2.794)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "betaspray_Connector:+3.3V"
+		(symbol "betaspray_MCU_Espressif:+3.3V"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -269,108 +130,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "betaspray_Connector:GND"
-			(power)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "#PWR"
-				(at 0 -6.35 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value" "GND"
-				(at 0 -3.81 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "GND_0_1"
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "GND_1_1"
-				(pin power_in line
-					(at 0 0 270)
-					(length 0)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "betaspray_LDO:C"
+		(symbol "betaspray_MCU_Espressif:C"
 			(pin_numbers
 				(hide yes)
 			)
@@ -492,280 +252,6 @@
 					(at 0 -3.81 90)
 					(length 2.794)
 					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "betaspray_LDO:R"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "R"
-				(at 2.032 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "R"
-				(at 0 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at -1.778 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Resistor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "R res resistor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "R_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "R_0_1"
-				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "R_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "betaspray_LDO:SW_Push"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "SW"
-				(at 1.27 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "SW_Push"
-				(at 0 -1.524 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Push button switch, generic, two pins"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "switch normally-open pushbutton push-button"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "SW_Push_0_1"
-				(circle
-					(center -2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 1.27) (xy 0 3.048)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 1.27) (xy -2.54 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 2.54)
-					(name "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1629,6 +1115,564 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "betaspray_MCU_Espressif:GND"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "GND_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "betaspray_MCU_Espressif:LED"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "LED"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Light emitting diode"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Pins" "1=K 2=A"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "LED diode"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "LED* LED_SMD:* LED_THT:*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LED_0_1"
+				(polyline
+					(pts
+						(xy -3.048 -0.762) (xy -4.572 -2.286) (xy -3.81 -2.286) (xy -4.572 -2.286) (xy -4.572 -1.524)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.778 -0.762) (xy -3.302 -2.286) (xy -2.54 -2.286) (xy -3.302 -2.286) (xy -3.302 -1.524)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 0) (xy 1.27 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -1.27) (xy -1.27 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "LED_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "betaspray_MCU_Espressif:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "betaspray_MCU_Espressif:SW_Push"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 1.27 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "SW_Push"
+				(at 0 -1.524 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Push button switch, generic, two pins"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "switch normally-open pushbutton push-button"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_Push_0_1"
+				(circle
+					(center -2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.27) (xy 0 3.048)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 1.27) (xy -2.54 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(text "https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html#gpio0"
 		(exclude_from_sim no)
@@ -1779,8 +1823,40 @@
 		(uuid "fddaefac-77a8-4846-8420-4dc62724152f")
 	)
 	(no_connect
+		(at 127 45.72)
+		(uuid "1c3ca64d-a437-4df7-b595-6ef48f8fa80a")
+	)
+	(no_connect
+		(at 127 78.74)
+		(uuid "3b9a3f61-0633-4bc9-b359-eb089f3dafbd")
+	)
+	(no_connect
+		(at 127 66.04)
+		(uuid "88766026-9a8c-4eb5-ae88-95dfd5bb373d")
+	)
+	(no_connect
+		(at 127 81.28)
+		(uuid "97c6663f-1ae5-4a3d-b875-1139a34e9d36")
+	)
+	(no_connect
 		(at 148.59 139.7)
 		(uuid "9d0a902a-c84b-4fff-b083-1cfaaf2d395d")
+	)
+	(no_connect
+		(at 96.52 55.88)
+		(uuid "aaee39b8-9955-4778-bb73-f681e196deff")
+	)
+	(no_connect
+		(at 127 43.18)
+		(uuid "c67e803a-1150-4f0d-a3ef-ed44feebef13")
+	)
+	(no_connect
+		(at 127 76.2)
+		(uuid "ef0f256f-a225-4969-895e-42b25d9cdf46")
+	)
+	(no_connect
+		(at 127 63.5)
+		(uuid "f9afea12-a092-4ead-b33f-256c2fbca3d6")
 	)
 	(wire
 		(pts
@@ -1824,6 +1900,16 @@
 	)
 	(wire
 		(pts
+			(xy 189.23 133.35) (xy 193.04 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d95642d-a167-4457-8c8c-e2b76912b4a0")
+	)
+	(wire
+		(pts
 			(xy 186.69 62.23) (xy 196.85 62.23)
 		)
 		(stroke
@@ -1852,6 +1938,16 @@
 		)
 		(uuid "1518ebc7-f066-4bca-a5f1-48fe48d9731f")
 	)
+	(wire
+		(pts
+			(xy 189.23 140.97) (xy 193.04 140.97)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "18f317de-d9b0-417b-ad1e-7677f94f2acf")
+	)
 	(polyline
 		(pts
 			(xy 177.8 82.55) (xy 278.13 82.55)
@@ -1871,6 +1967,16 @@
 			(type default)
 		)
 		(uuid "25c2babd-c0e4-4bfa-adde-fd6e3b0dfd6c")
+	)
+	(wire
+		(pts
+			(xy 189.23 125.73) (xy 193.04 125.73)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "27af139d-c2ad-4752-a905-cdd948039cba")
 	)
 	(wire
 		(pts
@@ -1901,6 +2007,16 @@
 			(type default)
 		)
 		(uuid "34ceb432-4857-46ae-86b3-78ad5eb4e6d9")
+	)
+	(wire
+		(pts
+			(xy 165.1 50.8) (xy 160.02 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "374124ca-31ba-4718-8fd2-26dc9497bc51")
 	)
 	(wire
 		(pts
@@ -2064,6 +2180,16 @@
 	)
 	(wire
 		(pts
+			(xy 189.23 128.27) (xy 193.04 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "80afca96-7aa4-42e0-84e5-405737482b03")
+	)
+	(wire
+		(pts
 			(xy 127 53.34) (xy 132.08 53.34)
 		)
 		(stroke
@@ -2071,6 +2197,16 @@
 			(type default)
 		)
 		(uuid "820f2540-2db8-47d1-8781-7a6fe002a23d")
+	)
+	(wire
+		(pts
+			(xy 189.23 130.81) (xy 193.04 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "856917b0-9a43-4b90-9e01-a3c419924068")
 	)
 	(wire
 		(pts
@@ -2101,6 +2237,16 @@
 			(type default)
 		)
 		(uuid "922d3603-e291-4be8-aba6-52e0fc49fd8f")
+	)
+	(wire
+		(pts
+			(xy 189.23 123.19) (xy 193.04 123.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "97d947b4-c8f3-4ec7-925e-b8a2ff65e69a")
 	)
 	(wire
 		(pts
@@ -2174,6 +2320,16 @@
 	)
 	(wire
 		(pts
+			(xy 189.23 135.89) (xy 193.04 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0b9280d-415d-4e70-8d2f-0207606848e0")
+	)
+	(wire
+		(pts
 			(xy 35.56 29.21) (xy 48.26 29.21)
 		)
 		(stroke
@@ -2191,6 +2347,16 @@
 			(type default)
 		)
 		(uuid "b7c4dee1-3487-4462-a449-2d3641695af8")
+	)
+	(wire
+		(pts
+			(xy 127 50.8) (xy 144.78 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bf110605-da9f-412c-bbf7-f57a14c501c1")
 	)
 	(wire
 		(pts
@@ -2251,6 +2417,16 @@
 			(type default)
 		)
 		(uuid "d7bf8401-8be9-4ea3-a187-726079b3bbb4")
+	)
+	(wire
+		(pts
+			(xy 189.23 138.43) (xy 193.04 138.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb6d3dbd-8715-4de4-94e6-5368879b4330")
 	)
 	(polyline
 		(pts
@@ -2372,6 +2548,16 @@
 		)
 		(uuid "39ab94e8-f545-47fd-b6be-258ac5db6009")
 	)
+	(label "SERV1"
+		(at 189.23 125.73 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "3d4212c6-393a-47f8-93c0-d1d9aa13fb8a")
+	)
 	(label "SERV4"
 		(at 93.98 60.96 180)
 		(effects
@@ -2381,6 +2567,26 @@
 			(justify right bottom)
 		)
 		(uuid "40d69c0f-7b5e-4918-be30-b7ee7de21a78")
+	)
+	(label "SERV0"
+		(at 189.23 123.19 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "4d292c53-73f7-4d34-87ac-f39dec44b59a")
+	)
+	(label "SERV6"
+		(at 189.23 138.43 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "4d3e8ef2-de0e-4475-8490-70b5a758de83")
 	)
 	(label "SERV2"
 		(at 132.08 48.26 0)
@@ -2401,6 +2607,36 @@
 			(justify right bottom)
 		)
 		(uuid "5d7e569a-e809-446c-aad0-bfa12f645294")
+	)
+	(label "SERV4"
+		(at 189.23 133.35 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6e2c33bf-12d6-4051-b4d9-ae2c1e6854cf")
+	)
+	(label "SERV2"
+		(at 189.23 128.27 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "70eea672-dd4b-47bd-a904-93f6ff9373c5")
+	)
+	(label "SERV5"
+		(at 189.23 135.89 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "781ad77d-6dd8-4f58-8322-266eae1dbc2e")
 	)
 	(label "USB_D_P"
 		(at 76.2 124.46 180)
@@ -2441,6 +2677,26 @@
 			(justify right bottom)
 		)
 		(uuid "cdb90c28-564e-4adb-8053-5e493f073de5")
+	)
+	(label "SERV3"
+		(at 189.23 130.81 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d130e1f7-7163-4ba1-9368-d541d3ac77fb")
+	)
+	(label "SERV7"
+		(at 189.23 140.97 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d5330a89-4c5b-44f8-9c89-c45769c4d1b3")
 	)
 	(label "SERV5"
 		(at 93.98 63.5 180)
@@ -3133,7 +3389,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 111.76 96.52 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3199,7 +3455,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "betaspray_MCU_Espressif:C")
 		(at 35.56 33.02 0)
 		(mirror y)
 		(unit 1)
@@ -3269,7 +3525,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 146.05 93.98 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3335,7 +3591,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:SW_Push")
+		(lib_id "betaspray_MCU_Espressif:SW_Push")
 		(at 242.57 54.61 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3405,7 +3661,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 125.73 121.92 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3472,7 +3728,75 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:R")
+		(at 156.21 50.8 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7e9b3635-7f19-4e03-8c49-e61bffaac407")
+		(property "Reference" "R7"
+			(at 156.21 44.45 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "300"
+			(at 156.21 46.99 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 156.21 52.578 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 156.21 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 156.21 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "6ae86e01-4b56-44c5-902b-a272cebf601e")
+		)
+		(pin "1"
+			(uuid "af4c41f2-b6c2-42d3-8ccd-af669d5633d6")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "R7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 35.56 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3538,7 +3862,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:R")
+		(lib_id "betaspray_MCU_Espressif:R")
 		(at 186.69 43.18 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3608,7 +3932,73 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
+		(at 165.1 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "95d0102a-5160-4e07-905c-e3df6062ddc2")
+		(property "Reference" "#PWR024"
+			(at 165.1 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VDD33"
+			(at 165.1 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 165.1 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 165.1 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 165.1 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5bd65562-d582-4e4a-bc59-20c30e9c01d1")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR024")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 232.41 36.83 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3674,7 +4064,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:C")
+		(lib_id "betaspray_MCU_Espressif:C")
 		(at 186.69 55.88 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3744,7 +4134,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 186.69 38.1 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3810,7 +4200,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:SW_Push")
+		(lib_id "betaspray_MCU_Espressif:SW_Push")
 		(at 196.85 55.88 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3880,7 +4270,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:C")
+		(lib_id "betaspray_MCU_Espressif:C")
 		(at 232.41 54.61 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3950,7 +4340,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:R")
+		(lib_id "betaspray_MCU_Espressif:R")
 		(at 146.05 88.9 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4020,7 +4410,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 232.41 62.23 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4086,7 +4476,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:+3.3V")
+		(lib_id "betaspray_MCU_Espressif:+3.3V")
 		(at 29.21 24.13 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4152,7 +4542,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 125.73 144.78 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4406,7 +4796,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:R")
+		(lib_id "betaspray_MCU_Espressif:R")
 		(at 232.41 41.91 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4476,7 +4866,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:GND")
+		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 186.69 63.5 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4542,7 +4932,84 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:C")
+		(lib_id "betaspray_MCU_Espressif:LED")
+		(at 148.59 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "eae13e51-eba9-4e95-bd87-605ed870d3fa")
+		(property "Reference" "D2"
+			(at 147.0025 44.45 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED"
+			(at 147.0025 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "LED_SMD:LED_0805_2012Metric"
+			(at 148.59 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 148.59 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 148.59 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
+			(at 148.59 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "e6c8a097-de49-4724-aa92-d9a578512ab8")
+		)
+		(pin "1"
+			(uuid "3f33d064-67cc-4072-9d5d-b68a03bdb356")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "D2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_MCU_Espressif:C")
 		(at 48.26 33.02 0)
 		(mirror y)
 		(unit 1)
@@ -4612,7 +5079,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_LDO:C")
+		(lib_id "betaspray_MCU_Espressif:C")
 		(at 59.69 33.02 0)
 		(mirror y)
 		(unit 1)
@@ -4744,7 +5211,7 @@
 		)
 	)
 	(sheet
-		(at 173.99 119.38)
+		(at 193.04 120.65)
 		(size 22.86 27.94)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4760,7 +5227,7 @@
 		)
 		(uuid "4a1c4786-b2e3-40ac-8072-dc4e90a79445")
 		(property "Sheetname" "servo_subsystem"
-			(at 173.99 118.6684 0)
+			(at 193.04 119.9384 0)
 			(show_name yes)
 			(effects
 				(font
@@ -4770,7 +5237,7 @@
 			)
 		)
 		(property "Sheetfile" "servo_subsystem.kicad_sch"
-			(at 173.99 147.9046 0)
+			(at 193.04 149.1746 0)
 			(show_name yes)
 			(effects
 				(font
@@ -4780,7 +5247,7 @@
 			)
 		)
 		(pin "SERV2" input
-			(at 173.99 127 180)
+			(at 193.04 128.27 180)
 			(uuid "ae9eb309-95c4-4190-a6b5-2a7cb39f3eee")
 			(effects
 				(font
@@ -4790,7 +5257,7 @@
 			)
 		)
 		(pin "SERV1" input
-			(at 173.99 124.46 180)
+			(at 193.04 125.73 180)
 			(uuid "8e4e5fb6-c7ae-44bb-80b2-d555daa900b1")
 			(effects
 				(font
@@ -4800,7 +5267,7 @@
 			)
 		)
 		(pin "SERV0" input
-			(at 173.99 121.92 180)
+			(at 193.04 123.19 180)
 			(uuid "322c07ac-76e5-4c18-ad63-fd4715fe0781")
 			(effects
 				(font
@@ -4810,7 +5277,7 @@
 			)
 		)
 		(pin "SERV4" input
-			(at 173.99 132.08 180)
+			(at 193.04 133.35 180)
 			(uuid "9a0d1a3f-b686-432d-883d-0e0a3e87bfa1")
 			(effects
 				(font
@@ -4820,7 +5287,7 @@
 			)
 		)
 		(pin "SERV7" input
-			(at 173.99 139.7 180)
+			(at 193.04 140.97 180)
 			(uuid "9c7a4fd9-573f-4df5-bfa5-2f0e9a19d65d")
 			(effects
 				(font
@@ -4830,7 +5297,7 @@
 			)
 		)
 		(pin "SERV5" input
-			(at 173.99 134.62 180)
+			(at 193.04 135.89 180)
 			(uuid "5c4504b8-ea7a-42f8-ad9b-dc49df610ace")
 			(effects
 				(font
@@ -4840,7 +5307,7 @@
 			)
 		)
 		(pin "SERV6" input
-			(at 173.99 137.16 180)
+			(at 193.04 138.43 180)
 			(uuid "82484555-7f1b-4362-b5f3-0ee3c5dab504")
 			(effects
 				(font
@@ -4850,7 +5317,7 @@
 			)
 		)
 		(pin "SERV3" input
-			(at 173.99 129.54 180)
+			(at 193.04 130.81 180)
 			(uuid "e7ad6004-7ef0-4707-8129-5339083bb439")
 			(effects
 				(font

@@ -5,7 +5,7 @@
 	(uuid "7b468eee-57b5-4dce-a6fd-97d4b6f953dc")
 	(paper "A4")
 	(lib_symbols
-		(symbol "betaspray_Connector:Conn_01x09_Pin"
+		(symbol "betaspray_MCU_Espressif:Conn_01x09_Pin"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -7779,7 +7779,7 @@
 		(uuid "f05f650b-1ae4-4354-bbf1-8139d3ee9c8e")
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x09_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x09_Pin")
 		(at 217.17 57.15 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -7875,7 +7875,7 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_Connector:Conn_01x09_Pin")
+		(lib_id "betaspray_MCU_Espressif:Conn_01x09_Pin")
 		(at 267.97 57.15 0)
 		(mirror y)
 		(unit 1)
