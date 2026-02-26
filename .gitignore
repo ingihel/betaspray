@@ -36,3 +36,9 @@ fp-info-cache
 
 # Local project settings
 *.kicad_prl
+
+# Ignore latex stuff
+*.aux
+*.log
+*.out
+*.toc
