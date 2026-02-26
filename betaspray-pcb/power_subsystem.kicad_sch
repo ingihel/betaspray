@@ -2190,7 +2190,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LM3940IT-3.3:TO254P1054X470X1955-3"
+		(property "Footprint" "LDO:TO254P1054X470X1955-3"
 			(at 121.92 48.26 0)
 			(effects
 				(font
