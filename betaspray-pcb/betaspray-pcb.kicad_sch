@@ -509,6 +509,280 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "betaspray_LDO:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "betaspray_LDO:SW_Push"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 1.27 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "SW_Push"
+				(at 0 -1.524 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Push button switch, generic, two pins"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "switch normally-open pushbutton push-button"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_Push_0_1"
+				(circle
+					(center -2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.27) (xy 0 3.048)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 1.27) (xy -2.54 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "betaspray_MCU_Espressif:ESP32-S3-WROOM-1"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -1356,6 +1630,26 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html#gpio0"
+		(exclude_from_sim no)
+		(at 245.11 71.628 0)
+		(effects
+			(font
+				(size 0.635 0.635)
+			)
+		)
+		(uuid "3ff062bc-db6e-4e30-9303-54a129e11b09")
+	)
+	(text "Reset Button"
+		(exclude_from_sim no)
+		(at 192.532 29.21 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "40a0bc51-04e5-4c62-ae07-bb1032e213c0")
+	)
 	(text "Decoupling:\n\n10 uF  : low-frequency, high draw (wifi)\n0.1 uF : high-frequency\n1 uF   : mid-band\n\nThis is in line with the decoupling approach/guidelines used in the CAD assignment.\n\nIt is also consistent with the ESP32-S3 Hardware Design Guidelines:\n\n\"For VDD3P3, when ESP32-S3 is transmitting signals, there may be a sudden increase in the current draw, causing\npower rail collapse. Therefore, it is highly recommended to add a 10 μF capacitor to the power rail, which can work\nin conjunction with the 1 μF capacitor(s) or other capacitors.\""
 		(exclude_from_sim no)
 		(at 18.542 68.58 0)
@@ -1366,6 +1660,27 @@
 			(justify left)
 		)
 		(uuid "426dac83-9331-4345-9a8c-37f2b9377b53")
+	)
+	(text "Strapping Pins"
+		(exclude_from_sim no)
+		(at 180.594 16.256 0)
+		(effects
+			(font
+				(size 3.81 3.81)
+			)
+			(justify left)
+		)
+		(uuid "4fff2c4d-3a64-47b0-a425-fc73b9b40299")
+	)
+	(text "Bootstrapping, pulled up"
+		(exclude_from_sim no)
+		(at 239.776 27.686 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "a67bf0a8-c9f5-4670-8085-e0771f63f99f")
 	)
 	(text "OV5640 Camera Breakouts"
 		(exclude_from_sim no)
@@ -1387,11 +1702,45 @@
 		)
 		(uuid "dd510ffe-ffe8-4fff-a168-a68cd2bfe9d8")
 	)
+	(text "https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html#gpio46"
+		(exclude_from_sim no)
+		(at 184.15 90.424 0)
+		(effects
+			(font
+				(size 0.635 0.635)
+			)
+		)
+		(uuid "eaa17506-e220-4be7-8d4e-a7e3995af35d")
+	)
+	(junction
+		(at 232.41 60.96)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "10ad9850-fe73-4813-ac6a-a87ef44d9835")
+	)
+	(junction
+		(at 232.41 48.26)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1a7a819b-07a7-4130-94e2-92ab486d88a4")
+	)
 	(junction
 		(at 59.69 29.21)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "368e0897-1a9a-4751-b4ff-c4482c69fd61")
+	)
+	(junction
+		(at 186.69 62.23)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "39df4d7e-5122-4dec-bf02-ebde381c8664")
+	)
+	(junction
+		(at 186.69 49.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a1db9141-e2b9-44af-a6e4-f3d85a1146e8")
 	)
 	(junction
 		(at 35.56 29.21)
@@ -1406,6 +1755,12 @@
 		(uuid "a79d324e-1116-4b08-a778-b2103efa500a")
 	)
 	(junction
+		(at 242.57 48.26)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ac3b3fd1-12d6-40c0-b448-b5c98142d618")
+	)
+	(junction
 		(at 35.56 39.37)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1416,6 +1771,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "c55ea7a6-15cf-4c7e-9987-189524b6b852")
+	)
+	(junction
+		(at 196.85 49.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "fddaefac-77a8-4846-8420-4dc62724152f")
 	)
 	(no_connect
 		(at 148.59 139.7)
@@ -1430,6 +1791,46 @@
 			(type default)
 		)
 		(uuid "026d2f37-f577-4c54-acd3-0ba0a34974ef")
+	)
+	(wire
+		(pts
+			(xy 186.69 49.53) (xy 186.69 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "04505594-a77a-4482-8e16-4a0b0c93651d")
+	)
+	(wire
+		(pts
+			(xy 232.41 36.83) (xy 232.41 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0b522b46-5cf8-4187-94f0-658a906c5c0b")
+	)
+	(wire
+		(pts
+			(xy 146.05 83.82) (xy 127 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d895176-0810-4f55-8d84-fc9a79872c7a")
+	)
+	(wire
+		(pts
+			(xy 186.69 62.23) (xy 196.85 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1127453c-7502-410c-a0e6-e82ad49e61d7")
 	)
 	(wire
 		(pts
@@ -1450,6 +1851,26 @@
 			(type default)
 		)
 		(uuid "1518ebc7-f066-4bca-a5f1-48fe48d9731f")
+	)
+	(polyline
+		(pts
+			(xy 177.8 82.55) (xy 278.13 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1a383d4a-b49c-4d06-a7a1-dd8516ab2f85")
+	)
+	(wire
+		(pts
+			(xy 242.57 48.26) (xy 246.38 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "25c2babd-c0e4-4bfa-adde-fd6e3b0dfd6c")
 	)
 	(wire
 		(pts
@@ -1473,6 +1894,46 @@
 	)
 	(wire
 		(pts
+			(xy 232.41 48.26) (xy 232.41 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3928a8d8-f2e5-46ac-9e0f-32475860fb84")
+	)
+	(polyline
+		(pts
+			(xy 177.8 11.43) (xy 177.8 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3b8e8634-3654-4ec9-872b-27a1d70dd28d")
+	)
+	(wire
+		(pts
+			(xy 186.69 38.1) (xy 186.69 39.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f658f99-b01f-4a2c-b4db-b45ad6069d18")
+	)
+	(wire
+		(pts
+			(xy 146.05 92.71) (xy 146.05 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "43dfa03d-85de-4618-8969-d2854bc2d517")
+	)
+	(wire
+		(pts
 			(xy 111.76 29.21) (xy 111.76 38.1)
 		)
 		(stroke
@@ -1480,6 +1941,76 @@
 			(type default)
 		)
 		(uuid "48753915-5015-4f77-aef9-cf87ac82d12d")
+	)
+	(wire
+		(pts
+			(xy 242.57 60.96) (xy 242.57 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4ac0172f-0657-4d3d-978e-8e01e7488da7")
+	)
+	(wire
+		(pts
+			(xy 186.69 62.23) (xy 186.69 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "56d24fb9-4e4b-456b-a714-02af040675f0")
+	)
+	(wire
+		(pts
+			(xy 146.05 85.09) (xy 146.05 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "670eabab-a763-47d9-904d-622ea8140b20")
+	)
+	(wire
+		(pts
+			(xy 232.41 48.26) (xy 242.57 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "677c6bf8-5d91-4281-8ed2-a0920cf1ccf3")
+	)
+	(wire
+		(pts
+			(xy 92.71 43.18) (xy 96.52 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6dcda916-f0fe-414c-8b08-66754eb5aac1")
+	)
+	(wire
+		(pts
+			(xy 232.41 58.42) (xy 232.41 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7571aa0f-9c0d-422e-82ac-38595d7b27cc")
+	)
+	(wire
+		(pts
+			(xy 186.69 49.53) (xy 196.85 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7d66a7be-9bb8-40a7-bb41-f875aaec3dff")
 	)
 	(wire
 		(pts
@@ -1493,6 +2024,16 @@
 	)
 	(wire
 		(pts
+			(xy 242.57 48.26) (xy 242.57 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "88f28113-a200-4dec-a073-cd25cda55b59")
+	)
+	(wire
+		(pts
 			(xy 35.56 39.37) (xy 48.26 39.37)
 		)
 		(stroke
@@ -1500,6 +2041,46 @@
 			(type default)
 		)
 		(uuid "8e6ba2d8-ac72-48bd-a5fa-e6bc75777b89")
+	)
+	(wire
+		(pts
+			(xy 92.71 48.26) (xy 96.52 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9a436e79-a9aa-4099-a183-ce4185ea7632")
+	)
+	(wire
+		(pts
+			(xy 196.85 49.53) (xy 200.66 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9b75f218-00bb-45d4-82db-958a703712bb")
+	)
+	(wire
+		(pts
+			(xy 186.69 59.69) (xy 186.69 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a3cfce8f-d560-43e5-ba5d-d65ea1050846")
+	)
+	(wire
+		(pts
+			(xy 196.85 49.53) (xy 196.85 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4a5697c-5dc0-4b78-bf3d-778597782198")
 	)
 	(wire
 		(pts
@@ -1533,6 +2114,26 @@
 	)
 	(wire
 		(pts
+			(xy 232.41 60.96) (xy 242.57 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b7c4dee1-3487-4462-a449-2d3641695af8")
+	)
+	(wire
+		(pts
+			(xy 186.69 46.99) (xy 186.69 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5d321b3-b207-4c2c-b558-cae6c9a1e182")
+	)
+	(wire
+		(pts
 			(xy 111.76 93.98) (xy 111.76 96.52)
 		)
 		(stroke
@@ -1550,6 +2151,16 @@
 			(type default)
 		)
 		(uuid "cafec082-f0d5-4f15-b5d0-65d6b9af2a41")
+	)
+	(wire
+		(pts
+			(xy 232.41 45.72) (xy 232.41 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d60cbf01-66ba-46a3-9d17-67423c2376af")
 	)
 	(wire
 		(pts
@@ -1571,6 +2182,16 @@
 		)
 		(uuid "d7bf8401-8be9-4ea3-a187-726079b3bbb4")
 	)
+	(polyline
+		(pts
+			(xy 278.13 11.43) (xy 278.13 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ef63e9e4-a126-4c16-b279-101b985d0464")
+	)
 	(wire
 		(pts
 			(xy 35.56 39.37) (xy 35.56 44.45)
@@ -1583,6 +2204,26 @@
 	)
 	(wire
 		(pts
+			(xy 232.41 60.96) (xy 232.41 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f5942042-f69c-4d7b-b25e-91782d02b256")
+	)
+	(wire
+		(pts
+			(xy 196.85 62.23) (xy 196.85 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f94a3988-28a3-4734-b331-f524c33ab27b")
+	)
+	(wire
+		(pts
 			(xy 127 55.88) (xy 132.08 55.88)
 		)
 		(stroke
@@ -1590,6 +2231,16 @@
 			(type default)
 		)
 		(uuid "fdd45da1-9ee5-40ea-85a1-8bae97b4c330")
+	)
+	(label "EN"
+		(at 200.66 49.53 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "02f364cc-c88f-4ef0-8399-8681f47e26eb")
 	)
 	(label "SERV1"
 		(at 80.01 53.34 180)
@@ -1661,6 +2312,16 @@
 		)
 		(uuid "5327175a-40c6-40f3-87ff-988d629679ae")
 	)
+	(label "EN"
+		(at 92.71 43.18 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "5d7e569a-e809-446c-aad0-bfa12f645294")
+	)
 	(label "USB_D_P"
 		(at 76.2 124.46 180)
 		(effects
@@ -1691,6 +2352,16 @@
 		)
 		(uuid "c56048aa-22bd-4bb0-b3a4-b5cb910184c1")
 	)
+	(label "BOOT"
+		(at 92.71 48.26 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "cdb90c28-564e-4adb-8053-5e493f073de5")
+	)
 	(label "SERV5"
 		(at 80.01 63.5 180)
 		(effects
@@ -1700,6 +2371,16 @@
 			(justify right bottom)
 		)
 		(uuid "dcb5f0fd-396c-46df-850c-d74663152d5d")
+	)
+	(label "BOOT"
+		(at 246.38 48.26 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e76acac8-1556-4d0a-ba5f-fe7d5779740d")
 	)
 	(label "USB_D_N"
 		(at 76.2 121.92 180)
@@ -2508,6 +3189,142 @@
 		)
 	)
 	(symbol
+		(lib_id "betaspray_Connector:GND")
+		(at 146.05 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5aea06a0-0751-469a-bb27-73e9bec72f5e")
+		(property "Reference" "#PWR023"
+			(at 146.05 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 146.05 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 146.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 146.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ff090cc9-2e16-438a-908c-75643e53b6f9")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR023")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:SW_Push")
+		(at 242.57 54.61 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "60c43036-f5aa-4fd7-a29e-206526ec22f5")
+		(property "Reference" "SW2"
+			(at 246.38 53.3399 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SW_Push"
+			(at 246.38 55.8799 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 247.65 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 247.65 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Push button switch, generic, two pins"
+			(at 242.57 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "12101fee-3fdf-45e9-973a-e71fb4b51cc6")
+		)
+		(pin "2"
+			(uuid "a7c25955-3645-46b8-b698-49c56db43f62")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "SW2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "betaspray_Connector:+3.3V")
 		(at 125.73 121.92 90)
 		(unit 1)
@@ -2635,6 +3452,554 @@
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
 					(reference "#PWR016")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:R")
+		(at 186.69 43.18 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8e1f014c-b015-4e89-b069-61d907b95ddc")
+		(property "Reference" "R4"
+			(at 189.23 41.9099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 189.23 44.4499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 184.912 43.18 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 186.69 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 186.69 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "6b1b9c5b-5a93-4d33-b706-2a6be91a04e4")
+		)
+		(pin "1"
+			(uuid "9206abef-4e5a-454a-af49-72fc58e54324")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_Connector:+3.3V")
+		(at 232.41 36.83 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "96d59879-29c0-422c-b109-ad36980a26ef")
+		(property "Reference" "#PWR021"
+			(at 232.41 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VDD33"
+			(at 232.41 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 232.41 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 232.41 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 232.41 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "79b05636-3863-485b-ae1c-39409d3407ca")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:C")
+		(at 186.69 55.88 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9a1f544c-2933-43db-9596-0d5b8b2fa805")
+		(property "Reference" "C6"
+			(at 190.5 54.6099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1 uF"
+			(at 190.5 57.1499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 187.6552 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 186.69 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 186.69 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "1d9c7099-07a1-4807-9649-4baa84c2113d")
+		)
+		(pin "1"
+			(uuid "8ed5bfe1-7afc-4a02-b135-b7f4e3f5d73c")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_Connector:+3.3V")
+		(at 186.69 38.1 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9f9a4100-b41f-4a60-bf67-4607185c6c68")
+		(property "Reference" "#PWR019"
+			(at 186.69 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VDD33"
+			(at 186.69 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 186.69 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 186.69 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 186.69 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5b166d6b-5abf-4950-9bca-31f778355c31")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR019")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:SW_Push")
+		(at 196.85 55.88 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a2ebb31a-c5c8-4f73-b4ca-7b975c7f5c0a")
+		(property "Reference" "SW1"
+			(at 200.66 54.6099 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SW_Push"
+			(at 200.66 57.1499 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 201.93 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 201.93 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Push button switch, generic, two pins"
+			(at 196.85 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4cea4f9d-6142-4ab8-861f-cf6ab8dae958")
+		)
+		(pin "2"
+			(uuid "18f79d6d-8b63-41b0-b105-9a86969e8bed")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "SW1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:C")
+		(at 232.41 54.61 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "aab09008-ce79-4a6f-a803-0af99cf4ebce")
+		(property "Reference" "C7"
+			(at 236.22 53.3399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1 uF"
+			(at 236.22 55.8799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 233.3752 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 232.41 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 232.41 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "4d0aefe4-6456-495c-bfb2-94ece470b60e")
+		)
+		(pin "1"
+			(uuid "eba27a1b-7ee2-4792-8e7b-1b268b89e7bb")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "C7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:R")
+		(at 146.05 88.9 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b1cc00a6-d3fe-46b9-a5d5-483ea7f0e344")
+		(property "Reference" "R6"
+			(at 148.59 87.6299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 148.59 90.1699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 144.272 88.9 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 146.05 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 146.05 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "d83fd9a9-f180-4d3c-93e6-185635f8c178")
+		)
+		(pin "1"
+			(uuid "ab2a0274-0021-470b-8cc4-43cc5cc1d08e")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "R6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_Connector:GND")
+		(at 232.41 62.23 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bd51c6a9-ba70-4077-8a7d-bc0c6393975b")
+		(property "Reference" "#PWR022"
+			(at 232.41 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 232.41 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 232.41 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 232.41 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 232.41 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "9f2ee99f-62c6-4d58-99a8-e86f44f6d0e1")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -2955,6 +4320,142 @@
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
 					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_LDO:R")
+		(at 232.41 41.91 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e12f1a7d-d989-43a8-b29f-3c6399c3b00a")
+		(property "Reference" "R5"
+			(at 234.95 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 234.95 43.1799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 230.632 41.91 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 232.41 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 232.41 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "82bc88a7-8cc0-4d2a-8176-048c612133f1")
+		)
+		(pin "1"
+			(uuid "809a8062-56ad-4c4b-9a3a-eb5fa008d4a3")
+		)
+		(instances
+			(project "betaspray-pcb"
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_Connector:GND")
+		(at 186.69 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e4bf9258-cb61-44b4-8fd8-5f7dc43fbd48")
+		(property "Reference" "#PWR020"
+			(at 186.69 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 186.69 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 186.69 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 186.69 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 186.69 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d37dd151-96c3-4fce-aef7-3d4e69a4654d")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429"
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
