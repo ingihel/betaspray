@@ -1137,7 +1137,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "4335cfc7-6212-4f56-9fcf-f0fa940e55f3")
 		(property "Reference" "#PWR012"
 			(at 102.87 100.33 0)
@@ -1148,12 +1147,13 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "VDD5"
-			(at 102.87 109.22 0)
+		(property "Value" "VDD5V"
+			(at 99.822 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Footprint" ""
@@ -1690,7 +1690,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "ccb5af9c-c79f-4701-b065-53d4be41fbdb")
 		(property "Reference" "#PWR010"
 			(at 74.93 100.33 0)
@@ -1701,12 +1700,13 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "VDD5"
-			(at 74.93 109.22 0)
+		(property "Value" "VDD5V"
+			(at 71.882 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Footprint" ""

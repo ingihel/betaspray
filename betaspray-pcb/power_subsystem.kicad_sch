@@ -2087,6 +2087,17 @@
 		)
 		(uuid "2d157608-4872-47a4-89b1-11d907f0b84b")
 	)
+	(hierarchical_label "VDD3V"
+		(shape input)
+		(at 139.7 38.1 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3308b2d5-28f1-4da8-8c24-322eb6b038ed")
+	)
 	(hierarchical_label "USB_D_N"
 		(shape bidirectional)
 		(at 66.04 40.64 0)
@@ -2301,72 +2312,6 @@
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429/48241481-8c99-4c08-b4b7-9ff4b52e25cf"
 					(reference "C4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "betaspray_MCU_Espressif:+3.3V")
-		(at 139.7 38.1 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "12a92016-01e9-411e-b17a-5ed3ede83717")
-		(property "Reference" "#PWR03"
-			(at 139.7 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VDD3V"
-			(at 139.7 33.02 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 139.7 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 139.7 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 139.7 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1402b554-c943-4f8a-8c16-cfec10aec0db")
-		)
-		(instances
-			(project ""
-				(path "/5d34c70f-469d-43be-b671-484e3b695429/48241481-8c99-4c08-b4b7-9ff4b52e25cf"
-					(reference "#PWR03")
 					(unit 1)
 				)
 			)
