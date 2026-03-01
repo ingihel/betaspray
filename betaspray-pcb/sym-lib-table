@@ -1,6 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "betaspray_MCU_Espressif")(type "KiCad")(uri "${KIPRJMOD}/betaspray_MCU_Espressif.kicad_sym")(options "")(descr ""))
-  (lib (name "betaspray_LDO")(type "KiCad")(uri "${KIPRJMOD}/betaspray_LDO.kicad_sym")(options "")(descr ""))
-  (lib (name "betaspray_Connector")(type "KiCad")(uri "${KIPRJMOD}/betaspray_Connector.kicad_sym")(options "")(descr ""))
-)
