@@ -1216,189 +1216,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "betaspray_MCU_Espressif:LED"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "D"
-				(at 0 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED"
-				(at 0 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Light emitting diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Pins" "1=K 2=A"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "LED diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "LED* LED_SMD:* LED_THT:*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "LED_0_1"
-				(polyline
-					(pts
-						(xy -3.048 -0.762) (xy -4.572 -2.286) (xy -3.81 -2.286) (xy -4.572 -2.286) (xy -4.572 -1.524)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 -0.762) (xy -3.302 -2.286) (xy -2.54 -2.286) (xy -3.302 -2.286) (xy -3.302 -1.524)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy 1.27 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -1.27) (xy -1.27 1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "LED_1_1"
-				(pin passive line
-					(at -3.81 0 0)
-					(length 2.54)
-					(name "K"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 3.81 0 180)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "betaspray_MCU_Espressif:R"
 			(pin_numbers
 				(hide yes)
@@ -1839,24 +1656,22 @@
 		(uuid "9d0a902a-c84b-4fff-b083-1cfaaf2d395d")
 	)
 	(no_connect
-		(at 96.52 55.88)
-		(uuid "aaee39b8-9955-4778-bb73-f681e196deff")
-	)
-	(no_connect
 		(at 127 43.18)
 		(uuid "c67e803a-1150-4f0d-a3ef-ed44feebef13")
-	)
-	(no_connect
-		(at 96.52 88.9)
-		(uuid "f212093f-94e6-418b-8505-2d96f62dabf6")
 	)
 	(no_connect
 		(at 127 63.5)
 		(uuid "f9afea12-a092-4ead-b33f-256c2fbca3d6")
 	)
-	(no_connect
-		(at 96.52 86.36)
-		(uuid "fc13f342-3948-485c-a6ad-265ee9149dca")
+	(wire
+		(pts
+			(xy 74.93 55.88) (xy 96.52 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "01341176-19d8-4e1b-8b99-b0beb6afdbc4")
 	)
 	(wire
 		(pts
@@ -1877,6 +1692,16 @@
 			(type default)
 		)
 		(uuid "04505594-a77a-4482-8e16-4a0b0c93651d")
+	)
+	(wire
+		(pts
+			(xy 90.17 88.9) (xy 96.52 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "054af701-c42c-4117-b035-d1e5db2532cb")
 	)
 	(wire
 		(pts
@@ -2060,6 +1885,16 @@
 	)
 	(wire
 		(pts
+			(xy 90.17 86.36) (xy 96.52 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a9ecf17-60e2-4416-b4af-8d1acd891488")
+	)
+	(wire
+		(pts
 			(xy 242.57 60.96) (xy 242.57 59.69)
 		)
 		(stroke
@@ -2070,16 +1905,6 @@
 	)
 	(wire
 		(pts
-			(xy 127 48.26) (xy 149.86 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "56b69372-03da-431c-a64a-633cba3c0ca3")
-	)
-	(wire
-		(pts
 			(xy 186.69 62.23) (xy 186.69 63.5)
 		)
 		(stroke
@@ -2087,6 +1912,16 @@
 			(type default)
 		)
 		(uuid "56d24fb9-4e4b-456b-a714-02af040675f0")
+	)
+	(wire
+		(pts
+			(xy 132.08 48.26) (xy 127 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "615975fd-d1be-4b30-870c-803f05ffc1ea")
 	)
 	(wire
 		(pts
@@ -2187,16 +2022,6 @@
 			(type default)
 		)
 		(uuid "8e6ba2d8-ac72-48bd-a5fa-e6bc75777b89")
-	)
-	(wire
-		(pts
-			(xy 165.1 48.26) (xy 170.18 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "95a67f5a-609d-4d53-adfe-e13c5d62c8ab")
 	)
 	(wire
 		(pts
@@ -2438,6 +2263,16 @@
 		)
 		(uuid "fdd45da1-9ee5-40ea-85a1-8bae97b4c330")
 	)
+	(label "LSR_3"
+		(at 90.17 88.9 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "00d8e4ec-e316-4377-93ff-798ea3c18480")
+	)
 	(label "EN"
 		(at 200.66 49.53 0)
 		(effects
@@ -2448,6 +2283,16 @@
 		)
 		(uuid "02f364cc-c88f-4ef0-8399-8681f47e26eb")
 	)
+	(label "LSR_1"
+		(at 215.9 125.73 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1ad8ef26-620d-45b8-809a-28d0667569a7")
+	)
 	(label "SERV7"
 		(at 96.52 73.66 180)
 		(effects
@@ -2457,6 +2302,16 @@
 			(justify right bottom)
 		)
 		(uuid "364f78ac-6e51-4370-bf96-d49c85249d24")
+	)
+	(label "LSR_4"
+		(at 74.93 55.88 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "38d09c53-b9be-466f-8404-5c96acc544fc")
 	)
 	(label "SERV1"
 		(at 189.23 125.73 180)
@@ -2598,6 +2453,16 @@
 		)
 		(uuid "93125a13-27c5-492d-9d31-957bcd32c758")
 	)
+	(label "LSR_2"
+		(at 90.17 86.36 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "9d317e1f-ac6b-43e3-8d5b-92344ebbeff3")
+	)
 	(label "SERV6"
 		(at 96.52 66.04 180)
 		(effects
@@ -2628,6 +2493,16 @@
 		)
 		(uuid "ba05475f-7c21-42eb-81ed-c4437ce39164")
 	)
+	(label "LSR_1"
+		(at 132.08 48.26 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c4790e97-1306-480b-b326-abf39cccc8cc")
+	)
 	(label "USB_D_P"
 		(at 132.08 55.88 0)
 		(effects
@@ -2648,6 +2523,16 @@
 		)
 		(uuid "cdb90c28-564e-4adb-8053-5e493f073de5")
 	)
+	(label "LSR_2"
+		(at 215.9 129.54 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ce9777b9-ac6e-4ee2-9885-f490db4a4957")
+	)
 	(label "SERV3"
 		(at 189.23 130.81 180)
 		(effects
@@ -2667,6 +2552,26 @@
 			(justify right bottom)
 		)
 		(uuid "d5330a89-4c5b-44f8-9c89-c45769c4d1b3")
+	)
+	(label "LSR_4"
+		(at 215.9 137.16 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d783b4d1-1b24-440d-8e65-3da50b2e732f")
+	)
+	(label "LSR_3"
+		(at 215.9 133.35 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d955c918-34a0-4b45-a0bf-19b7b7a15250")
 	)
 	(label "BOOT"
 		(at 246.38 48.26 0)
@@ -3698,74 +3603,6 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_MCU_Espressif:R")
-		(at 161.29 48.26 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "7e9b3635-7f19-4e03-8c49-e61bffaac407")
-		(property "Reference" "R7"
-			(at 161.29 41.91 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "300"
-			(at 161.29 44.45 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
-			(at 161.29 50.038 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 161.29 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 161.29 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "6ae86e01-4b56-44c5-902b-a272cebf601e")
-		)
-		(pin "1"
-			(uuid "af4c41f2-b6c2-42d3-8ccd-af669d5633d6")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "R7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "betaspray_MCU_Espressif:GND")
 		(at 35.56 44.45 0)
 		(unit 1)
@@ -3896,72 +3733,6 @@
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
 					(reference "R4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "betaspray_MCU_Espressif:+3.3V")
-		(at 170.18 48.26 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "95d0102a-5160-4e07-905c-e3df6062ddc2")
-		(property "Reference" "#PWR024"
-			(at 170.18 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VDD33"
-			(at 170.18 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 170.18 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 170.18 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 170.18 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "5bd65562-d582-4e4a-bc59-20c30e9c01d1")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -4902,83 +4673,6 @@
 		)
 	)
 	(symbol
-		(lib_id "betaspray_MCU_Espressif:LED")
-		(at 153.67 48.26 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "eae13e51-eba9-4e95-bd87-605ed870d3fa")
-		(property "Reference" "D2"
-			(at 152.0825 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED"
-			(at 152.0825 44.45 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "LED_SMD:LED_0805_2012Metric"
-			(at 153.67 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 153.67 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Light emitting diode"
-			(at 153.67 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Pins" "1=K 2=A"
-			(at 153.67 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "e6c8a097-de49-4724-aa92-d9a578512ab8")
-		)
-		(pin "1"
-			(uuid "3f33d064-67cc-4072-9d5d-b68a03bdb356")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "D2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "betaspray_MCU_Espressif:C")
 		(at 48.26 33.02 0)
 		(mirror y)
@@ -5304,6 +4998,46 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+		(pin "LSR_1" input
+			(at 215.9 125.73 0)
+			(uuid "d8ce5ff6-8548-4f08-8265-8836b4c9207a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LSR_2" input
+			(at 215.9 129.54 0)
+			(uuid "5b2d242a-ce06-4d9a-9d6b-5177371311e2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LSR_3" input
+			(at 215.9 133.35 0)
+			(uuid "f9ce6851-2d0a-4658-b872-d5752de0cacd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LSR_4" input
+			(at 215.9 137.16 0)
+			(uuid "b440d0df-ef50-47fa-8bc6-aa7984cf930e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
 			)
 		)
 		(instances
