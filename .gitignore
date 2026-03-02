@@ -42,3 +42,7 @@ fp-info-cache
 *.log
 *.out
 *.toc
+
+# Other stuff
+.pio/*
+sdkconfig.esp32*
