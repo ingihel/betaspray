@@ -2,6 +2,7 @@
 #include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "fatfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "led_strip.h"
