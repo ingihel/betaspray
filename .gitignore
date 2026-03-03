@@ -46,3 +46,4 @@ fp-info-cache
 # Other stuff
 .pio/*
 sdkconfig.esp32*
+.vscode/*
