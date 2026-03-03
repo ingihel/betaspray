@@ -2,22 +2,23 @@
 #include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "fatfs.h"
+// #include "fatfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "led_strip.h"
 #include "nvs_flash.h"
 #include "server.h"
+#include "servo.h"
 #include "wifi.h"
 #include <stdio.h>
 
-#define LED_PIN        38
-#define CAM_UART_NUM   UART_NUM_0
-#define CAM_UART_BAUD  921600
+#define LED_PIN 38
+#define CAM_UART_NUM UART_NUM_0
+#define CAM_UART_BAUD 921600
 
 // Frame framing: START(4) + LENGTH(4, LE uint32) + JPEG DATA + END(4)
 static const uint8_t FRAME_START[] = {0xAA, 0xBB, 0xCC, 0xDD};
-static const uint8_t FRAME_END[]   = {0xDD, 0xCC, 0xBB, 0xAA};
+static const uint8_t FRAME_END[] = {0xDD, 0xCC, 0xBB, 0xAA};
 
 static void uart_send_frame(const uint8_t *data, size_t len) {
   uint32_t length = (uint32_t)len;
@@ -43,7 +44,7 @@ void app_main(void) {
   uart_config_t uart_config = {
       .baud_rate = CAM_UART_BAUD,
       .data_bits = UART_DATA_8_BITS,
-      .parity    = UART_PARITY_DISABLE,
+      .parity = UART_PARITY_DISABLE,
       .stop_bits = UART_STOP_BITS_1,
       .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
   };
@@ -54,10 +55,10 @@ void app_main(void) {
   // LED strip
   led_strip_handle_t led_strip;
   led_strip_config_t strip_config = {
-      .strip_gpio_num   = LED_PIN,
-      .max_leds         = 1,
+      .strip_gpio_num = LED_PIN,
+      .max_leds = 1,
       .led_pixel_format = LED_PIXEL_FORMAT_GRB,
-      .led_model        = LED_MODEL_WS2812,
+      .led_model = LED_MODEL_WS2812,
   };
   led_strip_rmt_config_t rmt_config = {
       .resolution_hz = 10 * 1000 * 1000,
@@ -75,14 +76,14 @@ void app_main(void) {
   camera_set_format(CAMERA_FORMAT_JPEG);
 
   uint8_t colors[][3] = {
-      {20, 0,  0 }, // Red
-      {0,  20, 0 }, // Green
-      {0,  0,  20}, // Blue
-      {20, 20, 0 }, // Yellow
-      {0,  20, 20}, // Cyan
-      {20, 0,  20}, // Magenta
+      {20, 0, 0},  // Red
+      {0, 20, 0},  // Green
+      {0, 0, 20},  // Blue
+      {20, 20, 0}, // Yellow
+      {0, 20, 20}, // Cyan
+      {20, 0, 20}, // Magenta
   };
-  int num_colors   = sizeof(colors) / sizeof(colors[0]);
+  int num_colors = sizeof(colors) / sizeof(colors[0]);
   int current_color = 0;
 
   while (1) {
