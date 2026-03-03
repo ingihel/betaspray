@@ -1,4 +1,5 @@
 #include "esp_event.h"
+#include "fatfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "led_strip.h"
