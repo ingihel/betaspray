@@ -1640,6 +1640,10 @@
 		(uuid "fddaefac-77a8-4846-8420-4dc62724152f")
 	)
 	(no_connect
+		(at 74.93 55.88)
+		(uuid "194cc2b3-ba83-4491-8488-a141c6f01b3d")
+	)
+	(no_connect
 		(at 127 45.72)
 		(uuid "1c3ca64d-a437-4df7-b595-6ef48f8fa80a")
 	)
@@ -1658,6 +1662,14 @@
 	(no_connect
 		(at 127 43.18)
 		(uuid "c67e803a-1150-4f0d-a3ef-ed44feebef13")
+	)
+	(no_connect
+		(at 90.17 88.9)
+		(uuid "d049fbdc-3227-47c2-84f8-e18d9651d96c")
+	)
+	(no_connect
+		(at 90.17 86.36)
+		(uuid "dd903179-f17e-488d-9c71-6d3491451909")
 	)
 	(no_connect
 		(at 127 63.5)
@@ -2263,16 +2275,6 @@
 		)
 		(uuid "fdd45da1-9ee5-40ea-85a1-8bae97b4c330")
 	)
-	(label "LSR_3"
-		(at 90.17 88.9 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "00d8e4ec-e316-4377-93ff-798ea3c18480")
-	)
 	(label "EN"
 		(at 200.66 49.53 0)
 		(effects
@@ -2302,16 +2304,6 @@
 			(justify right bottom)
 		)
 		(uuid "364f78ac-6e51-4370-bf96-d49c85249d24")
-	)
-	(label "LSR_4"
-		(at 74.93 55.88 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "38d09c53-b9be-466f-8404-5c96acc544fc")
 	)
 	(label "SERV1"
 		(at 189.23 125.73 180)
@@ -2453,16 +2445,6 @@
 		)
 		(uuid "93125a13-27c5-492d-9d31-957bcd32c758")
 	)
-	(label "LSR_2"
-		(at 90.17 86.36 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "9d317e1f-ac6b-43e3-8d5b-92344ebbeff3")
-	)
 	(label "SERV6"
 		(at 96.52 66.04 180)
 		(effects
@@ -2523,16 +2505,6 @@
 		)
 		(uuid "cdb90c28-564e-4adb-8053-5e493f073de5")
 	)
-	(label "LSR_2"
-		(at 215.9 129.54 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "ce9777b9-ac6e-4ee2-9885-f490db4a4957")
-	)
 	(label "SERV3"
 		(at 189.23 130.81 180)
 		(effects
@@ -2552,26 +2524,6 @@
 			(justify right bottom)
 		)
 		(uuid "d5330a89-4c5b-44f8-9c89-c45769c4d1b3")
-	)
-	(label "LSR_4"
-		(at 215.9 137.16 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d783b4d1-1b24-440d-8e65-3da50b2e732f")
-	)
-	(label "LSR_3"
-		(at 215.9 133.35 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d955c918-34a0-4b45-a0bf-19b7b7a15250")
 	)
 	(label "BOOT"
 		(at 246.38 48.26 0)
@@ -5003,36 +4955,6 @@
 		(pin "LSR_1" input
 			(at 215.9 125.73 0)
 			(uuid "d8ce5ff6-8548-4f08-8265-8836b4c9207a")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "LSR_2" input
-			(at 215.9 129.54 0)
-			(uuid "5b2d242a-ce06-4d9a-9d6b-5177371311e2")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "LSR_3" input
-			(at 215.9 133.35 0)
-			(uuid "f9ce6851-2d0a-4658-b872-d5752de0cacd")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "LSR_4" input
-			(at 215.9 137.16 0)
-			(uuid "b440d0df-ef50-47fa-8bc6-aa7984cf930e")
 			(effects
 				(font
 					(size 1.27 1.27)

@@ -577,6 +577,447 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "betaspray_MCU_Espressif:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "betaspray_Transistor_FET:AO3400A"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at 5.08 1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "AO3400A"
+				(at 5.08 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+				(at 5.08 -1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf"
+				(at 5.08 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Description" "30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "N-Channel MOSFET"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "AO3400A_0_1"
+				(polyline
+					(pts
+						(xy 0.254 1.905) (xy 0.254 -1.905)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 2.286) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 0.508) (xy 0.762 -0.508)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 -1.27) (xy 0.762 -2.286)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 -1.778) (xy 3.302 -1.778) (xy 3.302 1.778) (xy 0.762 1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.016 0) (xy 2.032 0.381) (xy 2.032 -0.381) (xy 1.016 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(circle
+					(center 1.651 0)
+					(radius 2.794)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 2.54) (xy 2.54 1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.54 1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(circle
+					(center 2.54 -1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -2.54) (xy 2.54 0) (xy 0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.921 0.381) (xy 3.683 0.381)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.302 0.381) (xy 2.921 -0.254) (xy 3.683 -0.254) (xy 3.302 0.381)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "AO3400A_1_1"
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(name "D"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 163.83 62.23)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "01772f8e-0465-42b7-9870-0f2571925684")
+	)
+	(junction
+		(at 152.4 116.84)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1eba87c4-7798-4f16-a62b-571419501969")
+	)
+	(junction
+		(at 152.4 105.41)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2513e9ad-b3fc-4c83-988d-043d1fc0e2b6")
 	)
 	(junction
 		(at 81.28 91.44)
@@ -601,6 +1042,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5985c0b2-9b40-4105-9d17-cacd1957cb56")
+	)
+	(junction
+		(at 163.83 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "5e88c08e-6aac-4ad8-981c-e03c66482e9f")
 	)
 	(junction
 		(at 109.22 91.44)
@@ -631,6 +1078,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "afa9750a-09c2-4fcf-8ab8-710fc5c503d8")
+	)
+	(junction
+		(at 163.83 96.52)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d2a785fb-3536-44d3-a56c-42749917b49e")
 	)
 	(junction
 		(at 102.87 78.74)
@@ -679,6 +1132,16 @@
 			(type default)
 		)
 		(uuid "0e2e1bed-c19c-4417-b1cc-8f2d6f6ecb22")
+	)
+	(wire
+		(pts
+			(xy 163.83 116.84) (xy 152.4 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1415e192-c47d-4e1f-9706-a9a05bb7801a")
 	)
 	(wire
 		(pts
@@ -742,6 +1205,16 @@
 	)
 	(wire
 		(pts
+			(xy 152.4 109.22) (xy 152.4 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "46563584-7a55-4a52-a7ff-2100abc7a4f9")
+	)
+	(wire
+		(pts
 			(xy 81.28 91.44) (xy 81.28 104.14)
 		)
 		(stroke
@@ -749,6 +1222,16 @@
 			(type default)
 		)
 		(uuid "491fc19c-d5de-4166-820d-3d4a8cf7863a")
+	)
+	(wire
+		(pts
+			(xy 163.83 80.01) (xy 163.83 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4f638612-5cbb-4756-a5a9-1f74763c1574")
 	)
 	(wire
 		(pts
@@ -772,6 +1255,16 @@
 	)
 	(wire
 		(pts
+			(xy 148.59 105.41) (xy 152.4 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5a5d801b-fc5c-4dff-ad69-d88db883966e")
+	)
+	(wire
+		(pts
 			(xy 102.87 93.98) (xy 102.87 104.14)
 		)
 		(stroke
@@ -782,6 +1275,16 @@
 	)
 	(wire
 		(pts
+			(xy 163.83 96.52) (xy 163.83 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "627397e2-7a34-418e-8834-f13907b39d67")
+	)
+	(wire
+		(pts
 			(xy 102.87 78.74) (xy 102.87 93.98)
 		)
 		(stroke
@@ -789,6 +1292,16 @@
 			(type default)
 		)
 		(uuid "684715c3-a78b-465c-9347-c9c8a3e8acc6")
+	)
+	(wire
+		(pts
+			(xy 152.4 105.41) (xy 156.21 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6ace0215-e8ad-4a98-b930-657778c51c92")
 	)
 	(wire
 		(pts
@@ -822,6 +1335,16 @@
 	)
 	(wire
 		(pts
+			(xy 140.97 96.52) (xy 163.83 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "76c479f5-ae56-4efc-805c-5e66a811eabb")
+	)
+	(wire
+		(pts
 			(xy 93.98 93.98) (xy 102.87 93.98)
 		)
 		(stroke
@@ -829,6 +1352,16 @@
 			(type default)
 		)
 		(uuid "7b88c1cb-aadd-428a-8309-aa79e1d24581")
+	)
+	(wire
+		(pts
+			(xy 140.97 62.23) (xy 163.83 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7fa127cf-5319-4c3c-8b12-a31cac60761e")
 	)
 	(wire
 		(pts
@@ -849,6 +1382,16 @@
 			(type default)
 		)
 		(uuid "99f5bd30-5f56-4ba8-9452-3c804b2e213c")
+	)
+	(wire
+		(pts
+			(xy 152.4 116.84) (xy 152.4 120.65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9b86e9d5-4c9d-4486-b26a-4c12e0f283a0")
 	)
 	(wire
 		(pts
@@ -879,6 +1422,36 @@
 			(type default)
 		)
 		(uuid "b5858a59-7ccc-4b78-aaad-f22eb7486529")
+	)
+	(wire
+		(pts
+			(xy 140.97 45.72) (xy 163.83 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b9e73cd2-22a7-4fec-8d28-11abcf437d99")
+	)
+	(wire
+		(pts
+			(xy 140.97 80.01) (xy 163.83 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bc0a24b6-2c6f-4617-8950-1bc811459a6e")
+	)
+	(wire
+		(pts
+			(xy 163.83 62.23) (xy 163.83 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c1c24642-3c64-4239-949d-85eee47d06ff")
 	)
 	(wire
 		(pts
@@ -922,6 +1495,16 @@
 	)
 	(wire
 		(pts
+			(xy 134.62 105.41) (xy 140.97 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da43eb4c-a696-425f-934a-b3dc4d8f8b4b")
+	)
+	(wire
+		(pts
 			(xy 74.93 78.74) (xy 74.93 93.98)
 		)
 		(stroke
@@ -942,6 +1525,16 @@
 	)
 	(wire
 		(pts
+			(xy 163.83 45.72) (xy 163.83 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e0838c9c-365c-41e9-851b-fcb1977f193f")
+	)
+	(wire
+		(pts
 			(xy 74.93 44.45) (xy 74.93 60.96)
 		)
 		(stroke
@@ -949,6 +1542,16 @@
 			(type default)
 		)
 		(uuid "e2802007-7e00-49c9-afc5-7ca4c3e4b264")
+	)
+	(wire
+		(pts
+			(xy 163.83 110.49) (xy 163.83 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "faa4139c-f4bd-4f63-92d7-2f553f0547c6")
 	)
 	(wire
 		(pts
@@ -969,6 +1572,46 @@
 			(type default)
 		)
 		(uuid "ffa22575-745b-4126-930c-171ad08d9319")
+	)
+	(label "VDD5V"
+		(at 140.97 43.18 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "53fad55d-b610-4b5b-9c15-c202245d41c0")
+	)
+	(label "VDD5V"
+		(at 140.97 59.69 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6b504113-4c83-483e-98bf-ca180f4fe4fb")
+	)
+	(label "VDD5V"
+		(at 140.97 93.98 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d0735ae6-dce4-4d79-80b6-ce8e8a320287")
+	)
+	(label "VDD5V"
+		(at 140.97 77.47 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f7a8429c-da49-4d7e-b4b8-34be0f038132")
 	)
 	(hierarchical_label "SERV4"
 		(shape input)
@@ -1025,28 +1668,6 @@
 		)
 		(uuid "76f711b6-207b-42c3-a8d3-1fe3c8924121")
 	)
-	(hierarchical_label "LSR_4"
-		(shape input)
-		(at 140.97 93.98 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "a5e2f2a3-1ad5-4414-a684-2842afce872c")
-	)
-	(hierarchical_label "LSR_2"
-		(shape input)
-		(at 140.97 59.69 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "bfb5128c-1447-4eb4-876f-6082c8b5a41d")
-	)
 	(hierarchical_label "SERV5"
 		(shape input)
 		(at 93.98 63.5 0)
@@ -1069,25 +1690,14 @@
 		)
 		(uuid "e1465fbc-1b02-43ed-aafb-b8199d4f0734")
 	)
-	(hierarchical_label "LSR_3"
-		(shape input)
-		(at 140.97 77.47 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "edf95e02-04b4-45fb-9b03-0c7bb044aa36")
-	)
 	(hierarchical_label "LSR_1"
 		(shape input)
-		(at 140.97 43.18 0)
+		(at 134.62 105.41 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "ef32362f-b95d-45ec-99c9-f1771736b693")
 	)
@@ -1174,6 +1784,76 @@
 		)
 	)
 	(symbol
+		(lib_id "betaspray_MCU_Espressif:R")
+		(at 152.4 113.03 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "016df54a-5ae5-400c-91e2-3d1085cb67f2")
+		(property "Reference" "R8"
+			(at 154.94 111.7599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "10K"
+			(at 154.94 114.2999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 154.178 113.03 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 152.4 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 152.4 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cb317256-73c4-40d0-90a9-713b8454b184")
+		)
+		(pin "2"
+			(uuid "9b163170-5dbe-4c45-bf08-7a04ffb97476")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
+					(reference "R8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 44.45 0)
 		(unit 1)
@@ -1246,82 +1926,16 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 140.97 62.23 0)
+		(at 152.4 120.65 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "08961d71-d741-4cc6-b7fd-f5d9eaa68e1c")
-		(property "Reference" "#PWR024"
-			(at 140.97 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 140.97 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 140.97 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 140.97 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 140.97 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "cbe16d00-3a01-41e3-9b9d-3f7fc9783325")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
-					(reference "#PWR024")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 140.97 45.72 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "21419a9d-e708-46f2-bb28-6e7f8d4f98ca")
+		(uuid "2afe85c2-3d35-4199-a258-fadf0c1a6892")
 		(property "Reference" "#PWR03"
-			(at 140.97 52.07 0)
+			(at 152.4 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1330,7 +1944,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 140.97 50.8 0)
+			(at 152.4 125.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1338,7 +1952,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 140.97 45.72 0)
+			(at 152.4 120.65 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1347,7 +1961,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 140.97 45.72 0)
+			(at 152.4 120.65 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1356,7 +1970,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 140.97 45.72 0)
+			(at 152.4 120.65 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1365,10 +1979,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "0554867f-f501-4657-a9ce-35380a29fec1")
+			(uuid "c40d00b0-197f-4431-90fc-1dc1f0a240e6")
 		)
 		(instances
-			(project "betaspray-pcb"
+			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
 					(reference "#PWR03")
 					(unit 1)
@@ -1574,72 +2188,6 @@
 			(project "betaspray-pcb"
 				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
 					(reference "#PWR011")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 140.97 96.52 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "5c28fffa-9140-4a81-b2ea-a5535a4ff4e9")
-		(property "Reference" "#PWR026"
-			(at 140.97 102.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 140.97 101.6 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 140.97 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 140.97 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 140.97 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "7074c19a-d611-4e73-8f51-0859500c12e8")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
-					(reference "#PWR026")
 					(unit 1)
 				)
 			)
@@ -1924,6 +2472,82 @@
 		)
 	)
 	(symbol
+		(lib_id "betaspray_Transistor_FET:AO3400A")
+		(at 161.29 105.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "88931d9f-3118-4997-9b07-3bb9a1f038e6")
+		(property "Reference" "Q1"
+			(at 167.64 104.1399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "AO3400A"
+			(at 167.64 106.6799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 166.37 107.315 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf"
+			(at 166.37 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"
+			(at 161.29 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ab3a863f-b45a-40c1-9586-4875098c3ef5")
+		)
+		(pin "3"
+			(uuid "fb3045df-f313-4c3d-9671-6c461faa8855")
+		)
+		(pin "2"
+			(uuid "b056a30e-92dd-43b0-b6a1-7bf1a8c0dc92")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
+					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
 		(at 60.96 78.74 0)
 		(unit 1)
@@ -1989,72 +2613,6 @@
 			(project "betaspray-pcb"
 				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
 					(reference "J13")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 140.97 80.01 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a0dbbd6d-8f82-4a8b-ac1a-e485f878f17d")
-		(property "Reference" "#PWR025"
-			(at 140.97 86.36 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 140.97 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 140.97 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 140.97 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 140.97 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "eda15f9a-011d-4b7a-bd7d-6e6a86f72fb4")
-		)
-		(instances
-			(project "betaspray-pcb"
-				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
-					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -2333,6 +2891,74 @@
 			(project "betaspray-pcb"
 				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
 					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "betaspray_MCU_Espressif:R")
+		(at 144.78 105.41 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c6091eca-fea9-474a-ae18-97e38464d245")
+		(property "Reference" "R7"
+			(at 144.78 99.06 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "300"
+			(at 144.78 101.6 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 144.78 107.188 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 144.78 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 144.78 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cb317256-73c4-40d0-90a9-713b8454b184")
+		)
+		(pin "2"
+			(uuid "9b163170-5dbe-4c45-bf08-7a04ffb97476")
+		)
+		(instances
+			(project ""
+				(path "/5d34c70f-469d-43be-b671-484e3b695429/4a1c4786-b2e3-40ac-8072-dc4e90a79445"
+					(reference "R7")
 					(unit 1)
 				)
 			)
