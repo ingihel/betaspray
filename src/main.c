@@ -1,9 +1,10 @@
+#include "esp_event.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_event.h"
 #include "led_strip.h"
 #include "nvs_flash.h"
 #include "server.h"
+#include "servo.h"
 #include "wifi.h"
 #include <stdio.h>
 
@@ -13,7 +14,8 @@
 void app_main(void) {
   // Required before any WiFi or network init
   esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+      ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
   }
@@ -61,6 +63,8 @@ void app_main(void) {
   wifi_init_softap();
   server_start();
 
+  servo_init();
+
   // 3. Infinite loop to cycle colors
   while (1) {
     // Set the color of pixel 0 (our only LED)
@@ -75,6 +79,7 @@ void app_main(void) {
     if (current_color >= num_colors) {
       current_color = 0; // Wrap back to the start
     }
+    servo_drive(0, 30);
 
     // Wait 500 milliseconds
     vTaskDelay(500 / portTICK_PERIOD_MS);
