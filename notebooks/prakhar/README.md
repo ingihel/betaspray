@@ -247,7 +247,7 @@ Met with Prof. Gruev for the design document review. Overall the document was in
 
 **PCB submission**: Submit the current PCB design to the TA by end of day.
 
-**SG90 current draw and voltage ripple**: Prof. Gruev asked us to look more carefully at how the SG90 behaves across its operating voltage range and what that means for our 5 V rail. Servos are inductive loads and draw sharp current spikes when they start moving — without bulk capacitance on the supply rail these transients cause voltage droops that can propagate through the AMS1117 LDO and destabilize the 3.3 V logic rail. Went through the datasheet and did some analysis after the meeting.
+**SG90 current draw and voltage ripple**: Prof. Gruev asked us to look more carefully at how the SG90 behaves across its operating voltage range and what that means for our 5 V rail. Servos are inductive loads and draw sharp current spikes when they start moving — without bulk capacitance on the supply rail these transients cause voltage droops that can propagate through the lm3940IT-3.3 LDO and destabilize the 3.3 V logic rail. Went through the datasheet and did some analysis after the meeting.
 
 From the SG90 datasheet, current draw varies significantly with operating voltage and mechanical load:
 
@@ -265,7 +265,7 @@ Transient ripple is the bigger risk. Back of envelope to hold droop under 200 mV
 C = I·Δt / ΔV = 0.2 × 0.002 / 0.2 = 2000 µF
 ```
 
-For multiple servos switching together, 4700–10000 µF of bulk capacitance on the 5 V servo rail is warranted, placed close to the servo connector bank. The AMS1117 output also needs local decoupling (100 µF + 100 nF) to ride out fast transients before they affect the ESP32. Longer term, an LC filter or separate buck converter for the servo rail would fully isolate servo switching noise from the logic supply.
+For multiple servos switching together, 4700–10000 µF of bulk capacitance on the 5 V servo rail is warranted, placed close to the servo connector bank. The lm3940IT-3.3 output also needs local decoupling (100 µF + 100 nF) to ride out fast transients before they affect the ESP32. Longer term, an LC filter or separate buck converter for the servo rail would fully isolate servo switching noise from the logic supply.
 
 #### Action Items
 - Pull SG90 datasheet and verify GPIO voltage compatibility; add level shifter to schematic if needed
@@ -273,5 +273,5 @@ For multiple servos switching together, 4700–10000 µF of bulk capacitance on 
 - Run CV benchmark on ESP32-S3 eval board and record frame rate / CPU utilization
 - Submit PCB design to Gayatri by EOD
 - Add 4700+ µF bulk capacitance to 5 V servo rail in KiCad, near servo connectors
-- Add 100 µF + 100 nF decoupling on AMS1117 output if not already present
+- Add 100 µF + 100 nF decoupling on lm3940IT-3.3 output if not already present
 - Evaluate LC filter or separate buck converter to isolate servo 5 V from logic 5 V
