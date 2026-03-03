@@ -14,7 +14,7 @@
 
 #define LED_PIN 38
 #define CAM_UART_NUM UART_NUM_0
-#define CAM_UART_BAUD 921600
+#define CAM_UART_BAUD 115200
 
 // Frame framing: START(4) + LENGTH(4, LE uint32) + JPEG DATA + END(4)
 static const uint8_t FRAME_START[] = {0xAA, 0xBB, 0xCC, 0xDD};
@@ -86,16 +86,23 @@ void app_main(void) {
   int num_colors = sizeof(colors) / sizeof(colors[0]);
   int current_color = 0;
 
+  // Take a picture every 10 s. LED cycles every 500 ms so we count ticks.
+  const int ticks_per_photo = 10000 / 500; // 20 ticks
+  int ticks = 0;
+
   while (1) {
     led_strip_set_pixel(led_strip, 0, colors[current_color][0],
                         colors[current_color][1], colors[current_color][2]);
     led_strip_refresh(led_strip);
     current_color = (current_color + 1) % num_colors;
 
-    camera_fb_t *fb = camera_capture_frame();
-    if (fb) {
-      uart_send_frame(fb->buf, fb->len);
-      camera_return_frame(fb);
+    if (++ticks >= ticks_per_photo) {
+      ticks = 0;
+      camera_fb_t *fb = camera_capture_frame();
+      if (fb) {
+        uart_send_frame(fb->buf, fb->len);
+        camera_return_frame(fb);
+      }
     }
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
