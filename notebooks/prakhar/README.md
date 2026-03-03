@@ -275,3 +275,76 @@ For multiple servos switching together, 4700–10000 µF of bulk capacitance on 
 - Add 4700+ µF bulk capacitance to 5 V servo rail in KiCad, near servo connectors
 - Add 100 µF + 100 nF decoupling on lm3940IT-3.3 output if not already present
 - Evaluate LC filter or separate buck converter to isolate servo 5 V from logic 5 V
+
+---
+
+## Entry 7 — 2026-03-03
+
+### Objectives
+- get the firmware stack off the ground on the devkit
+- wifi, http server, servo control, fatfs
+
+---
+
+### Work Record
+
+#### firmware bringup
+
+spent today writing the core firmware modules for the devkit. all using platformio + espidf. got through wifi, http server, servos, and flash storage.
+
+**wifi**
+
+got soft AP working (SSID `BetaSpray`, WPA2). hit a few annoying issues:
+
+- `MACSTR` and `IPSTR` are format-string macros that don't play nice with ESP-IDF 5.x's `ESP_LOGI` — the log macro chain wraps the format string internally and breaks string literal concatenation. just inlined the format specifiers directly instead.
+- board was crashing on boot with `ESP_ERR_INVALID_STATE` inside `esp_netif_create_default_wifi_ap`. turns out you need to call `esp_event_loop_create_default()` before any wifi init. added that (and nvs flash init) to the top of `app_main`.
+- serial monitor was printing garbage — forgot to set `monitor_speed = 115200` in `platformio.ini`. PlatformIO defaults to 9600.
+
+**http server**
+
+set up a basic http server with four endpoints: `POST /route` for hold data, `GET /start`, `GET /stop`, and `POST /test` which just echoes back whatever you send it prefixed with `ECHO:`. the test endpoint is nice for quickly checking the server is up without needing real route data.
+
+**servo control**
+
+got SG90 control working through the LEDC peripheral. 50 Hz, 14-bit resolution. drives one servo at a time for a fixed duration then releases the signal. angle-to-duty is just linear interpolation between 1 ms (0°) and 2 ms (180°) pulse widths. confirmed pin assignments GPIO 4–11 against the devkit pinout — all clear of strapping, psram, uart, jtag, usb, and the rgb led.
+
+**fatfs**
+
+got fatfs working on the internal spi flash using esp-idf's wear levelling layer. wrote `fatfs_init`, `fatfs_reset`, `fatfs_list`, `fatfs_read`, `fatfs_write`, `fatfs_create`, `fatfs_delete`. read and write both take an offset + size so you can do chunked access without loading a whole file at once.
+
+had to write a custom `partitions.csv` since the default partition table doesn't have a fat partition. fit everything into 2 MB:
+
+| Partition | Offset | Size |
+|-----------|--------|------|
+| nvs | 0x9000 | 24 KB |
+| phy_init | 0xf000 | 4 KB |
+| factory | 0x10000 | 1 MB |
+| storage (FAT) | 0x110000 | 960 KB |
+
+#### Ingi
+
+Ingi is doing back-of-envelope math on wall-cm to pixel mapping — basically figuring out what cm/pixel we get from the OV5640 at our target standoff distance. this directly answers the pixel-to-area question Gruev asked about yesterday and will tell us whether our camera resolution is actually sufficient for the ±5 cm accuracy requirement.
+
+
+#### Memory subsystem and PSRAM
+
+We were thinking of using the onboard flash for FatFS to store 
+images. BUt the DVP only writes to RAM. So we're gonna have to 
+use the PSRAM to store the images. The new package 
+ESP32-S3FH4R2 has 4MB of PSRAM, so we are liely going to need to 
+do DMA based writes from the DVP.
+
+The goal is to use MAX resolution on a wall-scan. Then save to PSRAM
+
+Do the CV and save a list of XY coords to flash as a fatfs file (all hold_coords.file). Then send the XY 
+coordinate list, and the image over HTTP to the user. They reply with 
+a post request that sets a route number and gives us the XY coordinates 
+for holds in that route. 
+
+When we are in the CV mode to detect the climber, we want to downgrade the solution to detect the climber.
+
+#### Action Items
+- hook up `fatfs_init` and `server_start` in `app_main`
+- test the `/test` echo endpoint over wifi once AP is stable
+- scope the servo PWM output and check against SG90 spec
+- get Ingi's cm/pixel number and put it in the design doc tolerance analysis
