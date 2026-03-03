@@ -3,6 +3,7 @@
 #include "esp_event.h"
 #include "led_strip.h"
 #include "nvs_flash.h"
+#include "server.h"
 #include "wifi.h"
 #include <stdio.h>
 
@@ -58,6 +59,7 @@ void app_main(void) {
   int current_color = 0;
 
   wifi_init_softap();
+  server_start();
 
   // 3. Infinite loop to cycle colors
   while (1) {
