@@ -13,8 +13,8 @@ static camera_config_t s_cfg = {
     .pin_pwdn     = CAM_PIN_PWDN,
     .pin_reset    = CAM_PIN_RESET,
     .pin_xclk     = CAM_PIN_XCLK,
-    .pin_sccb_sda = CAM_PIN_SDA,
-    .pin_sccb_scl = CAM_PIN_SCL,
+    .pin_sccb_sda = CAM_PIN_SIOD,
+    .pin_sccb_scl = CAM_PIN_SIOC,
     .pin_d7       = CAM_PIN_D7,
     .pin_d6       = CAM_PIN_D6,
     .pin_d5       = CAM_PIN_D5,
@@ -27,17 +27,17 @@ static camera_config_t s_cfg = {
     .pin_href     = CAM_PIN_HREF,
     .pin_pclk     = CAM_PIN_PCLK,
 
-    .xclk_freq_hz = 0,   // unused — OV5640 internal 24 MHz oscillator
+    .xclk_freq_hz = 20000000,   // 20 MHz fallback (OV5640 uses internal 24 MHz, but library needs non-zero)
     // LEDC_TIMER_1 / LEDC_CHANNEL_7 — avoids servo's LEDC_TIMER_0 / CH0–7.
-    // Only used when CAM_PIN_XCLK != -1.
+    // Not actually used when CAM_PIN_XCLK == -1, but library may reference it.
     .ledc_timer   = LEDC_TIMER_1,
     .ledc_channel = LEDC_CHANNEL_7,
 
     .pixel_format = PIXFORMAT_JPEG,
     .frame_size   = FRAMESIZE_QVGA,
     .jpeg_quality = 12,           // 0–63; lower = better quality / larger file
-    .fb_count     = 2,            // double-buffer for continuous capture
-    .fb_location  = CAMERA_FB_IN_PSRAM,   // DMA → PSRAM; frees internal SRAM
+    .fb_count     = 1,            // single buffer to save memory
+    .fb_location  = CAMERA_FB_IN_DRAM,   // Use internal DRAM (PSRAM alloc failing)
     .grab_mode    = CAMERA_GRAB_WHEN_EMPTY,
 };
 
@@ -50,6 +50,11 @@ static uint8_t s_bss_buf[CAMERA_BSS_BUF_SIZE];
 
 void camera_reset(void)
 {
+    if (CAM_PIN_RESET == -1) {
+        ESP_LOGI(TAG, "Reset pin not connected (NC), skipping reset");
+        return;
+    }
+
     gpio_config_t io = {
         .pin_bit_mask = (1ULL << CAM_PIN_RESET),
         .mode         = GPIO_MODE_OUTPUT,
@@ -82,8 +87,8 @@ esp_err_t camera_init(void)
              CAM_PIN_D4, CAM_PIN_D5, CAM_PIN_D6, CAM_PIN_D7);
     ESP_LOGI(TAG, "  VSYNC/HREF/PCLK : GPIO%d/%d/%d",
              CAM_PIN_VSYNC, CAM_PIN_HREF, CAM_PIN_PCLK);
-    ESP_LOGI(TAG, "  SDA/SCL : GPIO%d/%d  PWDN/RST : GPIO%d/%d",
-             CAM_PIN_SDA, CAM_PIN_SCL, CAM_PIN_PWDN, CAM_PIN_RESET);
+    ESP_LOGI(TAG, "  SIOD/SIOC : GPIO%d/%d  PWDN/RST : GPIO%d/%d",
+             CAM_PIN_SIOD, CAM_PIN_SIOC, CAM_PIN_PWDN, CAM_PIN_RESET);
 
     esp_err_t err = esp_camera_init(&s_cfg);
     if (err != ESP_OK) {

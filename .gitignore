@@ -47,3 +47,4 @@ fp-info-cache
 .pio/*
 sdkconfig.esp32*
 .vscode/*
+frames/*
