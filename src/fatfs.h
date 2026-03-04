@@ -12,7 +12,7 @@
 // // Pass format_if_empty=true to auto-format on first boot.
 // esp_err_t fatfs_init(bool format_if_empty);
 //
-// // Unmount, format, and remount — erases all stored files.
+// // Unmount, format, and remount - erases all stored files.
 // esp_err_t fatfs_reset(void);
 //
 // // Log all files in dir (e.g. FATFS_BASE_PATH).
@@ -24,7 +24,7 @@
 //                      size_t offset, size_t size, size_t *bytes_read);
 //
 // // Write size bytes from buf to path at offset.
-// // File must already exist — call fatfs_create() first if needed.
+// // File must already exist - call fatfs_create() first if needed.
 // // If offset > file size, the gap content is undefined.
 // esp_err_t fatfs_write(const char *path, const void *buf,
 //                       size_t offset, size_t size);

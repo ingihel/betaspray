@@ -9,7 +9,7 @@ for a fixed duration.
 
 | Macro | Default | Description |
 |-------|---------|-------------|
-| `NUM_SERVOS` | `1` | Number of active servos (1–8) |
+| `NUM_SERVOS` | `1` | Number of active servos (1-8) |
 | `SERVO_DURATION_MS` | `500` | How long to hold position before releasing (ms) |
 
 ---
@@ -71,7 +71,7 @@ to [0, 180].
 | 90°   | 1.5 ms      | 1228              |
 | 180°  | 2.0 ms      | 1638              |
 
-Period = 20 ms (50 Hz), resolution = 14-bit (0–16383).
+Period = 20 ms (50 Hz), resolution = 14-bit (0-16383).
 
 ---
 
@@ -94,5 +94,5 @@ for (int angle = 0; angle <= 180; angle += 45) {
 
 ## Enabling more servos
 
-Change `NUM_SERVOS` in `servo.h` (max 8). No other changes needed — each
+Change `NUM_SERVOS` in `servo.h` (max 8). No other changes needed - each
 index maps directly to an LEDC channel and its corresponding `SERVO_PIN_N`.

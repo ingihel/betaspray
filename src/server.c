@@ -3,9 +3,8 @@
 
 static const char *TAG = "server";
 
-// POST /route — receive route hold data from the client
-static esp_err_t route_handler(httpd_req_t *req)
-{
+// POST /route - receive route hold data from the client
+static esp_err_t route_handler(httpd_req_t *req) {
     int len = req->content_len;
     char buf[len];
 
@@ -20,25 +19,22 @@ static esp_err_t route_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-// GET /start — begin projecting the loaded route
-static esp_err_t start_handler(httpd_req_t *req)
-{
+// GET /start - begin projecting the loaded route
+static esp_err_t start_handler(httpd_req_t *req) {
     ESP_LOGI(TAG, "GET /start");
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
 
-// GET /stop — stop projection
-static esp_err_t stop_handler(httpd_req_t *req)
-{
+// GET /stop - stop projection
+static esp_err_t stop_handler(httpd_req_t *req) {
     ESP_LOGI(TAG, "GET /stop");
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
 
-// POST /test — echo back the request body prefixed with "ECHO: "
-static esp_err_t test_handler(httpd_req_t *req)
-{
+// POST /test - echo back the request body prefixed with "ECHO: "
+static esp_err_t test_handler(httpd_req_t *req) {
     int len = req->content_len;
     char buf[len + 1];
 
@@ -55,31 +51,30 @@ static esp_err_t test_handler(httpd_req_t *req)
 }
 
 static const httpd_uri_t uri_test = {
-    .uri     = "/test",
-    .method  = HTTP_POST,
+    .uri = "/test",
+    .method = HTTP_POST,
     .handler = test_handler,
 };
 
 static const httpd_uri_t uri_route = {
-    .uri     = "/route",
-    .method  = HTTP_POST,
+    .uri = "/route",
+    .method = HTTP_POST,
     .handler = route_handler,
 };
 
 static const httpd_uri_t uri_start = {
-    .uri     = "/start",
-    .method  = HTTP_GET,
+    .uri = "/start",
+    .method = HTTP_GET,
     .handler = start_handler,
 };
 
 static const httpd_uri_t uri_stop = {
-    .uri     = "/stop",
-    .method  = HTTP_GET,
+    .uri = "/stop",
+    .method = HTTP_GET,
     .handler = stop_handler,
 };
 
-httpd_handle_t server_start(void)
-{
+httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     httpd_handle_t server = NULL;
 
@@ -97,8 +92,7 @@ httpd_handle_t server_start(void)
     return server;
 }
 
-void server_stop(httpd_handle_t server)
-{
+void server_stop(httpd_handle_t server) {
     if (server) {
         httpd_stop(server);
     }

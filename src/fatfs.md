@@ -37,7 +37,7 @@ Mount the `storage` partition. Call once at startup before any other fatfs
 calls.
 
 Pass `true` to auto-format on the first boot (when no filesystem is found).
-Pass `false` to fail instead — useful if you want to detect a missing/corrupt
+Pass `false` to fail instead - useful if you want to detect a missing/corrupt
 filesystem explicitly.
 
 ```c
@@ -108,7 +108,7 @@ near end of file).
 uint8_t buf[64];
 size_t n;
 fatfs_read(FATFS_BASE_PATH "/route.bin", buf, 0, sizeof(buf), &n);   // first 64 bytes
-fatfs_read(FATFS_BASE_PATH "/route.bin", buf, 128, sizeof(buf), &n); // bytes 128–191
+fatfs_read(FATFS_BASE_PATH "/route.bin", buf, 128, sizeof(buf), &n); // bytes 128-191
 ```
 
 ---
@@ -116,7 +116,7 @@ fatfs_read(FATFS_BASE_PATH "/route.bin", buf, 128, sizeof(buf), &n); // bytes 12
 ### `fatfs_write(const char *path, const void *buf, size_t offset, size_t size)`
 
 Write `size` bytes from `buf` into `path` at `offset`. The file must already
-exist — call `fatfs_create()` first. If `offset` is beyond the current end of
+exist - call `fatfs_create()` first. If `offset` is beyond the current end of
 file, the gap content is undefined.
 
 | Parameter | Description |
