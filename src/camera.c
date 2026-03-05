@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "conf.h"
 #include "driver/gpio.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
@@ -92,6 +93,10 @@ esp_err_t camera_init(void) {
     ESP_LOGI(TAG, "Camera ready - framesize=%d format=%d fb_count=%d loc=%s", s_cfg.frame_size,
              s_cfg.pixel_format, s_cfg.fb_count,
              s_cfg.fb_location == CAMERA_FB_IN_PSRAM ? "PSRAM" : "DRAM");
+    ESP_LOGI(TAG, "Calibration %dx%d  fx=%.2f fy=%.2f  cx=%.2f cy=%.2f",
+             CALIB_WIDTH, CALIB_HEIGHT, CALIB_FX, CALIB_FY, CALIB_CX, CALIB_CY);
+    ESP_LOGI(TAG, "  dist k1=%.4f k2=%.4f p1=%.4f p2=%.4f k3=%.4f",
+             CALIB_K1, CALIB_K2, CALIB_P1, CALIB_P2, CALIB_K3);
     return ESP_OK;
 }
 
