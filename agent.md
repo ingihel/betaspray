@@ -48,19 +48,30 @@ esp_event_loop_create_default()
 
 | GPIO | Assignment |
 |------|-----------|
-| 1 | Camera SDA (SCCB) |
-| 2 | Camera PCLK |
-| 4–11 | Servo PWM (LEDC CH0–7) |
-| 12–18, 21 | Camera D0–D7 |
+| 1 | Servo PWM (LEDC CH0, `SERVO_PIN_0`) |
+| 4 | Camera SDA (SCCB) |
+| 5 | Camera SCL (SCCB) |
+| 6 | Camera VSYNC |
+| 7 | Camera HREF |
+| 8 | Camera D2 |
+| 9 | Camera D1 |
+| 10 | Camera D3 |
+| 11 | Camera D0 (LSB) |
+| 12 | Camera D4 |
+| 13 | Camera PCLK |
+| 15 | Camera PWDN |
+| 16 | Camera D7 (MSB) |
+| 17 | Camera D6 |
+| 18 | Camera D5 |
 | 38 | RGB LED (WS2812) |
-| 39 | Camera PWDN |
-| 40 | Camera RESET |
-| 41 | Camera SCL (SCCB) |
 | 43, 44 | UART0 TX/RX (serial + frame stream) |
-| 47, 48 | Camera VSYNC, HREF |
 
-Avoided: strapping (0, 3, 45, 46), PSRAM SPI (35–37), USB (19, 20), JTAG
-(39–41 repurposed for camera; 42 spare).
+Avoided: strapping (0, 3, 45, 46), PSRAM SPI (35–37), USB (19, 20).
+JTAG (39–42) are free — camera no longer uses those pins.
+
+**Warning:** `SERVO_PIN_1`–`SERVO_PIN_7` (GPIO 5–11) conflict with camera pins.
+Only `SERVO_PIN_0` (GPIO 1) is safe. Do not increase `NUM_SERVOS` without
+reassigning those pins first.
 
 ---
 

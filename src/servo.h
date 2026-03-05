@@ -1,10 +1,9 @@
 #pragma once
 
-// GPIO pin assignments (left rail, GPIO4 through 11)
-// All are RTC/Touch/ADC capable, there should be no UART/JTAG/USB/PSRAM/strapping conflicts
-// GPIO9-11 are FSPI-capable but free since FSPI peripheral is unused
+// GPIO pin assignments
+// GPIO1: ADC1_CH0, free from camera/JTAG/USB/PSRAM/strapping conflicts
 // Alternate iomux options are listed for posterity's sake
-#define SERVO_PIN_0 4  // ADC1_3, TOUCH4
+#define SERVO_PIN_0 1  // ADC1_0
 #define SERVO_PIN_1 5  // ADC1_4, TOUCH5
 #define SERVO_PIN_2 6  // ADC1_5, TOUCH6
 #define SERVO_PIN_3 7  // ADC1_6, TOUCH7
