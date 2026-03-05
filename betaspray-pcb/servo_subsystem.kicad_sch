@@ -1366,123 +1366,156 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "Laser Drive Circuit"
+		(exclude_from_sim no)
+		(at 105.918 28.702 0)
+		(effects
+			(font
+				(size 2.032 2.032)
+			)
+			(justify left)
+		)
+		(uuid "3ebd1696-3771-47f9-9bdb-cd77067fd562")
+	)
+	(text "Servo PWM Connections"
+		(exclude_from_sim no)
+		(at 19.558 30.48 0)
+		(effects
+			(font
+				(size 2.032 2.032)
+			)
+			(justify left)
+		)
+		(uuid "d65461a4-45e9-4ba8-8c78-a5b362dff74e")
+	)
+	(text "Servo Decoupling Capacitors"
+		(exclude_from_sim no)
+		(at 24.892 138.43 0)
+		(effects
+			(font
+				(size 2.032 2.032)
+			)
+			(justify left)
+		)
+		(uuid "ebd1ae9d-0d6d-477e-926e-c0f1d0f3a54f")
+	)
 	(junction
-		(at 163.83 62.23)
+		(at 144.78 60.96)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "01772f8e-0465-42b7-9870-0f2571925684")
 	)
 	(junction
-		(at 152.4 116.84)
+		(at 133.35 115.57)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1eba87c4-7798-4f16-a62b-571419501969")
 	)
 	(junction
-		(at 152.4 105.41)
+		(at 133.35 104.14)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2513e9ad-b3fc-4c83-988d-043d1fc0e2b6")
 	)
 	(junction
-		(at 81.28 91.44)
+		(at 52.07 91.44)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2c767710-d5c3-492e-9778-cee53f5c6620")
 	)
 	(junction
-		(at 74.93 93.98)
+		(at 45.72 93.98)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "433ff7cb-e109-4bd5-bd40-493281288423")
 	)
 	(junction
-		(at 102.87 60.96)
+		(at 73.66 60.96)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "465fd2fa-b057-471f-a6f9-1f4540078018")
 	)
 	(junction
-		(at 81.28 58.42)
+		(at 52.07 58.42)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5985c0b2-9b40-4105-9d17-cacd1957cb56")
 	)
 	(junction
-		(at 163.83 80.01)
+		(at 144.78 78.74)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5e88c08e-6aac-4ad8-981c-e03c66482e9f")
 	)
 	(junction
-		(at 34.29 119.38)
+		(at 39.37 146.05)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "692070d8-1878-4948-b99d-beaa6fe042a2")
 	)
 	(junction
-		(at 109.22 91.44)
+		(at 80.01 91.44)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "83247367-6cd7-4e4b-9cfc-cd769c960c4b")
 	)
 	(junction
-		(at 74.93 60.96)
+		(at 45.72 60.96)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "9549943f-6b60-48bb-aeae-6182f9f88f5c")
 	)
 	(junction
-		(at 74.93 78.74)
+		(at 45.72 78.74)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "9ad6f6f6-e681-4b09-bdaf-946a9a874074")
 	)
 	(junction
-		(at 102.87 93.98)
+		(at 73.66 93.98)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a082ffea-a664-497b-a804-7723ca368b67")
 	)
 	(junction
-		(at 109.22 58.42)
+		(at 80.01 58.42)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "afa9750a-09c2-4fcf-8ab8-710fc5c503d8")
 	)
 	(junction
-		(at 34.29 132.08)
+		(at 39.37 158.75)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d1852d06-6066-46c7-8b71-1fb09c57a366")
 	)
 	(junction
-		(at 163.83 96.52)
+		(at 144.78 95.25)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d2a785fb-3536-44d3-a56c-42749917b49e")
 	)
 	(junction
-		(at 102.87 78.74)
+		(at 73.66 78.74)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f8c2dd96-6c2b-4aff-bdc8-d29ae4813984")
 	)
 	(junction
-		(at 81.28 76.2)
+		(at 52.07 76.2)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "fd1a80ed-f772-4d35-8c74-414bdf5d85bc")
 	)
 	(junction
-		(at 109.22 76.2)
+		(at 80.01 76.2)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "fdd413b0-7c38-457d-a5fe-11eff9c9e9df")
 	)
 	(wire
 		(pts
-			(xy 81.28 58.42) (xy 81.28 76.2)
+			(xy 52.07 58.42) (xy 52.07 76.2)
 		)
 		(stroke
 			(width 0)
@@ -1492,7 +1525,7 @@
 	)
 	(wire
 		(pts
-			(xy 55.88 132.08) (xy 55.88 129.54)
+			(xy 60.96 158.75) (xy 60.96 156.21)
 		)
 		(stroke
 			(width 0)
@@ -1500,9 +1533,19 @@
 		)
 		(uuid "0981e190-42ca-49b8-a67e-1346f41c873d")
 	)
+	(polyline
+		(pts
+			(xy 167.64 11.43) (xy 167.64 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a5052ac-6ae9-464a-a747-0b50ba3cc6da")
+	)
 	(wire
 		(pts
-			(xy 102.87 44.45) (xy 102.87 60.96)
+			(xy 73.66 44.45) (xy 73.66 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1512,7 +1555,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 91.44) (xy 109.22 91.44)
+			(xy 64.77 91.44) (xy 80.01 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1522,7 +1565,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 116.84) (xy 152.4 116.84)
+			(xy 144.78 115.57) (xy 133.35 115.57)
 		)
 		(stroke
 			(width 0)
@@ -1532,7 +1575,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 91.44) (xy 81.28 91.44)
+			(xy 36.83 91.44) (xy 52.07 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1542,7 +1585,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 41.91) (xy 109.22 41.91)
+			(xy 64.77 41.91) (xy 80.01 41.91)
 		)
 		(stroke
 			(width 0)
@@ -1552,7 +1595,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 78.74) (xy 102.87 78.74)
+			(xy 64.77 78.74) (xy 73.66 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1560,9 +1603,19 @@
 		)
 		(uuid "1deaf171-2f72-49c3-b7a7-b03c7b376b0f")
 	)
+	(polyline
+		(pts
+			(xy 11.43 129.54) (xy 167.64 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "269ecdd6-9dae-47df-a630-1a52c8d95452")
+	)
 	(wire
 		(pts
-			(xy 93.98 60.96) (xy 102.87 60.96)
+			(xy 64.77 60.96) (xy 73.66 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1572,7 +1625,7 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 41.91) (xy 81.28 58.42)
+			(xy 52.07 41.91) (xy 52.07 58.42)
 		)
 		(stroke
 			(width 0)
@@ -1582,7 +1635,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 44.45) (xy 102.87 44.45)
+			(xy 64.77 44.45) (xy 73.66 44.45)
 		)
 		(stroke
 			(width 0)
@@ -1592,7 +1645,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 109.22) (xy 152.4 105.41)
+			(xy 133.35 107.95) (xy 133.35 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1602,7 +1655,7 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 91.44) (xy 81.28 104.14)
+			(xy 52.07 91.44) (xy 52.07 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1610,9 +1663,29 @@
 		)
 		(uuid "491fc19c-d5de-4166-820d-3d4a8cf7863a")
 	)
+	(polyline
+		(pts
+			(xy 93.98 170.18) (xy 93.98 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a2f5617-9746-4340-80f2-9251b9fcc6bf")
+	)
+	(polyline
+		(pts
+			(xy 92.71 11.43) (xy 93.98 11.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4d614f1a-c986-474a-aadf-5d13f4b291b4")
+	)
 	(wire
 		(pts
-			(xy 163.83 80.01) (xy 163.83 96.52)
+			(xy 144.78 78.74) (xy 144.78 95.25)
 		)
 		(stroke
 			(width 0)
@@ -1622,7 +1695,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 76.2) (xy 81.28 76.2)
+			(xy 36.83 76.2) (xy 52.07 76.2)
 		)
 		(stroke
 			(width 0)
@@ -1632,7 +1705,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 76.2) (xy 109.22 76.2)
+			(xy 64.77 76.2) (xy 80.01 76.2)
 		)
 		(stroke
 			(width 0)
@@ -1642,7 +1715,7 @@
 	)
 	(wire
 		(pts
-			(xy 148.59 105.41) (xy 152.4 105.41)
+			(xy 129.54 104.14) (xy 133.35 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1652,7 +1725,7 @@
 	)
 	(wire
 		(pts
-			(xy 102.87 93.98) (xy 102.87 104.14)
+			(xy 73.66 93.98) (xy 73.66 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1662,7 +1735,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 96.52) (xy 163.83 100.33)
+			(xy 144.78 95.25) (xy 144.78 99.06)
 		)
 		(stroke
 			(width 0)
@@ -1672,7 +1745,7 @@
 	)
 	(wire
 		(pts
-			(xy 102.87 78.74) (xy 102.87 93.98)
+			(xy 73.66 78.74) (xy 73.66 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1682,7 +1755,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 105.41) (xy 156.21 105.41)
+			(xy 133.35 104.14) (xy 137.16 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1692,7 +1765,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 58.42) (xy 81.28 58.42)
+			(xy 36.83 58.42) (xy 52.07 58.42)
 		)
 		(stroke
 			(width 0)
@@ -1702,7 +1775,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 76.2) (xy 109.22 91.44)
+			(xy 80.01 76.2) (xy 80.01 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1712,7 +1785,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 60.96) (xy 74.93 78.74)
+			(xy 45.72 60.96) (xy 45.72 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1722,7 +1795,7 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 132.08) (xy 55.88 132.08)
+			(xy 39.37 158.75) (xy 60.96 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1732,7 +1805,7 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 96.52) (xy 163.83 96.52)
+			(xy 121.92 95.25) (xy 144.78 95.25)
 		)
 		(stroke
 			(width 0)
@@ -1742,7 +1815,7 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 119.38) (xy 34.29 121.92)
+			(xy 39.37 146.05) (xy 39.37 148.59)
 		)
 		(stroke
 			(width 0)
@@ -1752,7 +1825,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 93.98) (xy 102.87 93.98)
+			(xy 64.77 93.98) (xy 73.66 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1762,7 +1835,7 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 62.23) (xy 163.83 62.23)
+			(xy 121.92 60.96) (xy 144.78 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1770,9 +1843,19 @@
 		)
 		(uuid "7fa127cf-5319-4c3c-8b12-a31cac60761e")
 	)
+	(polyline
+		(pts
+			(xy 11.43 170.18) (xy 93.98 170.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "93406b39-5738-4964-a611-30020a0dd725")
+	)
 	(wire
 		(pts
-			(xy 81.28 76.2) (xy 81.28 91.44)
+			(xy 52.07 76.2) (xy 52.07 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1782,7 +1865,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 58.42) (xy 109.22 76.2)
+			(xy 80.01 58.42) (xy 80.01 76.2)
 		)
 		(stroke
 			(width 0)
@@ -1792,7 +1875,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 116.84) (xy 152.4 120.65)
+			(xy 133.35 115.57) (xy 133.35 119.38)
 		)
 		(stroke
 			(width 0)
@@ -1802,7 +1885,7 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 129.54) (xy 34.29 132.08)
+			(xy 39.37 156.21) (xy 39.37 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1812,7 +1895,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 93.98) (xy 74.93 93.98)
+			(xy 36.83 93.98) (xy 45.72 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1822,7 +1905,7 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 119.38) (xy 55.88 119.38)
+			(xy 39.37 146.05) (xy 60.96 146.05)
 		)
 		(stroke
 			(width 0)
@@ -1832,7 +1915,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 60.96) (xy 74.93 60.96)
+			(xy 36.83 60.96) (xy 45.72 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1842,7 +1925,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 91.44) (xy 109.22 104.14)
+			(xy 80.01 91.44) (xy 80.01 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1852,7 +1935,7 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 45.72) (xy 163.83 45.72)
+			(xy 121.92 44.45) (xy 144.78 44.45)
 		)
 		(stroke
 			(width 0)
@@ -1862,7 +1945,7 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 80.01) (xy 163.83 80.01)
+			(xy 121.92 78.74) (xy 144.78 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1872,7 +1955,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 62.23) (xy 163.83 80.01)
+			(xy 144.78 60.96) (xy 144.78 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1882,7 +1965,7 @@
 	)
 	(wire
 		(pts
-			(xy 102.87 60.96) (xy 102.87 78.74)
+			(xy 73.66 60.96) (xy 73.66 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1892,7 +1975,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 41.91) (xy 81.28 41.91)
+			(xy 36.83 41.91) (xy 52.07 41.91)
 		)
 		(stroke
 			(width 0)
@@ -1902,7 +1985,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 41.91) (xy 109.22 58.42)
+			(xy 80.01 41.91) (xy 80.01 58.42)
 		)
 		(stroke
 			(width 0)
@@ -1912,7 +1995,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 93.98) (xy 74.93 104.14)
+			(xy 45.72 93.98) (xy 45.72 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1922,7 +2005,7 @@
 	)
 	(wire
 		(pts
-			(xy 55.88 119.38) (xy 55.88 121.92)
+			(xy 60.96 146.05) (xy 60.96 148.59)
 		)
 		(stroke
 			(width 0)
@@ -1932,7 +2015,7 @@
 	)
 	(wire
 		(pts
-			(xy 134.62 105.41) (xy 140.97 105.41)
+			(xy 115.57 104.14) (xy 121.92 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1942,7 +2025,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 78.74) (xy 74.93 93.98)
+			(xy 45.72 78.74) (xy 45.72 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1952,7 +2035,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 44.45) (xy 74.93 44.45)
+			(xy 36.83 44.45) (xy 45.72 44.45)
 		)
 		(stroke
 			(width 0)
@@ -1962,7 +2045,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 45.72) (xy 163.83 62.23)
+			(xy 144.78 44.45) (xy 144.78 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1972,7 +2055,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 44.45) (xy 74.93 60.96)
+			(xy 45.72 44.45) (xy 45.72 60.96)
 		)
 		(stroke
 			(width 0)
@@ -1980,9 +2063,19 @@
 		)
 		(uuid "e2802007-7e00-49c9-afc5-7ca4c3e4b264")
 	)
+	(polyline
+		(pts
+			(xy 93.98 129.54) (xy 93.98 11.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f2a86277-076f-4f27-8955-dd403ec882ac")
+	)
 	(wire
 		(pts
-			(xy 163.83 110.49) (xy 163.83 116.84)
+			(xy 144.78 109.22) (xy 144.78 115.57)
 		)
 		(stroke
 			(width 0)
@@ -1992,7 +2085,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 78.74) (xy 74.93 78.74)
+			(xy 36.83 78.74) (xy 45.72 78.74)
 		)
 		(stroke
 			(width 0)
@@ -2002,7 +2095,7 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 58.42) (xy 109.22 58.42)
+			(xy 64.77 58.42) (xy 80.01 58.42)
 		)
 		(stroke
 			(width 0)
@@ -2011,7 +2104,7 @@
 		(uuid "ffa22575-745b-4126-930c-171ad08d9319")
 	)
 	(label "VDD5V"
-		(at 140.97 43.18 0)
+		(at 121.92 41.91 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2021,7 +2114,7 @@
 		(uuid "53fad55d-b610-4b5b-9c15-c202245d41c0")
 	)
 	(label "VDD5V"
-		(at 140.97 59.69 0)
+		(at 121.92 58.42 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2031,7 +2124,7 @@
 		(uuid "6b504113-4c83-483e-98bf-ca180f4fe4fb")
 	)
 	(label "VDD5V"
-		(at 140.97 93.98 0)
+		(at 121.92 92.71 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2041,7 +2134,7 @@
 		(uuid "d0735ae6-dce4-4d79-80b6-ce8e8a320287")
 	)
 	(label "VDD5V"
-		(at 140.97 77.47 0)
+		(at 121.92 76.2 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2052,7 +2145,7 @@
 	)
 	(hierarchical_label "SERV4"
 		(shape input)
-		(at 93.98 46.99 0)
+		(at 64.77 46.99 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2063,7 +2156,7 @@
 	)
 	(hierarchical_label "SERV0"
 		(shape input)
-		(at 66.04 46.99 0)
+		(at 36.83 46.99 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2074,7 +2167,7 @@
 	)
 	(hierarchical_label "SERV3"
 		(shape input)
-		(at 66.04 96.52 0)
+		(at 36.83 96.52 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2085,7 +2178,7 @@
 	)
 	(hierarchical_label "SERV2"
 		(shape input)
-		(at 66.04 81.28 0)
+		(at 36.83 81.28 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2096,7 +2189,7 @@
 	)
 	(hierarchical_label "SERV6"
 		(shape input)
-		(at 93.98 81.28 0)
+		(at 64.77 81.28 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2107,7 +2200,7 @@
 	)
 	(hierarchical_label "SERV5"
 		(shape input)
-		(at 93.98 63.5 0)
+		(at 64.77 63.5 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2118,7 +2211,7 @@
 	)
 	(hierarchical_label "SERV1"
 		(shape input)
-		(at 66.04 63.5 0)
+		(at 36.83 63.5 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2129,7 +2222,7 @@
 	)
 	(hierarchical_label "LSR_1"
 		(shape input)
-		(at 134.62 105.41 180)
+		(at 115.57 104.14 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2140,7 +2233,7 @@
 	)
 	(hierarchical_label "SERV7"
 		(shape input)
-		(at 93.98 96.52 0)
+		(at 64.77 96.52 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2151,7 +2244,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 60.96 60.96 0)
+		(at 31.75 60.96 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2160,7 +2253,7 @@
 		(fields_autoplaced yes)
 		(uuid "00cd52a6-6288-4cda-83f3-4d7c4f156623")
 		(property "Reference" "J12"
-			(at 61.595 53.34 0)
+			(at 32.385 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2168,7 +2261,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 61.595 55.88 0)
+			(at 32.385 55.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2176,7 +2269,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 60.96 60.96 0)
+			(at 31.75 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2185,7 +2278,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 60.96 60.96 0)
+			(at 31.75 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2194,7 +2287,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 60.96 60.96 0)
+			(at 31.75 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2222,7 +2315,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:R")
-		(at 152.4 113.03 180)
+		(at 133.35 111.76 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2231,7 +2324,7 @@
 		(fields_autoplaced yes)
 		(uuid "016df54a-5ae5-400c-91e2-3d1085cb67f2")
 		(property "Reference" "R8"
-			(at 154.94 111.7599 0)
+			(at 135.89 110.4899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2240,7 +2333,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 154.94 114.2999 0)
+			(at 135.89 113.0299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2249,7 +2342,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
-			(at 154.178 113.03 90)
+			(at 135.128 111.76 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2258,7 +2351,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 152.4 113.03 0)
+			(at 133.35 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2267,7 +2360,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 152.4 113.03 0)
+			(at 133.35 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2292,7 +2385,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 60.96 44.45 0)
+		(at 31.75 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2301,7 +2394,7 @@
 		(fields_autoplaced yes)
 		(uuid "03b5f32a-c0b4-4cfc-ae28-8e284197394a")
 		(property "Reference" "J11"
-			(at 61.595 36.83 0)
+			(at 32.385 36.83 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2309,7 +2402,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 61.595 39.37 0)
+			(at 32.385 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2317,7 +2410,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 60.96 44.45 0)
+			(at 31.75 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2326,7 +2419,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 60.96 44.45 0)
+			(at 31.75 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2335,7 +2428,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 60.96 44.45 0)
+			(at 31.75 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2363,7 +2456,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_Connector:GND")
-		(at 34.29 132.08 0)
+		(at 39.37 158.75 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2371,7 +2464,7 @@
 		(dnp no)
 		(uuid "0955441d-0d38-4e4d-9e87-dd84a4a36512")
 		(property "Reference" "#PWR027"
-			(at 34.29 138.43 0)
+			(at 39.37 165.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2380,7 +2473,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 34.2901 135.89 0)
+			(at 39.3701 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2389,7 +2482,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 34.29 132.08 0)
+			(at 39.37 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2398,7 +2491,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 34.29 132.08 0)
+			(at 39.37 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2407,7 +2500,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 34.29 132.08 0)
+			(at 39.37 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2429,7 +2522,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:C")
-		(at 55.88 125.73 0)
+		(at 60.96 152.4 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2437,7 +2530,7 @@
 		(dnp no)
 		(uuid "1106b754-8170-44de-a2e4-3828305b646c")
 		(property "Reference" "C10"
-			(at 62.23 124.46 0)
+			(at 67.31 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2445,7 +2538,7 @@
 			)
 		)
 		(property "Value" "2200uF"
-			(at 62.23 127 0)
+			(at 67.31 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2453,7 +2546,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_THT:CP_Radial_D16.0mm_P7.50mm"
-			(at 56.8452 129.54 0)
+			(at 61.9252 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2462,7 +2555,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 55.88 125.73 0)
+			(at 60.96 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2471,7 +2564,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 55.88 125.73 0)
+			(at 60.96 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2496,7 +2589,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 152.4 120.65 0)
+		(at 133.35 119.38 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2505,7 +2598,7 @@
 		(fields_autoplaced yes)
 		(uuid "2afe85c2-3d35-4199-a258-fadf0c1a6892")
 		(property "Reference" "#PWR03"
-			(at 152.4 127 0)
+			(at 133.35 125.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2514,7 +2607,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 152.4 125.73 0)
+			(at 133.35 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2522,7 +2615,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 152.4 120.65 0)
+			(at 133.35 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2531,7 +2624,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 152.4 120.65 0)
+			(at 133.35 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2540,7 +2633,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 152.4 120.65 0)
+			(at 133.35 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2562,7 +2655,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 88.9 93.98 0)
+		(at 59.69 93.98 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2571,7 +2664,7 @@
 		(fields_autoplaced yes)
 		(uuid "3a6f4ff9-c14a-46a6-907a-df81631fcd19")
 		(property "Reference" "J18"
-			(at 89.535 86.36 0)
+			(at 60.325 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2579,7 +2672,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 89.535 88.9 0)
+			(at 60.325 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2587,7 +2680,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 88.9 93.98 0)
+			(at 59.69 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2596,7 +2689,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 88.9 93.98 0)
+			(at 59.69 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2605,7 +2698,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 88.9 93.98 0)
+			(at 59.69 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2633,7 +2726,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:+3.3V")
-		(at 102.87 104.14 180)
+		(at 73.66 104.14 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2641,7 +2734,7 @@
 		(dnp no)
 		(uuid "4335cfc7-6212-4f56-9fcf-f0fa940e55f3")
 		(property "Reference" "#PWR012"
-			(at 102.87 100.33 0)
+			(at 73.66 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2650,7 +2743,7 @@
 			)
 		)
 		(property "Value" "VDD5V"
-			(at 99.822 109.22 0)
+			(at 70.612 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2659,7 +2752,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 102.87 104.14 0)
+			(at 73.66 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2668,7 +2761,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 102.87 104.14 0)
+			(at 73.66 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2677,7 +2770,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 102.87 104.14 0)
+			(at 73.66 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2699,7 +2792,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:C")
-		(at 34.29 125.73 0)
+		(at 39.37 152.4 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2707,7 +2800,7 @@
 		(dnp no)
 		(uuid "46ca6365-68b0-4bbe-8598-694d2ef43d18")
 		(property "Reference" "C11"
-			(at 40.64 124.46 0)
+			(at 45.72 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2715,7 +2808,7 @@
 			)
 		)
 		(property "Value" "2200uF"
-			(at 40.64 127 0)
+			(at 45.72 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2723,7 +2816,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_THT:CP_Radial_D16.0mm_P7.50mm"
-			(at 35.2552 129.54 0)
+			(at 40.3352 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2732,7 +2825,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 34.29 125.73 0)
+			(at 39.37 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2741,7 +2834,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 34.29 125.73 0)
+			(at 39.37 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2750,10 +2843,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "7c43baa1-e7a2-4f9c-817d-4bb8b23cbacd")
+			(uuid "7c43baa1-e7a2-4f9c-817d-4bb8b23cbace")
 		)
 		(pin "2"
-			(uuid "b3ccd954-9ba7-4379-9435-1064f0f32a73")
+			(uuid "b3ccd954-9ba7-4379-9435-1064f0f32a74")
 		)
 		(instances
 			(project ""
@@ -2766,7 +2859,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 81.28 104.14 0)
+		(at 52.07 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2775,7 +2868,7 @@
 		(fields_autoplaced yes)
 		(uuid "4c2f386a-01df-454e-a932-8d67336ec468")
 		(property "Reference" "#PWR011"
-			(at 81.28 110.49 0)
+			(at 52.07 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2784,7 +2877,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 81.28 109.22 0)
+			(at 52.07 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2792,7 +2885,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 81.28 104.14 0)
+			(at 52.07 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2801,7 +2894,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 81.28 104.14 0)
+			(at 52.07 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2810,7 +2903,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 81.28 104.14 0)
+			(at 52.07 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2832,7 +2925,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x02")
-		(at 135.89 80.01 180)
+		(at 116.84 78.74 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2841,7 +2934,7 @@
 		(fields_autoplaced yes)
 		(uuid "6a91ae50-9e25-4535-809c-481e72c4ac08")
 		(property "Reference" "J4"
-			(at 135.89 71.12 0)
+			(at 116.84 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2849,7 +2942,7 @@
 			)
 		)
 		(property "Value" "Conn_01x02"
-			(at 135.89 73.66 0)
+			(at 116.84 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2857,7 +2950,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x01_P2.54mm_Vertical"
-			(at 135.89 80.01 0)
+			(at 116.84 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2866,7 +2959,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 135.89 80.01 0)
+			(at 116.84 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2875,7 +2968,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 135.89 80.01 0)
+			(at 116.84 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2900,7 +2993,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 88.9 60.96 0)
+		(at 59.69 60.96 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2909,7 +3002,7 @@
 		(fields_autoplaced yes)
 		(uuid "710548b0-ec18-4937-b148-778467cd789e")
 		(property "Reference" "J16"
-			(at 89.535 53.34 0)
+			(at 60.325 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2917,7 +3010,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 89.535 55.88 0)
+			(at 60.325 55.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2925,7 +3018,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 88.9 60.96 0)
+			(at 59.69 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2934,7 +3027,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 88.9 60.96 0)
+			(at 59.69 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2943,7 +3036,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 88.9 60.96 0)
+			(at 59.69 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2971,7 +3064,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 60.96 93.98 0)
+		(at 31.75 93.98 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2980,7 +3073,7 @@
 		(fields_autoplaced yes)
 		(uuid "86aca8d7-0361-46b9-84e8-616a2cf034a0")
 		(property "Reference" "J14"
-			(at 61.595 86.36 0)
+			(at 32.385 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2988,7 +3081,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 61.595 88.9 0)
+			(at 32.385 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2996,7 +3089,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 60.96 93.98 0)
+			(at 31.75 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3005,7 +3098,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 60.96 93.98 0)
+			(at 31.75 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3014,7 +3107,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 60.96 93.98 0)
+			(at 31.75 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3042,7 +3135,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x02")
-		(at 135.89 96.52 180)
+		(at 116.84 95.25 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3051,7 +3144,7 @@
 		(fields_autoplaced yes)
 		(uuid "87eaa3ee-30f3-4005-bf87-32243206c968")
 		(property "Reference" "J5"
-			(at 135.89 87.63 0)
+			(at 116.84 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3059,7 +3152,7 @@
 			)
 		)
 		(property "Value" "Conn_01x02"
-			(at 135.89 90.17 0)
+			(at 116.84 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3067,7 +3160,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x01_P2.54mm_Vertical"
-			(at 135.89 96.52 0)
+			(at 116.84 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3076,7 +3169,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 135.89 96.52 0)
+			(at 116.84 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3085,7 +3178,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 135.89 96.52 0)
+			(at 116.84 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3110,7 +3203,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_Transistor_FET:AO3400A")
-		(at 161.29 105.41 0)
+		(at 142.24 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3119,7 +3212,7 @@
 		(fields_autoplaced yes)
 		(uuid "88931d9f-3118-4997-9b07-3bb9a1f038e6")
 		(property "Reference" "Q1"
-			(at 167.64 104.1399 0)
+			(at 148.59 102.8699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3128,7 +3221,7 @@
 			)
 		)
 		(property "Value" "AO3400A"
-			(at 167.64 106.6799 0)
+			(at 148.59 105.4099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3137,7 +3230,7 @@
 			)
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 166.37 107.315 0)
+			(at 147.32 106.045 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3148,7 +3241,7 @@
 			)
 		)
 		(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf"
-			(at 166.37 109.22 0)
+			(at 147.32 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3158,7 +3251,7 @@
 			)
 		)
 		(property "Description" "30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"
-			(at 161.29 105.41 0)
+			(at 142.24 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3186,7 +3279,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 60.96 78.74 0)
+		(at 31.75 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3195,7 +3288,7 @@
 		(fields_autoplaced yes)
 		(uuid "962f7f19-034b-4855-9256-a16871cadd62")
 		(property "Reference" "J13"
-			(at 61.595 71.12 0)
+			(at 32.385 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3203,7 +3296,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 61.595 73.66 0)
+			(at 32.385 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3211,7 +3304,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 60.96 78.74 0)
+			(at 31.75 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3220,7 +3313,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 60.96 78.74 0)
+			(at 31.75 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3229,7 +3322,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 60.96 78.74 0)
+			(at 31.75 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3257,7 +3350,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 88.9 78.74 0)
+		(at 59.69 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3266,7 +3359,7 @@
 		(fields_autoplaced yes)
 		(uuid "aacec639-6e08-4fee-9705-b58b3efcb49e")
 		(property "Reference" "J17"
-			(at 89.535 71.12 0)
+			(at 60.325 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3274,7 +3367,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 89.535 73.66 0)
+			(at 60.325 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3282,7 +3375,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 88.9 78.74 0)
+			(at 59.69 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3291,7 +3384,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 88.9 78.74 0)
+			(at 59.69 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3300,7 +3393,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 88.9 78.74 0)
+			(at 59.69 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3328,7 +3421,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x02")
-		(at 135.89 45.72 180)
+		(at 116.84 44.45 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3337,7 +3430,7 @@
 		(fields_autoplaced yes)
 		(uuid "abdd8513-c7e9-4844-92e2-2abc4ace957f")
 		(property "Reference" "J2"
-			(at 135.89 36.83 0)
+			(at 116.84 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3345,7 +3438,7 @@
 			)
 		)
 		(property "Value" "Conn_01x02"
-			(at 135.89 39.37 0)
+			(at 116.84 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3353,7 +3446,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x01_P2.54mm_Vertical"
-			(at 135.89 45.72 0)
+			(at 116.84 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3362,7 +3455,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 135.89 45.72 0)
+			(at 116.84 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3371,7 +3464,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 135.89 45.72 0)
+			(at 116.84 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3396,7 +3489,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x03_Pin")
-		(at 88.9 44.45 0)
+		(at 59.69 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3405,7 +3498,7 @@
 		(fields_autoplaced yes)
 		(uuid "bbbd19ed-7137-4188-914f-55a7f075f0c7")
 		(property "Reference" "J15"
-			(at 89.535 36.83 0)
+			(at 60.325 36.83 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3413,7 +3506,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 89.535 39.37 0)
+			(at 60.325 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3421,7 +3514,7 @@
 			)
 		)
 		(property "Footprint" "Connector:FanPinHeader_1x03_P2.54mm_Vertical"
-			(at 88.9 44.45 0)
+			(at 59.69 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3430,7 +3523,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 88.9 44.45 0)
+			(at 59.69 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3439,7 +3532,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 88.9 44.45 0)
+			(at 59.69 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3467,7 +3560,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:Conn_01x02")
-		(at 135.89 62.23 180)
+		(at 116.84 60.96 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3476,7 +3569,7 @@
 		(fields_autoplaced yes)
 		(uuid "bf609931-49ec-493b-94f2-dc843a1f22bf")
 		(property "Reference" "J3"
-			(at 135.89 53.34 0)
+			(at 116.84 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3484,7 +3577,7 @@
 			)
 		)
 		(property "Value" "Conn_01x02"
-			(at 135.89 55.88 0)
+			(at 116.84 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3492,7 +3585,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x01_P2.54mm_Vertical"
-			(at 135.89 62.23 0)
+			(at 116.84 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3501,7 +3594,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 135.89 62.23 0)
+			(at 116.84 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3510,7 +3603,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 135.89 62.23 0)
+			(at 116.84 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3535,7 +3628,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:R")
-		(at 144.78 105.41 90)
+		(at 125.73 104.14 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3544,7 +3637,7 @@
 		(fields_autoplaced yes)
 		(uuid "c6091eca-fea9-474a-ae18-97e38464d245")
 		(property "Reference" "R7"
-			(at 144.78 99.06 90)
+			(at 125.73 97.79 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3552,7 +3645,7 @@
 			)
 		)
 		(property "Value" "300"
-			(at 144.78 101.6 90)
+			(at 125.73 100.33 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3560,7 +3653,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
-			(at 144.78 107.188 90)
+			(at 125.73 105.918 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3569,7 +3662,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 144.78 105.41 0)
+			(at 125.73 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3578,7 +3671,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 144.78 105.41 0)
+			(at 125.73 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3603,7 +3696,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:GND")
-		(at 109.22 104.14 0)
+		(at 80.01 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3612,7 +3705,7 @@
 		(fields_autoplaced yes)
 		(uuid "c9230715-5b1c-4bf3-8127-e74d1b17c4e7")
 		(property "Reference" "#PWR013"
-			(at 109.22 110.49 0)
+			(at 80.01 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3621,7 +3714,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 109.22 109.22 0)
+			(at 80.01 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3629,7 +3722,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 109.22 104.14 0)
+			(at 80.01 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3638,7 +3731,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 109.22 104.14 0)
+			(at 80.01 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3647,7 +3740,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 109.22 104.14 0)
+			(at 80.01 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3669,7 +3762,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:+3.3V")
-		(at 74.93 104.14 180)
+		(at 45.72 104.14 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3677,7 +3770,7 @@
 		(dnp no)
 		(uuid "ccb5af9c-c79f-4701-b065-53d4be41fbdb")
 		(property "Reference" "#PWR010"
-			(at 74.93 100.33 0)
+			(at 45.72 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3686,7 +3779,7 @@
 			)
 		)
 		(property "Value" "VDD5V"
-			(at 71.882 109.22 0)
+			(at 42.672 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3695,7 +3788,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 74.93 104.14 0)
+			(at 45.72 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3704,7 +3797,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 74.93 104.14 0)
+			(at 45.72 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3713,7 +3806,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 74.93 104.14 0)
+			(at 45.72 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3735,7 +3828,7 @@
 	)
 	(symbol
 		(lib_id "betaspray_MCU_Espressif:+5V")
-		(at 34.29 119.38 0)
+		(at 39.37 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3743,7 +3836,7 @@
 		(dnp no)
 		(uuid "ec1510a2-e4c6-42ed-8139-49d625ecafcf")
 		(property "Reference" "#PWR025"
-			(at 34.29 123.19 0)
+			(at 39.37 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3752,7 +3845,7 @@
 			)
 		)
 		(property "Value" "VDD5V"
-			(at 34.2901 115.57 0)
+			(at 39.3701 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3761,7 +3854,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 34.29 119.38 0)
+			(at 39.37 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3770,7 +3863,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 34.29 119.38 0)
+			(at 39.37 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3779,7 +3872,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 34.29 119.38 0)
+			(at 39.37 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)

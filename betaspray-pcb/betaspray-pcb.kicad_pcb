@@ -1440,7 +1440,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "41ea934f-e7b8-4038-91bf-3f94146dd9c5")
 		)
 		(pad "41" thru_hole circle
 			(at -2.2 -2.09 270)
@@ -1453,7 +1453,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "54c2d3aa-74b6-4eb0-9a7c-ffe0c2004da7")
 		)
 		(pad "41" thru_hole circle
 			(at -2.2 -0.69 270)
@@ -1466,7 +1466,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "9cf65c93-afd0-4ef3-91cb-014b2aae2eb0")
 		)
 		(pad "41" thru_hole circle
 			(at -2.2 0.71 270)
@@ -1479,7 +1479,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "81236c30-5948-47e4-86c3-499ea4d9ab8d")
 		)
 		(pad "41" thru_hole circle
 			(at -1.5 -1.39 270)
@@ -1492,7 +1492,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "400c4581-130f-494b-9899-12e9ebff10b6")
 		)
 		(pad "41" smd rect
 			(at -1.5 -0.69 270)
@@ -1503,7 +1503,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "0df11817-ddfa-4def-ae02-98301cf06323")
 		)
 		(pad "41" thru_hole circle
 			(at -1.5 0.01 270)
@@ -1516,7 +1516,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "acc029d5-2588-409e-9c32-dd76ca686b62")
 		)
 		(pad "41" thru_hole circle
 			(at -0.8 -2.09 270)
@@ -1529,7 +1529,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "0286d94b-564b-4d51-af62-edd830d7f73b")
 		)
 		(pad "41" thru_hole circle
 			(at -0.8 -0.69 270)
@@ -1542,7 +1542,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "db10ae44-d2e9-4655-ae8d-f7bff0700b3f")
 		)
 		(pad "41" thru_hole circle
 			(at -0.8 0.71 270)
@@ -1555,7 +1555,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "d813b89b-fde4-4ae4-9ded-0d3bf77f9737")
 		)
 		(pad "41" thru_hole circle
 			(at -0.1 -1.39 270)
@@ -1568,7 +1568,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "9b80a378-c17d-4122-92ac-d1f31be5d14f")
 		)
 		(pad "41" thru_hole circle
 			(at -0.1 0.01 270)
@@ -1581,7 +1581,7 @@
 			(pinfunction "GND")
 			(pintype "passive")
 			(zone_connect 2)
-			(uuid "8a02b33e-532a-4090-a787-ca1e736d7859")
+			(uuid "5c980fc9-959c-4d94-92b9-eeb705bb0f12")
 		)
 		(embedded_fonts no)
 		(model "${KICAD9_3DMODEL_DIR}/RF_Module.3dshapes/ESP32-S3-WROOM-1U.step"
@@ -15885,7 +15885,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 167.3028 134.2644 90)
 			(layer "Edge.Cuts")
 			(uuid "05a72ee4-a381-4aea-a159-304c54f399de")
@@ -15923,7 +15923,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 78.6638 129.8886 0)
 			(layer "Edge.Cuts")
 			(uuid "07ae911a-05f5-4840-8970-cee2c4f9c13c")
@@ -15961,7 +15961,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 80.6888 134.2136 90)
 			(layer "Edge.Cuts")
 			(uuid "08c11dff-d2b0-4512-b4da-3e174af109c2")
@@ -15999,7 +15999,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "3.908"
+		(gr_text "99.2632"
 			(at 68.6746 87.7316 90)
 			(layer "Edge.Cuts")
 			(uuid "27dc765d-8c08-4a4a-9014-e490f9d731d2")
@@ -16037,7 +16037,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "3.908"
+		(gr_text "99.2632"
 			(at 125.1204 144.011 0)
 			(layer "Edge.Cuts")
 			(uuid "4a6fca83-5bc7-414e-beb4-4388fe4477ba")
@@ -16075,7 +16075,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 167.2774 41.3258 90)
 			(layer "Edge.Cuts")
 			(uuid "5b823ce4-1962-4b26-8e5a-1926d340bc59")
@@ -16113,7 +16113,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 80.6126 41.275 90)
 			(layer "Edge.Cuts")
 			(uuid "68b24738-ec34-4f3d-92c7-19f8493f7478")
@@ -16151,7 +16151,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 171.6278 129.9394 0)
 			(layer "Edge.Cuts")
 			(uuid "c08d8040-6972-4bae-b6ef-08b62252ba7f")
@@ -16189,7 +16189,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 171.6024 43.3508 0)
 			(layer "Edge.Cuts")
 			(uuid "dd27d5c6-826d-41cd-b17f-f7e220371969")
@@ -16227,7 +16227,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "0.25"
+		(gr_text "6.35"
 			(at 78.613 43.3508 0)
 			(layer "Edge.Cuts")
 			(uuid "e9d55c03-b16c-4e97-b429-3da178030a11")
