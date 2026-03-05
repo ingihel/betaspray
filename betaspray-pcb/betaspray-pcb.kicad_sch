@@ -3638,7 +3638,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "60c43036-f5aa-4fd7-a29e-206526ec22f5")
-		(property "Reference" "SW2"
+		(property "Reference" "SBOOT"
 			(at 246.38 53.3399 90)
 			(effects
 				(font
@@ -3656,7 +3656,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Button_Switch_SMD:SW_DIP_SPSTx02_Slide_9.78x7.26mm_W8.61mm_P2.54mm"
+		(property "Footprint" "Button_Switch_THT:SW_TH_Tactile_Omron_B3F-10xx"
 			(at 247.65 54.61 0)
 			(effects
 				(font
@@ -3692,7 +3692,7 @@
 		(instances
 			(project "betaspray-pcb"
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "SW2")
+					(reference "SBOOT")
 					(unit 1)
 				)
 			)
@@ -4177,7 +4177,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a2ebb31a-c5c8-4f73-b4ca-7b975c7f5c0a")
-		(property "Reference" "SW1"
+		(property "Reference" "SRST"
 			(at 200.66 54.6099 90)
 			(effects
 				(font
@@ -4195,7 +4195,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Button_Switch_SMD:SW_DIP_SPSTx02_Slide_9.78x7.26mm_W8.61mm_P2.54mm"
+		(property "Footprint" "Button_Switch_THT:SW_TH_Tactile_Omron_B3F-10xx"
 			(at 201.93 55.88 0)
 			(effects
 				(font
@@ -4231,7 +4231,7 @@
 		(instances
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "SW1")
+					(reference "SRST")
 					(unit 1)
 				)
 			)
