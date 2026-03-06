@@ -20,7 +20,7 @@ under `src/`. Each has a companion `.md` documenting its public API.
 |--------|-------|---------------|
 | Wi-Fi | `wifi.c/h` | Soft AP (SSID `BetaSpray`, WPA2). Exposes `wifi_init_softap()`. |
 | HTTP server | `server.c/h` | `esp_http_server` wrapper. Routes: `POST /route`, `GET /start`, `GET /stop`, `POST /test`. |
-| Servo | `servo.c/h` | LEDC PWM, 50 Hz, 14-bit. Up to 8 SG90s on GPIO4–11. One servo at a time for `SERVO_DURATION_MS`. |
+| Servo | `servo.c/h` | LEDC PWM, 50 Hz, 14-bit. Up to 8 SG90s; GPIO1 (X-axis), GPIO2 (Y-axis) active. Hardware fade for smooth motion. Holds `SERVO_DURATION_MS` then releases. |
 | Camera | `camera.c/h` | OV5640 DVP via `esp32-camera`. DMA via LCD_CAM → PSRAM. Capture to BSS / DRAM / PSRAM / stack. |
 | FatFS | `fatfs.c/h` | FAT on internal SPI flash via wear-levelling. Chunked read/write with offset+size. |
 | Main | `main.c` | Ties everything together. NVS + event loop init, UART frame streaming, LED colour cycle. |
@@ -37,6 +37,8 @@ esp_event_loop_create_default()
     ├── LED strip init (GPIO38, WS2812)
     ├── wifi_init_softap()
     ├── server_start()
+    ├── servo_init()
+    │       └── servo_testbench_x(0), servo_testbench_y(1)  [startup only]
     └── camera_init()
             │
             └── main loop: capture → uart_send_frame → LED cycle
@@ -48,7 +50,8 @@ esp_event_loop_create_default()
 
 | GPIO | Assignment |
 |------|-----------|
-| 1 | Servo PWM (LEDC CH0, `SERVO_PIN_0`) |
+| 1 | Servo PWM (LEDC CH0, `SERVO_PIN_0`) — X-axis |
+| 2 | Servo PWM (LEDC CH1, `SERVO_PIN_1`) — Y-axis |
 | 4 | Camera SDA (SCCB) |
 | 5 | Camera SCL (SCCB) |
 | 6 | Camera VSYNC |
@@ -69,9 +72,9 @@ esp_event_loop_create_default()
 Avoided: strapping (0, 3, 45, 46), PSRAM SPI (35–37), USB (19, 20).
 JTAG (39–42) are free — camera no longer uses those pins.
 
-**Warning:** `SERVO_PIN_1`–`SERVO_PIN_7` (GPIO 5–11) conflict with camera pins.
-Only `SERVO_PIN_0` (GPIO 1) is safe. Do not increase `NUM_SERVOS` without
-reassigning those pins first.
+**Warning:** `SERVO_PIN_2`–`SERVO_PIN_7` (GPIO 6–11) conflict with camera pins.
+Only `SERVO_PIN_0` (GPIO 1) and `SERVO_PIN_1` (GPIO 2) are safe (`NUM_SERVOS=2`).
+Do not increase `NUM_SERVOS` beyond 2 without reassigning those pins first.
 
 ---
 

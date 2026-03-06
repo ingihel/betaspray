@@ -84,6 +84,13 @@ void app_main(void) {
     server_start();
     ESP_LOGI("MAIN", "HTTP server started");
 
+    // Servo init — GPIO1 (servo0), GPIO2 (servo1).  GPIO5-11 conflict with camera;
+    // do not increase NUM_SERVOS beyond 2 without first reassigning those pins.
+    // SG90 power note: use a dedicated supply, NOT the ESP32 3.3 V pin (40 mA max).
+    ESP_LOGI("MAIN", "Initializing servos");
+    servo_init();
+    ESP_LOGI("MAIN", "Servos initialized");
+
     // CAMERA: testing configuration
     // using QVGA (320x240) JPEG keeps frames small (~5-20 KB)
     // This allows streaming at 921600 baud with a comfortable margin
@@ -96,6 +103,10 @@ void app_main(void) {
     ESP_LOGI("MAIN", "Setting camera format");
     camera_set_format(CAMERA_FORMAT_JPEG);
     ESP_LOGI("MAIN", "Camera setup complete");
+
+    servo_testbench_x(0);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    servo_testbench_y(1);
 
     // Set log level to ERROR now that initialization is complete
     // Frame streaming uses UART0, so INFO logs would corrupt binary data.
