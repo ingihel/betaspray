@@ -71,19 +71,6 @@ esp_err_t camera_config(framesize_t res, pixformat_t fmt, int sccb_freq_hz);
 camera_fb_t *camera_capture_frame(void);
 void camera_return_frame(camera_fb_t *fb);
 
-// Capture a frame and copy it into the specified memory region.
-//
-//   CAMERA_MEM_BSS      *out_buf is set to the internal static buffer.
-//                        Not thread-safe; overwritten on next call.
-//   CAMERA_MEM_DATA_RAM *out_buf is set to a heap_malloc'd block. Caller frees.
-//   CAMERA_MEM_PSRAM    *out_buf is set to a PSRAM-malloc'd block. Caller
-//   frees. CAMERA_MEM_STACK    *out_buf must already point to a buffer of
-//   sufficient
-//                        size. The frame is copied in; nothing is allocated.
-//
-// *out_len receives the number of bytes written.
-esp_err_t camera_click_pic(camera_mem_t dest, uint8_t **out_buf, size_t *out_len);
-
 // Change resolution or format live via OV5640 sensor register writes.
 // No re-init required - takes effect on the next captured frame.
 void camera_set_resolution(framesize_t size);

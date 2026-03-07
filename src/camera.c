@@ -44,9 +44,6 @@ static camera_config_t s_cfg = {
 
 static bool s_initialized = false;
 
-// Internal BSS capture buffer - BSS is zero-initialised, hence no heap allocation needed
-static uint8_t s_bss_buf[CAMERA_BSS_BUF_SIZE];
-
 void camera_reset(void) {
     if (CAM_PIN_RESET == -1) {
         ESP_LOGI(TAG, "Reset pin not connected (NC), skipping reset");
@@ -54,7 +51,7 @@ void camera_reset(void) {
     }
 
     gpio_config_t io = {
-        .pin_bit_mask = (1ULL << CAM_PIN_RESET),
+        .pin_bit_mask = (1ULL << CAM_PIN_RESET), // NOTE: can we document this line better?
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -138,71 +135,6 @@ void camera_return_frame(camera_fb_t *fb) {
     if (fb) {
         esp_camera_fb_return(fb);
     }
-}
-
-esp_err_t camera_click_pic(camera_mem_t dest, uint8_t **out_buf, size_t *out_len) {
-    camera_fb_t *fb = esp_camera_fb_get();
-    if (!fb) {
-        ESP_LOGE(TAG, "click_pic: frame capture failed");
-        return ESP_FAIL;
-    }
-
-    esp_err_t err = ESP_OK;
-
-    switch (dest) {
-    /* Support possible destinations for DVP framebuffer */
-    // NOTE: this is a good idea to sanity check.
-    case CAMERA_MEM_BSS:
-        if (fb->len > CAMERA_BSS_BUF_SIZE) {
-            ESP_LOGE(TAG, "click_pic: frame %u B > BSS buf %u B", (unsigned)fb->len,
-                     (unsigned)CAMERA_BSS_BUF_SIZE);
-            err = ESP_ERR_NO_MEM;
-            break;
-        }
-        memcpy(s_bss_buf, fb->buf, fb->len);
-        *out_buf = s_bss_buf;
-        *out_len = fb->len;
-        ESP_LOGI(TAG, "click_pic: %u B -> BSS", (unsigned)fb->len);
-        break;
-
-    case CAMERA_MEM_DATA_RAM:
-        *out_buf = malloc(fb->len);
-        if (!*out_buf) {
-            ESP_LOGE(TAG, "click_pic: malloc(%u) failed (DATA_RAM)", (unsigned)fb->len);
-            err = ESP_ERR_NO_MEM;
-            break;
-        }
-        memcpy(*out_buf, fb->buf, fb->len);
-        *out_len = fb->len;
-        ESP_LOGI(TAG, "click_pic: %u B -> DATA_RAM @ %p", (unsigned)fb->len, *out_buf);
-        break;
-
-    case CAMERA_MEM_PSRAM:
-        *out_buf = heap_caps_malloc(fb->len, MALLOC_CAP_SPIRAM);
-        if (!*out_buf) {
-            ESP_LOGE(TAG, "click_pic: heap_caps_malloc(%u) failed (PSRAM)", (unsigned)fb->len);
-            err = ESP_ERR_NO_MEM;
-            break;
-        }
-        memcpy(*out_buf, fb->buf, fb->len);
-        *out_len = fb->len;
-        ESP_LOGI(TAG, "click_pic: %u B -> PSRAM @ %p", (unsigned)fb->len, *out_buf);
-        break;
-
-    case CAMERA_MEM_STACK:
-        if (!*out_buf) {
-            ESP_LOGE(TAG, "click_pic: STACK dest requires *out_buf != NULL");
-            err = ESP_ERR_INVALID_ARG;
-            break;
-        }
-        memcpy(*out_buf, fb->buf, fb->len);
-        *out_len = fb->len;
-        ESP_LOGI(TAG, "click_pic: %u B -> STACK @ %p", (unsigned)fb->len, *out_buf);
-        break;
-    }
-
-    esp_camera_fb_return(fb);
-    return err;
 }
 
 void camera_set_resolution(framesize_t size) {
