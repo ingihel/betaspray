@@ -226,3 +226,17 @@ void camera_set_format(pixformat_t fmt) {
     s_cfg.pixel_format = fmt;
     ESP_LOGI(TAG, "Format -> %d", fmt);
 }
+
+void camera_deinit(void) {
+    if (!s_initialized) {
+        ESP_LOGW(TAG, "Camera not initialized");
+        return;
+    }
+    esp_camera_deinit();
+    s_initialized = false;
+    ESP_LOGI(TAG, "Camera deinitialized");
+}
+
+bool camera_is_initialized(void) {
+    return s_initialized;
+}

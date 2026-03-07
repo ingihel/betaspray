@@ -2,6 +2,7 @@
 
 #include "esp_camera.h"
 #include "esp_err.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -87,3 +88,9 @@ esp_err_t camera_click_pic(camera_mem_t dest, uint8_t **out_buf, size_t *out_len
 // No re-init required - takes effect on the next captured frame.
 void camera_set_resolution(framesize_t size);
 void camera_set_format(pixformat_t fmt);
+
+// Deinitialize the camera and release resources.
+void camera_deinit(void);
+
+// Check if camera is currently initialized.
+bool camera_is_initialized(void);

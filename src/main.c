@@ -2,11 +2,12 @@
 #include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
-// #include "fatfs.h"
+#include "fatfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "led_strip.h"
 #include "nvs_flash.h"
+#include "route.h"
 #include "server.h"
 #include "servo.h"
 #include "wifi.h"
@@ -75,6 +76,11 @@ void app_main(void) {
     led_strip_clear(led_strip);
     ESP_LOGI("MAIN", "LED strip cleared");
 
+    // Initialize FatFS on internal SPI flash
+    ESP_LOGI("MAIN", "Initializing FatFS");
+    ESP_ERROR_CHECK(fatfs_init(true));
+    ESP_LOGI("MAIN", "FatFS initialized");
+
     // Initialize AP and HTTP server component
     ESP_LOGI("MAIN", "Initializing WiFi");
     wifi_init_softap();
@@ -91,19 +97,24 @@ void app_main(void) {
     servo_init();
     ESP_LOGI("MAIN", "Servos initialized");
 
+    // Route management system
+    ESP_LOGI("MAIN", "Initializing route system");
+    route_init();
+    ESP_LOGI("MAIN", "Route system initialized");
+
     // CAMERA: testing configuration
     // using QVGA (320x240) JPEG keeps frames small (~5-20 KB)
     // This allows streaming at 921600 baud with a comfortable margin
-    ESP_LOGI("MAIN", "Initializing camera");
-    ESP_ERROR_CHECK(camera_init());
-    ESP_LOGI("MAIN", "Camera initialized");
-
-    ESP_LOGI("MAIN", "Setting camera resolution");
-    camera_set_resolution(FRAMESIZE_QVGA);
-    ESP_LOGI("MAIN", "Setting camera format");
-    camera_set_format(CAMERA_FORMAT_JPEG);
-    ESP_LOGI("MAIN", "Camera setup complete");
-
+    // ESP_LOGI("MAIN", "Initializing camera");
+    // ESP_ERROR_CHECK(camera_init());
+    // ESP_LOGI("MAIN", "Camera initialized");
+    //
+    // ESP_LOGI("MAIN", "Setting camera resolution");
+    // camera_set_resolution(FRAMESIZE_QVGA);
+    // ESP_LOGI("MAIN", "Setting camera format");
+    // camera_set_format(CAMERA_FORMAT_JPEG);
+    // ESP_LOGI("MAIN", "Camera setup complete");
+    //
     servo_testbench_x(0);
     vTaskDelay(500 / portTICK_PERIOD_MS);
     servo_testbench_y(1);
@@ -111,6 +122,11 @@ void app_main(void) {
     // Set log level to ERROR now that initialization is complete
     // Frame streaming uses UART0, so INFO logs would corrupt binary data.
     esp_log_level_set("*", ESP_LOG_ERROR);
+
+    // But keep route, fatfs, and server logs at INFO level for debugging
+    esp_log_level_set("route", ESP_LOG_INFO);
+    esp_log_level_set("fatfs", ESP_LOG_INFO);
+    esp_log_level_set("server", ESP_LOG_INFO);
 
     uint8_t colors[][3] = {
         {20, 0, 0},  // Red
@@ -136,11 +152,11 @@ void app_main(void) {
 
         if (++ticks >= ticks_per_photo) {
             ticks = 0;
-            camera_fb_t *fb = camera_capture_frame();
-            if (fb) {
-                uart_send_frame(fb->buf, fb->len);
-                camera_return_frame(fb);
-            }
+            // camera_fb_t *fb = camera_capture_frame();
+            // if (fb) {
+            //     uart_send_frame(fb->buf, fb->len);
+            //     camera_return_frame(fb);
+            // }
         }
 
         vTaskDelay(500 / portTICK_PERIOD_MS);
