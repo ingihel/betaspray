@@ -28,9 +28,11 @@ static void log_response(const char *uri, const char *status, const char *detail
 }
 
 // Global state for captured frame
-static uint8_t *s_frame_buf = NULL;
+// Static buffer for QVGA JPEG (320x240): ~32KB fixed allocation
+#define FRAME_BUF_SIZE (32 * 1024)
+static uint8_t s_frame_buf[FRAME_BUF_SIZE];
 static size_t s_frame_len = 0;
-static bool s_camera_enabled = true;
+static bool s_camera_enabled = false;
 
 // POST /capture - trigger camera capture and store frame
 static esp_err_t capture_handler(httpd_req_t *req) {
@@ -47,21 +49,15 @@ static esp_err_t capture_handler(httpd_req_t *req) {
         return ESP_FAIL;
     }
 
-    // Free previous frame if it exists
-    if (s_frame_buf) {
-        heap_caps_free(s_frame_buf);
-    }
-
-    // Allocate new buffer in PSRAM for the frame
-    s_frame_buf = heap_caps_malloc(fb->len, MALLOC_CAP_SPIRAM);
-    if (!s_frame_buf) {
-        ESP_LOGE(TAG, "Failed to allocate frame buffer");
+    // Check frame size fits in static buffer
+    if (fb->len > FRAME_BUF_SIZE) {
+        ESP_LOGE(TAG, "Frame too large: %u bytes (max: %d)", fb->len, FRAME_BUF_SIZE);
         camera_return_frame(fb);
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
+        httpd_resp_sendstr(req, "Frame too large");
+        return ESP_OK;
     }
 
-    // Copy frame data
+    // Copy frame data to static buffer
     memcpy(s_frame_buf, fb->buf, fb->len);
     s_frame_len = fb->len;
     camera_return_frame(fb);
@@ -74,7 +70,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 // GET /get - return the stored frame as JPEG
 static esp_err_t get_handler(httpd_req_t *req) {
     log_request("GET", "/get", "");
-    if (!s_frame_buf || s_frame_len == 0) {
+    if (s_frame_len == 0) {
         httpd_resp_sendstr(req, "No frame captured");
         return ESP_OK;
     }
@@ -140,20 +136,20 @@ static esp_err_t configure_handler(httpd_req_t *req) {
         }
     }
 
-    // Handle resolution field
-    cJSON *resolution = cJSON_GetObjectItem(json, "resolution");
-    if (resolution && resolution->type == cJSON_String) {
-        framesize_t size = FRAMESIZE_QVGA;
-        if (strcmp(resolution->valuestring, "QVGA") == 0) {
-            size = FRAMESIZE_QVGA;
-        } else if (strcmp(resolution->valuestring, "VGA") == 0) {
-            size = FRAMESIZE_VGA;
-        } else if (strcmp(resolution->valuestring, "SVGA") == 0) {
-            size = FRAMESIZE_SVGA;
-        }
-        camera_set_resolution(size);
-        ESP_LOGI(TAG, "Resolution set to %s", resolution->valuestring);
-    }
+    // TODO: Handle resolution field (currently fixed to QVGA)
+    // cJSON *resolution = cJSON_GetObjectItem(json, "resolution");
+    // if (resolution && resolution->type == cJSON_String) {
+    //     framesize_t size = FRAMESIZE_QVGA;
+    //     if (strcmp(resolution->valuestring, "QVGA") == 0) {
+    //         size = FRAMESIZE_QVGA;
+    //     } else if (strcmp(resolution->valuestring, "VGA") == 0) {
+    //         size = FRAMESIZE_VGA;
+    //     } else if (strcmp(resolution->valuestring, "SVGA") == 0) {
+    //         size = FRAMESIZE_SVGA;
+    //     }
+    //     camera_set_resolution(size);
+    //     ESP_LOGI(TAG, "Resolution set to %s", resolution->valuestring);
+    // }
 
     // Handle format field
     cJSON *format = cJSON_GetObjectItem(json, "format");
@@ -653,9 +649,6 @@ void server_stop(httpd_handle_t server) {
     if (server) {
         httpd_stop(server);
     }
-    if (s_frame_buf) {
-        heap_caps_free(s_frame_buf);
-        s_frame_buf = NULL;
-        s_frame_len = 0;
-    }
+    // Static frame buffer doesn't need cleanup
+    s_frame_len = 0;
 }
