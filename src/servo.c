@@ -85,12 +85,20 @@ void servo_drive(int id, int angle) {
     ledc_channel_t ch = (ledc_channel_t)id;
     int from = servo_current_angle[id];
 
-    if (from < 0 || from == angle) {
-        // Unknown position or no movement: set duty directly.
+    if (from == angle) {
+        // No movement needed: set duty directly.
         ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle));
         ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
+    } else if (from < 0) {
+        // Unknown position: fade in from 0 duty with full ramp time
+        int fade_ms = SERVO_FADE_TIME_MS;  // Use full fade time for smooth ramp-in
+        ESP_LOGI(TAG, "Servo %d: unknown -> %d deg (fade %d ms)", id, angle, fade_ms);
+
+        // PWM is currently at 0, fade to target angle
+        ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle), fade_ms);
+        ledc_fade_start(LEDC_LOW_SPEED_MODE, ch, LEDC_FADE_WAIT_DONE);
     } else {
-        // Proportional fade time so shorter moves are faster.
+        // Known position: proportional fade time so shorter moves are faster.
         int fade_ms = abs(angle - from) * SERVO_FADE_TIME_MS / 180;
         if (fade_ms < SERVO_PERIOD_MS)
             fade_ms = SERVO_PERIOD_MS; // floor at one PWM period
@@ -115,6 +123,7 @@ void servo_drive(int id, int angle) {
 
     ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, 0);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
+    servo_current_angle[id] = -1;  // Position unknown after release (slow ramp-up on next move)
     ESP_LOGI(TAG, "Servo %d released at %d deg", id, angle);
 }
 

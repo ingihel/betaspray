@@ -31,12 +31,14 @@ static route_transform_t s_transform = {
 };
 
 static int pixel_to_servo_x(float px) {
-    int angle = (int)(px * s_transform.x_scale + s_transform.x_offset);
+    float distance_scale = s_transform.reference_distance_m / s_transform.distance_m;
+    int angle = (int)(px * s_transform.x_scale * distance_scale + s_transform.x_offset);
     return angle < 0 ? 0 : angle > 180 ? 180 : angle;
 }
 
 static int pixel_to_servo_y(float py) {
-    int angle = (int)(py * s_transform.y_scale + s_transform.y_offset);
+    float distance_scale = s_transform.reference_distance_m / s_transform.distance_m;
+    int angle = (int)(py * s_transform.y_scale * distance_scale + s_transform.y_offset);
     return angle < 0 ? 0 : angle > 180 ? 180 : angle;
 }
 
