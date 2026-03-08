@@ -123,7 +123,8 @@ void servo_drive(int id, int angle) {
 
     ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, 0);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
-    servo_current_angle[id] = -1;  // Position unknown after release (slow ramp-up on next move)
+
+    // servo_current_angle[id] = -1;  // Position unknown after release (slow ramp-up on next move)
     ESP_LOGI(TAG, "Servo %d released at %d deg", id, angle);
 }
 

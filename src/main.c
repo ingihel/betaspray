@@ -103,6 +103,7 @@ void app_main(void) {
     esp_log_level_set("route", ESP_LOG_INFO);
     esp_log_level_set("fatfs", ESP_LOG_INFO);
     esp_log_level_set("server", ESP_LOG_INFO);
+    esp_log_level_set("servo", ESP_LOG_INFO);
 
     uint8_t colors[][3] = {
         {20, 0, 0},  // Red
