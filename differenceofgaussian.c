@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
     if (dog_detect_jpeg(argv[1], &res) == ESP_OK) {
         LOGI(TAG, "Detected %d blobs", res.count);
         for (int i = 0; i < res.count; i++) {
-            printf("(x,y) of Blob %d: %.1f,%.1f\n", i, res.kps[i].x, res.kps[i].y);
+            printf("%d,%d;", (int)(res.kps[i].x), (int)(res.kps[i].y));
                    // also have res.kps[i].sigma, res.kps[i].response to play with
         }
     }

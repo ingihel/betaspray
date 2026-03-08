@@ -12,6 +12,7 @@ import argparse
 import sys
 import struct
 import shlex
+import subprocess
 from typing import List, Tuple, Optional
 from pathlib import Path
 
@@ -266,6 +267,8 @@ def build_interactive_parser():
     test_parser = subparsers.add_parser("test", help="Echo test")
     test_parser.add_argument("message", nargs="?", default="hello", help="Message to echo")
 
+    process_local_parser = subparsers.add_parser("process_local", help="Run local differenceofgaussian on capture.jpg and display blobs")
+
     help_parser = subparsers.add_parser("help", help="Show help message")
 
     return parser
@@ -325,7 +328,22 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "test":
             client.test(args.message)
+        elif args.command == "process_local":
+            try:
+                # Run the differenceofgaussian program
+                result = subprocess.run(
+                    ["./differenceofgaussian", "capture.jpg"],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                print(result.stdout)
+                subprocess.run(["feh", "-d", "output_blobs.ppm"])
 
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing differenceofgaussian: {e}\n{e.stderr}", file=sys.stderr)
+            except FileNotFoundError as e:
+                print(f"Executable not found: {e}. Make sure ./differenceofgaussian and feh are installed/compiled.", file=sys.stderr)
     except Exception as e:
         print(f"Command Error: {e}", file=sys.stderr)
 
