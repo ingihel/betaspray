@@ -77,7 +77,8 @@ esp_err_t route_create(int n, const route_hold_t *holds, int num_holds) {
         return err;
     }
 
-    ESP_LOGI(TAG, "[ROUTE_CREATE] SUCCESS: Route %d created with %d holds (%d bytes)", n, num_holds, total_size);
+    ESP_LOGI(TAG, "[ROUTE_CREATE] SUCCESS: Route %d created with %d holds (%d bytes)", n, num_holds,
+             total_size);
     return ESP_OK;
 }
 
@@ -112,7 +113,8 @@ esp_err_t route_load(int n) {
     ESP_LOGI(TAG, "[ROUTE_LOAD] Header read: %u holds", (unsigned)hold_count);
 
     if (hold_count == 0 || hold_count > ROUTE_MAX_HOLDS) {
-        ESP_LOGE(TAG, "[ROUTE_LOAD] Invalid hold count: %u (max: %d)", (unsigned)hold_count, ROUTE_MAX_HOLDS);
+        ESP_LOGE(TAG, "[ROUTE_LOAD] Invalid hold count: %u (max: %d)", (unsigned)hold_count,
+                 ROUTE_MAX_HOLDS);
         return ESP_FAIL;
     }
 
@@ -121,7 +123,8 @@ esp_err_t route_load(int n) {
     int coords_size = hold_count * 8;
     err = fatfs_read(path, coords_buf, 4, coords_size, &bytes_read);
     if (err != ESP_OK || bytes_read != (size_t)coords_size) {
-        ESP_LOGE(TAG, "[ROUTE_LOAD] Failed to read route data: expected %d bytes, got %u", coords_size, (unsigned)bytes_read);
+        ESP_LOGE(TAG, "[ROUTE_LOAD] Failed to read route data: expected %d bytes, got %u",
+                 coords_size, (unsigned)bytes_read);
         return ESP_ERR_NOT_FOUND;
     }
 
@@ -135,8 +138,8 @@ esp_err_t route_load(int n) {
 
     s_num_holds = hold_count;
     s_current_hold = 0;
-    ESP_LOGI(TAG, "[ROUTE_LOAD] SUCCESS: Loaded route %d with %u holds (%d bytes total)", n, (unsigned)hold_count,
-             4 + coords_size);
+    ESP_LOGI(TAG, "[ROUTE_LOAD] SUCCESS: Loaded route %d with %u holds (%d bytes total)", n,
+             (unsigned)hold_count, 4 + coords_size);
     return ESP_OK;
 }
 
@@ -232,7 +235,8 @@ static void route_playback_task(void *arg) {
         // Wait for next signal
 #if ROUTE_AUTO_ADVANCE
         TickType_t timeout = pdMS_TO_TICKS(ROUTE_DWELL_MS);
-        ESP_LOGI(TAG, "[PLAYBACK] Waiting %d ms for servo settle before next hold...", ROUTE_DWELL_MS);
+        ESP_LOGI(TAG, "[PLAYBACK] Waiting %d ms for servo settle before next hold...",
+                 ROUTE_DWELL_MS);
 #else
         TickType_t timeout = portMAX_DELAY;
         ESP_LOGI(TAG, "[PLAYBACK] Waiting for manual next command...");
@@ -245,7 +249,8 @@ static void route_playback_task(void *arg) {
         int old_hold = s_current_hold;
         s_current_hold += num_gimbals;
         if (s_current_hold >= s_num_holds) {
-            ESP_LOGI(TAG, "[PLAYBACK] Reached end of route (hold %d). Looping back to hold 0.", old_hold);
+            ESP_LOGI(TAG, "[PLAYBACK] Reached end of route (hold %d). Looping back to hold 0.",
+                     old_hold);
             s_current_hold = 0;
         } else {
             ESP_LOGI(TAG, "[PLAYBACK] Advancing: hold %d -> hold %d", old_hold, s_current_hold);

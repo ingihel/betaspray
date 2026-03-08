@@ -81,7 +81,8 @@ esp_err_t fatfs_read(const char *path, void *buf, size_t offset, size_t size, si
         return ESP_ERR_NOT_FOUND;
     }
     if (fseek(f, (long)offset, SEEK_SET) != 0) {
-        ESP_LOGE(TAG, "[FILE_READ] ERROR: fseek failed on '%s' at offset %u", path, (unsigned)offset);
+        ESP_LOGE(TAG, "[FILE_READ] ERROR: fseek failed on '%s' at offset %u", path,
+                 (unsigned)offset);
         fclose(f);
         return ESP_FAIL;
     }
@@ -93,25 +94,31 @@ esp_err_t fatfs_read(const char *path, void *buf, size_t offset, size_t size, si
 }
 
 esp_err_t fatfs_write(const char *path, const void *buf, size_t offset, size_t size) {
-    ESP_LOGI(TAG, "[FILE_WRITE] Opening '%s' for writing (offset:%u, size:%u)", path, (unsigned)offset, (unsigned)size);
+    ESP_LOGI(TAG, "[FILE_WRITE] Opening '%s' for writing (offset:%u, size:%u)", path,
+             (unsigned)offset, (unsigned)size);
     FILE *f = fopen(path, "r+b");
     if (!f) {
-        ESP_LOGE(TAG, "[FILE_WRITE] ERROR: Cannot open '%s' for write (call fatfs_create first): errno %d", path,
-                 errno);
+        ESP_LOGE(
+            TAG,
+            "[FILE_WRITE] ERROR: Cannot open '%s' for write (call fatfs_create first): errno %d",
+            path, errno);
         return ESP_ERR_NOT_FOUND;
     }
     if (fseek(f, (long)offset, SEEK_SET) != 0) {
-        ESP_LOGE(TAG, "[FILE_WRITE] ERROR: fseek failed on '%s' at offset %u", path, (unsigned)offset);
+        ESP_LOGE(TAG, "[FILE_WRITE] ERROR: fseek failed on '%s' at offset %u", path,
+                 (unsigned)offset);
         fclose(f);
         return ESP_FAIL;
     }
     size_t written = fwrite(buf, 1, size, f);
     fclose(f);
     if (written != size) {
-        ESP_LOGE(TAG, "[FILE_WRITE] ERROR: Short write on '%s': %u/%u bytes", path, (unsigned)written, (unsigned)size);
+        ESP_LOGE(TAG, "[FILE_WRITE] ERROR: Short write on '%s': %u/%u bytes", path,
+                 (unsigned)written, (unsigned)size);
         return ESP_FAIL;
     }
-    ESP_LOGI(TAG, "[FILE_WRITE] SUCCESS: Wrote %u bytes to '%s' (offset:%u)", (unsigned)written, path, (unsigned)offset);
+    ESP_LOGI(TAG, "[FILE_WRITE] SUCCESS: Wrote %u bytes to '%s' (offset:%u)", (unsigned)written,
+             path, (unsigned)offset);
     return ESP_OK;
 }
 

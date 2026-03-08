@@ -50,8 +50,8 @@ void camera_reset(void) {
         return;
     }
 
-    #if CAM_PIN_RESET == -1
-    #else
+#if CAM_PIN_RESET == -1
+#else
     gpio_config_t io = {
         .pin_bit_mask = (1ULL << CAM_PIN_RESET),
         .mode = GPIO_MODE_OUTPUT,
@@ -60,7 +60,7 @@ void camera_reset(void) {
         .intr_type = GPIO_INTR_DISABLE,
     };
     gpio_config(&io);
-    #endif
+#endif
 
     ESP_LOGI(TAG, "Resetting OV5640 via GPIO%d", CAM_PIN_RESET);
     gpio_set_level(CAM_PIN_RESET, 0);
@@ -93,10 +93,10 @@ esp_err_t camera_init(void) {
     ESP_LOGI(TAG, "Camera ready - framesize=%d format=%d fb_count=%d loc=%s", s_cfg.frame_size,
              s_cfg.pixel_format, s_cfg.fb_count,
              s_cfg.fb_location == CAMERA_FB_IN_PSRAM ? "PSRAM" : "DRAM");
-    ESP_LOGI(TAG, "Calibration %dx%d  fx=%.2f fy=%.2f  cx=%.2f cy=%.2f",
-             CALIB_WIDTH, CALIB_HEIGHT, CALIB_FX, CALIB_FY, CALIB_CX, CALIB_CY);
-    ESP_LOGI(TAG, "  dist k1=%.4f k2=%.4f p1=%.4f p2=%.4f k3=%.4f",
-             CALIB_K1, CALIB_K2, CALIB_P1, CALIB_P2, CALIB_K3);
+    ESP_LOGI(TAG, "Calibration %dx%d  fx=%.2f fy=%.2f  cx=%.2f cy=%.2f", CALIB_WIDTH, CALIB_HEIGHT,
+             CALIB_FX, CALIB_FY, CALIB_CX, CALIB_CY);
+    ESP_LOGI(TAG, "  dist k1=%.4f k2=%.4f p1=%.4f p2=%.4f k3=%.4f", CALIB_K1, CALIB_K2, CALIB_P1,
+             CALIB_P2, CALIB_K3);
     return ESP_OK;
 }
 
@@ -151,6 +151,4 @@ void camera_deinit(void) {
     ESP_LOGI(TAG, "Camera deinitialized");
 }
 
-bool camera_is_initialized(void) {
-    return s_initialized;
-}
+bool camera_is_initialized(void) { return s_initialized; }

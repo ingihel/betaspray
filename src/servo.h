@@ -35,7 +35,8 @@ void servo_drive(int id, int angle);
 //   Phase 2 — coarse jumps: 30 -> 45 -> 90 -> 180
 void servo_testbench_x(int id);
 
-// Testbench for Y-axis servo (active range 90-180 degrees, flat at 90 degrees, straight up at 180 degrees).
+// Testbench for Y-axis servo (active range 90-180 degrees, flat at 90 degrees, straight up at 180
+// degrees).
 //   Phase 1 — 15-degree increments: 90, 105, 120 ... 180
 //   Phase 2 — coarse jumps: 120 -> 135 -> 180
 void servo_testbench_y(int id);

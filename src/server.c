@@ -17,30 +17,29 @@ static bool s_camera_enabled = false;
 
 // Helper function to log an HTTP request in a formatted manner
 static void log_request(const char *method, const char *uri, const char *details) {
-    #if SUPPRESS_HTTP_SERIAL_LOGGING == 1
+#if SUPPRESS_HTTP_SERIAL_LOGGING == 1
     return;
-    #else
+#else
     if (details && strlen(details) > 0) {
         ESP_LOGI(TAG, "[HTTP] %s %s %s", method, uri, details);
     } else {
         ESP_LOGI(TAG, "[HTTP] %s %s", method, uri);
     }
-    #endif
+#endif
 }
 
 // Helper function to log an HTTP response with status
 static void log_response(const char *uri, const char *status, const char *details) {
-    #if SUPPRESS_HTTP_SERIAL_LOGGING == 1
+#if SUPPRESS_HTTP_SERIAL_LOGGING == 1
     return;
-    #else
+#else
     if (details && strlen(details) > 0) {
         ESP_LOGI(TAG, "[HTTP] %s -> %s %s", uri, status, details);
     } else {
         ESP_LOGI(TAG, "[HTTP] %s -> %s", uri, status);
     }
-    #endif
+#endif
 }
-
 
 /// --------- ROUTES ----------
 
@@ -194,7 +193,7 @@ static esp_err_t configure_handler(httpd_req_t *req) {
 static esp_err_t route_create_handler(httpd_req_t *req) {
     int len = req->content_len;
     log_request("POST", "/route/create", "");
-    if (len <= 0 || len > 2048) {  // Reduced from 4096
+    if (len <= 0 || len > 2048) { // Reduced from 4096
         log_response("/route/create", "FAIL", "invalid content length");
         httpd_resp_sendstr(req, "Invalid content length");
         return ESP_OK;
@@ -514,8 +513,8 @@ static esp_err_t servo_handler(httpd_req_t *req) {
 
     if (id < 0 || id >= NUM_SERVOS || ang < 0 || ang > 180) {
         char detail[64];
-        snprintf(detail, sizeof(detail), "servo=%d invalid (0-%d) or angle=%d invalid (0-180)",
-                 id, NUM_SERVOS - 1, ang);
+        snprintf(detail, sizeof(detail), "servo=%d invalid (0-%d) or angle=%d invalid (0-180)", id,
+                 NUM_SERVOS - 1, ang);
         log_response("/servo", "FAIL", detail);
         httpd_resp_sendstr(req, "Invalid servo ID or angle");
         cJSON_Delete(json);
@@ -636,7 +635,7 @@ static const httpd_uri_t uri_route_restart = {
 
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 16;  // Increase from default 8
+    config.max_uri_handlers = 16; // Increase from default 8
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {

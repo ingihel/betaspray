@@ -13,7 +13,7 @@ typedef struct {
 
 // Configurable pixel-to-angle linear transform per axis
 typedef struct {
-    float x_scale;   // angle = x * x_scale + x_offset
+    float x_scale; // angle = x * x_scale + x_offset
     float x_offset;
     float y_scale;
     float y_offset;
@@ -22,7 +22,7 @@ typedef struct {
 // File management
 // Note: route_create_from_json writes directly without pre-buffering all holds
 esp_err_t route_create(int n, const route_hold_t *holds, int num_holds);
-esp_err_t route_create_streaming(int n);  // For streaming writes (advanced)
+esp_err_t route_create_streaming(int n); // For streaming writes (advanced)
 esp_err_t route_delete(int n);
 esp_err_t route_load(int n);
 
