@@ -25,6 +25,9 @@ Usage:
     python calibrate_camera.py --from-dir calibration_frames/
 """
 
+# NOTE(Ingi) for (MAX): please make the default mode to be from images, not UART
+# We should be using HTTP for image transfers now, and not use the UART workaround unless need is dire.
+
 import sys
 import os
 import struct

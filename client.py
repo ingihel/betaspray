@@ -2,6 +2,8 @@
 """
 BetaSpray HTTP Client
 Interfaces with the ESP32-S3 over HTTP for camera, route, and servo control.
+
+Modified by ingi on March 7 to add "interactive/terminal session" mode
 """
 
 import requests
@@ -9,8 +11,14 @@ import json
 import argparse
 import sys
 import struct
+import shlex
 from typing import List, Tuple, Optional
 from pathlib import Path
+
+try:
+    import readline
+except ImportError:
+    pass
 
 DEFAULT_HOST = "192.168.4.1"
 DEFAULT_PORT = 80
@@ -64,7 +72,7 @@ class BetaSprayClient:
             print(f"Response: {resp.text}")
 
     def configure_camera(self, enabled: Optional[bool] = None, resolution: Optional[str] = None,
-                        format: Optional[str] = None):
+                         format: Optional[str] = None):
         """Configure camera settings."""
         config = {}
         if enabled is not None:
@@ -89,12 +97,10 @@ class BetaSprayClient:
 
     def create_route_binary(self, route_num: int, holds: List[Tuple[float, float]]):
         """Create a route using binary format (direct file write for testing)."""
-        # Binary format: [uint32: hold_count][float32: x0][float32: y0]...
         buf = struct.pack("<I", len(holds))  # hold count as little-endian uint32
         for x, y in holds:
             buf += struct.pack("<ff", x, y)  # x, y as little-endian float32
 
-        # Still send as JSON to HTTP endpoint, which converts to binary
         data = {
             "route": route_num,
             "holds": [[x, y] for x, y in holds]
@@ -151,11 +157,9 @@ class BetaSprayClient:
 def parse_holds(holds_str: str) -> List[Tuple[float, float]]:
     """Parse holds from format: '160,120;80,60;240,180' or JSON array."""
     if holds_str.startswith("["):
-        # JSON format
         data = json.loads(holds_str)
         return [(h[0], h[1]) for h in data]
     else:
-        # Semicolon-separated format
         holds = []
         for pair in holds_str.split(";"):
             x, y = map(float, pair.split(","))
@@ -169,49 +173,48 @@ def load_route_binary(route_num: int, filepath: str = None) -> List[Tuple[float,
         filepath = f"route{route_num}.bin"
 
     holds = []
-    with open(filepath, "rb") as f:
-        # Read hold count
-        count_bytes = f.read(4)
-        if len(count_bytes) < 4:
-            print(f"Error: Invalid file format", file=sys.stderr)
-            return []
+    try:
+        with open(filepath, "rb") as f:
+            count_bytes = f.read(4)
+            if len(count_bytes) < 4:
+                print(f"Error: Invalid file format", file=sys.stderr)
+                return []
 
-        hold_count = struct.unpack("<I", count_bytes)[0]
+            hold_count = struct.unpack("<I", count_bytes)[0]
 
-        # Read holds
-        for _ in range(hold_count):
-            coord_bytes = f.read(8)
-            if len(coord_bytes) < 8:
-                print(f"Error: Incomplete hold data", file=sys.stderr)
-                break
-            x, y = struct.unpack("<ff", coord_bytes)
-            holds.append((x, y))
+            for _ in range(hold_count):
+                coord_bytes = f.read(8)
+                if len(coord_bytes) < 8:
+                    print(f"Error: Incomplete hold data", file=sys.stderr)
+                    break
+                x, y = struct.unpack("<ff", coord_bytes)
+                holds.append((x, y))
 
-    print(f"Loaded {len(holds)} holds from {filepath}")
+        print(f"Loaded {len(holds)} holds from {filepath}")
+    except Exception as e:
+        print(f"Error loading {filepath}: {e}", file=sys.stderr)
     return holds
 
 
-def save_route_binary(route_num: int, holds: List[Tuple[float, float]],
-                     filepath: str = None) -> None:
+def save_route_binary(route_num: int, holds: List[Tuple[float, float]], filepath: str = None) -> None:
     """Save route to binary file (.bin) format."""
     if not filepath:
         filepath = f"route{route_num}.bin"
 
-    with open(filepath, "wb") as f:
-        # Write hold count
-        f.write(struct.pack("<I", len(holds)))
-        # Write holds
-        for x, y in holds:
-            f.write(struct.pack("<ff", x, y))
+    try:
+        with open(filepath, "wb") as f:
+            f.write(struct.pack("<I", len(holds)))
+            for x, y in holds:
+                f.write(struct.pack("<ff", x, y))
 
-    print(f"Saved {len(holds)} holds to {filepath}")
+        print(f"Saved {len(holds)} holds to {filepath}")
+    except Exception as e:
+        print(f"Error saving {filepath}: {e}", file=sys.stderr)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="BetaSpray HTTP Client")
-    parser.add_argument("--host", default=DEFAULT_HOST, help=f"Device IP (default: {DEFAULT_HOST})")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"Device port (default: {DEFAULT_PORT})")
-
+def build_interactive_parser():
+    """Builds the argparse parser for interactive shell commands."""
+    parser = argparse.ArgumentParser(prog="", description="BetaSpray Commands")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Camera commands
@@ -263,16 +266,18 @@ def main():
     test_parser = subparsers.add_parser("test", help="Echo test")
     test_parser.add_argument("message", nargs="?", default="hello", help="Message to echo")
 
-    args = parser.parse_args()
+    help_parser = subparsers.add_parser("help", help="Show help message")
 
-    if not args.command:
-        parser.print_help()
-        return
+    return parser
 
-    client = BetaSprayClient(args.host, args.port)
 
+def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: argparse.ArgumentParser):
+    """Executes the mapped command. Exceptions are caught to prevent crashing the interactive loop."""
     try:
-        if args.command == "capture":
+        if args.command == "help":
+            parser.print_help()
+
+        elif args.command == "capture":
             client.capture()
             if args.get:
                 client.get_frame(args.output)
@@ -322,9 +327,63 @@ def main():
             client.test(args.message)
 
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Command Error: {e}", file=sys.stderr)
 
+
+def main():
+    base_parser = argparse.ArgumentParser(description="BetaSpray HTTP Client Initialization")
+    base_parser.add_argument("--host", default=DEFAULT_HOST, help=f"Device IP (default: {DEFAULT_HOST})")
+    base_parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"Device port (default: {DEFAULT_PORT})")
+    
+    base_args, remaining_args = base_parser.parse_known_args()
+
+    client = BetaSprayClient(base_args.host, base_args.port)
+    cmd_parser = build_interactive_parser()
+
+    # Infer that CLI intent can exist too...
+    # if an argument was provided directly via command line, just do that then exit
+    if remaining_args:
+        try:
+            args = cmd_parser.parse_args(remaining_args)
+            if args.command:
+                execute_command(client, args, cmd_parser)
+                return
+        except SystemExit:
+            return
+
+    print(f"Connected to BetaSpray device at http://{base_args.host}:{base_args.port}")
+    print("Type 'help' to see available commands. Press Ctrl-D or type 'exit' to quit.\n")
+
+    while True:
+        try:
+            line = input("betaspray> ").strip()
+            if not line:
+                continue
+            
+            if line.lower() in ["exit", "quit"]:
+                print("Exiting...")
+                break
+ 
+            # recreate shell-style argument fmt
+            args_list = shlex.split(line)
+            args = cmd_parser.parse_args(args_list)
+
+            if not args.command:
+                cmd_parser.print_help()
+                continue
+            
+            execute_command(client, args, cmd_parser)
+
+        except KeyboardInterrupt:
+            print("\n(Cancelled) Press Ctrl-D or type 'exit' to quit.")
+            continue
+        except EOFError: # catch user EOF (C-d)
+            print("\nExiting...")
+            break
+        except ValueError as e: # shlex
+            print(f"input parsing error: {e}")
+        except SystemExit:
+            pass
 
 if __name__ == "__main__":
     main()
