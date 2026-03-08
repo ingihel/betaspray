@@ -27,53 +27,37 @@
 #define CAM_PIN_HREF 7   // HS
 #define CAM_PIN_PCLK 13  // PC
 
-// The esp32-camera component should ignore xclk_freq_hz when XCLK=-1
-
-// SCCB (I2C) clock: accepted by camera_config() but cannot be applied at
-// runtime - camera_config_t does not expose sccb_freq_hz. The component
-// defaults to 100 kHz internally.
-#define CAM_SCCB_FREQ_HZ 100000 // 100 kHz - informational only
-
-#define CAMERA_FORMAT_JPEG PIXFORMAT_JPEG
-#define CAMERA_FORMAT_RGB565 PIXFORMAT_RGB565
-#define CAMERA_FORMAT_GRAYSCALE PIXFORMAT_GRAYSCALE
-
-typedef enum {
-    CAMERA_MEM_BSS,      // Static buffer in .bss - no alloc, fixed 40 KB cap
-    CAMERA_MEM_DATA_RAM, // heap malloc from internal DRAM - caller must free()
-    CAMERA_MEM_PSRAM,    // heap malloc from PSRAM via MALLOC_CAP_SPIRAM - caller
-                         // must free()
-    CAMERA_MEM_STACK,    // Caller pre-allocates; *out_buf must point to buffer on
-                         // entry
-} camera_mem_t;
-
-// Size of the internal BSS capture buffer. Must be >= largest expected frame.
-// QVGA JPEG worst case ~40 KB; increase if using higher resolutions.
-#define CAMERA_BSS_BUF_SIZE (40 * 1024)
-
+// META(Ingi): do we actually anticipate needing this? What is the business logic
+// to initiate this?
+//
 // Hardware-reset the OV5640 by toggling RESET low for 10 ms.
 // Call before camera_init() if the sensor is in an unknown state.
 void camera_reset(void);
 
 // Initialize the camera with default config:
-//   QVGA (320x240), JPEG, 2 frame buffers in PSRAM, DMA via LCD_CAM.
-// DMA is enabled automatically by the esp32-camera component.
+//   QVGA (320x240), JPEG, DMA via LCD_CAM.
+//
+// NOTE: frame buffer location is determined by CAMERA_FB_IN_PSRAM macro
+//
+// NOTE: the esp32-camera library handles DMA object registry.
 esp_err_t camera_init(void);
 
-// Reconfigure resolution, pixel format, and SCCB clock, then re-init.
-// sccb_freq_hz is accepted but cannot be applied at runtime - camera_config_t
-// does not expose this field; the component defaults to 100 kHz internally.
-// XCLK is not a parameter: the OV5640 uses its internal 24 MHz oscillator.
-esp_err_t camera_config(framesize_t res, pixformat_t fmt, int sccb_freq_hz);
-
 // Capture a frame into the esp32-camera DMA-managed buffer.
-// Must be released with camera_return_frame() - do not hold long.
+// Must be released with camera_release_frame(), quickly is better.
 camera_fb_t *camera_capture_frame(void);
-void camera_return_frame(camera_fb_t *fb);
 
-// Change resolution or format live via OV5640 sensor register writes.
-// No re-init required - takes effect on the next captured frame.
+// Release esp32-camera DMA buffer.
+// MAKE SURE THIS IS BEING CALLED.
+void camera_release_frame(camera_fb_t *fb);
+
+// Change resolution of the OV5640 sensor.
+// This can be updated live, without re-initialization: the next
+// frame shall have the desired settings.
 void camera_set_resolution(framesize_t size);
+
+// Change image format of the OV5640 sensor.
+// This can be updated live, without re-initialization: the next
+// frame shall have the desired settings.
 void camera_set_format(pixformat_t fmt);
 
 // Deinitialize the camera and release resources.

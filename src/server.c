@@ -9,30 +9,40 @@
 
 static const char *TAG = "server";
 
-// Log HTTP request
+static uint8_t *s_frame_buf = NULL;
+static size_t s_frame_len = 0;
+static bool s_camera_enabled = false;
+
+/// --------- HELPERS ----------
+
+// Helper function to log an HTTP request in a formatted manner
 static void log_request(const char *method, const char *uri, const char *details) {
+    #if SUPPRESS_HTTP_SERIAL_LOGGING == 1
+    return;
+    #else
     if (details && strlen(details) > 0) {
         ESP_LOGI(TAG, "[HTTP] %s %s %s", method, uri, details);
     } else {
         ESP_LOGI(TAG, "[HTTP] %s %s", method, uri);
     }
+    #endif
 }
 
-// Log HTTP response with status
+// Helper function to log an HTTP response with status
 static void log_response(const char *uri, const char *status, const char *details) {
+    #if SUPPRESS_HTTP_SERIAL_LOGGING == 1
+    return;
+    #else
     if (details && strlen(details) > 0) {
         ESP_LOGI(TAG, "[HTTP] %s -> %s %s", uri, status, details);
     } else {
         ESP_LOGI(TAG, "[HTTP] %s -> %s", uri, status);
     }
+    #endif
 }
 
-// Global state for captured frame
-// Static buffer for QVGA JPEG (320x240): ~32KB fixed allocation
-#define FRAME_BUF_SIZE (32 * 1024)
-static uint8_t s_frame_buf[FRAME_BUF_SIZE];
-static size_t s_frame_len = 0;
-static bool s_camera_enabled = false;
+
+/// --------- ROUTES ----------
 
 // POST /capture - trigger camera capture and store frame
 static esp_err_t capture_handler(httpd_req_t *req) {
@@ -49,18 +59,26 @@ static esp_err_t capture_handler(httpd_req_t *req) {
         return ESP_FAIL;
     }
 
-    // Check frame size fits in static buffer
-    if (fb->len > FRAME_BUF_SIZE) {
-        ESP_LOGE(TAG, "Frame too large: %u bytes (max: %d)", fb->len, FRAME_BUF_SIZE);
-        camera_return_frame(fb);
-        httpd_resp_sendstr(req, "Frame too large");
-        return ESP_OK;
+    // Free previous frame if it exists
+    if (s_frame_buf) {
+        heap_caps_free(s_frame_buf);
+    }
+
+    // Allocate new buffer in PSRAM for the frame
+    // TODO(FUTURE): make this a PSRAM allocation
+    // :)
+    s_frame_buf = malloc(fb->len);
+    if (!s_frame_buf) {
+        ESP_LOGE(TAG, "Failed to allocate frame buffer");
+        camera_release_frame(fb);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
     }
 
     // Copy frame data to static buffer
     memcpy(s_frame_buf, fb->buf, fb->len);
     s_frame_len = fb->len;
-    camera_return_frame(fb);
+    camera_release_frame(fb);
 
     ESP_LOGI(TAG, "POST /capture: stored %u bytes", s_frame_len);
     httpd_resp_sendstr(req, "OK");

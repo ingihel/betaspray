@@ -17,18 +17,6 @@
 #define CAM_UART_NUM UART_NUM_0
 #define CAM_UART_BAUD 115200
 
-// Frame framing: START(4) + LENGTH(4, LE uint32) + JPEG DATA + END(4)
-static const uint8_t FRAME_START[] = {0xAA, 0xBB, 0xCC, 0xDD};
-static const uint8_t FRAME_END[] = {0xDD, 0xCC, 0xBB, 0xAA};
-
-static void uart_send_frame(const uint8_t *data, size_t len) {
-    uint32_t length = (uint32_t)len;
-    uart_write_bytes(CAM_UART_NUM, FRAME_START, sizeof(FRAME_START));
-    uart_write_bytes(CAM_UART_NUM, (const char *)&length, sizeof(length));
-    uart_write_bytes(CAM_UART_NUM, (const char *)data, len);
-    uart_write_bytes(CAM_UART_NUM, FRAME_END, sizeof(FRAME_END));
-}
-
 void app_main(void) {
     ESP_LOGI("MAIN", "Starting app_main");
     esp_err_t ret = nvs_flash_init();
@@ -82,9 +70,9 @@ void app_main(void) {
     ESP_LOGI("MAIN", "FatFS initialized");
 
     // Initialize AP and HTTP server component
-    ESP_LOGI("MAIN", "Initializing WiFi");
+    ESP_LOGI("MAIN", "Initializing WiFi (SoftAP)");
     wifi_init_softap();
-    ESP_LOGI("MAIN", "WiFi initialized");
+    ESP_LOGI("MAIN", "WiFi (SoftAP) initialized");
 
     ESP_LOGI("MAIN", "Starting HTTP server");
     server_start();
@@ -102,19 +90,7 @@ void app_main(void) {
     route_init();
     ESP_LOGI("MAIN", "Route system initialized");
 
-    // CAMERA: testing configuration
-    // using QVGA (320x240) JPEG keeps frames small (~5-20 KB)
-    // This allows streaming at 921600 baud with a comfortable margin
-    // ESP_LOGI("MAIN", "Initializing camera");
-    // ESP_ERROR_CHECK(camera_init());
-    // ESP_LOGI("MAIN", "Camera initialized");
-    //
-    // ESP_LOGI("MAIN", "Setting camera resolution");
-    // camera_set_resolution(FRAMESIZE_QVGA);
-    // ESP_LOGI("MAIN", "Setting camera format");
-    // camera_set_format(CAMERA_FORMAT_JPEG);
-    // ESP_LOGI("MAIN", "Camera setup complete");
-    //
+    // TMP: perform servo tests
     servo_testbench_x(0);
     vTaskDelay(500 / portTICK_PERIOD_MS);
     servo_testbench_y(1);
@@ -152,11 +128,8 @@ void app_main(void) {
 
         if (++ticks >= ticks_per_photo) {
             ticks = 0;
-            // camera_fb_t *fb = camera_capture_frame();
-            // if (fb) {
-            //     uart_send_frame(fb->buf, fb->len);
-            //     camera_return_frame(fb);
-            // }
+            // Virtual slower event loop
+            // Remove?
         }
 
         vTaskDelay(500 / portTICK_PERIOD_MS);

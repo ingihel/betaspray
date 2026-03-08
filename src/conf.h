@@ -1,5 +1,8 @@
 #pragma once
 
+
+// TODO(Max): use calibration figures in the loop
+
 /* Camera intrinsic calibration — OV5640, 320x240
  * Calibrated with calibrate_camera.py, RMS reprojection error: 0.7909 px */
 

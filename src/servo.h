@@ -30,12 +30,12 @@ void servo_init(void);
 // Holds for SERVO_DURATION_MS then releases.
 void servo_drive(int id, int angle);
 
-// Testbench for X-axis servo (full 180° range).
-//   Phase 1 — 15-degree increments: 0, 15, 30 … 180
-//   Phase 2 — coarse jumps: 30 → 45 → 90 → 180
+// Testbench for X-axis servo (full 180 degree range).
+//   Phase 1 — 15-degree increments: 0, 15, 30 ... 180
+//   Phase 2 — coarse jumps: 30 -> 45 -> 90 -> 180
 void servo_testbench_x(int id);
 
-// Testbench for Y-axis servo (active range 90-180°, flat at 90°, straight up at 180°).
-//   Phase 1 — 15-degree increments: 90, 105, 120 … 180
-//   Phase 2 — coarse jumps: 120 → 135 → 180
+// Testbench for Y-axis servo (active range 90-180 degrees, flat at 90 degrees, straight up at 180 degrees).
+//   Phase 1 — 15-degree increments: 90, 105, 120 ... 180
+//   Phase 2 — coarse jumps: 120 -> 135 -> 180
 void servo_testbench_y(int id);

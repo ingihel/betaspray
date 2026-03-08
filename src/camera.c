@@ -50,14 +50,17 @@ void camera_reset(void) {
         return;
     }
 
+    #if CAM_PIN_RESET == -1
+    #else
     gpio_config_t io = {
-        .pin_bit_mask = (1ULL << CAM_PIN_RESET), // NOTE: can we document this line better?
+        .pin_bit_mask = (1ULL << CAM_PIN_RESET),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE,
     };
     gpio_config(&io);
+    #endif
 
     ESP_LOGI(TAG, "Resetting OV5640 via GPIO%d", CAM_PIN_RESET);
     gpio_set_level(CAM_PIN_RESET, 0);
@@ -69,7 +72,7 @@ void camera_reset(void) {
 
 esp_err_t camera_init(void) {
     if (s_initialized) {
-        ESP_LOGW(TAG, "Already initialized");
+        ESP_LOGW(TAG, "camera: oops, already initialized!");
         return ESP_OK;
     }
 
@@ -97,45 +100,24 @@ esp_err_t camera_init(void) {
     return ESP_OK;
 }
 
-esp_err_t camera_config(framesize_t res, pixformat_t fmt, int sccb_freq_hz) {
-    // sccb_freq_hz is accepted but not applied - camera_config_t does not
-    // expose this field. The component defaults to 100 kHz internally.
-    if (sccb_freq_hz != CAM_SCCB_FREQ_HZ) {
-        ESP_LOGW(TAG,
-                 "sccb_freq_hz=%d requested but not applied "
-                 "(not supported by camera_config_t)",
-                 sccb_freq_hz);
-    }
-
-    if (s_initialized) {
-        esp_camera_deinit();
-        s_initialized = false;
-    }
-
-    s_cfg.frame_size = res;
-    s_cfg.pixel_format = fmt;
-
-    ESP_LOGI(TAG, "Reconfiguring - res=%d fmt=%d sccb=%d Hz (internal clk)", res, fmt,
-             sccb_freq_hz);
-    return camera_init();
-}
-
 camera_fb_t *camera_capture_frame(void) {
     camera_fb_t *fb = esp_camera_fb_get();
     if (!fb) {
         ESP_LOGE(TAG, "Frame capture failed");
         return NULL;
     }
-    ESP_LOGI(TAG, "Frame: %u bytes  %ux%u  fmt=%d", (unsigned)fb->len, fb->width, fb->height,
+    ESP_LOGI(TAG, "got frame: %u bytes  %ux%u  fmt=%d", (unsigned)fb->len, fb->width, fb->height,
              fb->format);
     return fb;
 }
 
-void camera_return_frame(camera_fb_t *fb) {
+void camera_release_frame(camera_fb_t *fb) {
     if (fb) {
         esp_camera_fb_return(fb);
     }
 }
+
+// TODO: add s_cfg->set_fb_location
 
 void camera_set_resolution(framesize_t size) {
     sensor_t *s = esp_camera_sensor_get();
