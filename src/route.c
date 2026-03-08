@@ -30,21 +30,22 @@ static route_transform_t s_transform = {
 };
 
 static int pixel_to_servo_x(float px) {
-    // Pixel to real-world angle: angle = px * (hfov / width)
-    float angle_deg = px * (s_transform.hfov_deg / s_transform.image_width);
+    // Center coordinates: image center = 0°, edges = ±FOV/2
+    float center_x = s_transform.image_width / 2.0f;
+    float angle_deg = (px - center_x) * (s_transform.hfov_deg / s_transform.image_width);
 
-    // Clamp to servo range
-    int servo_angle = (int)angle_deg;
+    // Offset to servo range (0-180°, center at 90°)
+    int servo_angle = (int)(angle_deg + 90.0f);
     return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
 static int pixel_to_servo_y(float py) {
-    // Pixel to real-world angle: angle = py * (vfov / height)
-    // Then offset to 90-180 range (flat to straight-up)
-    float angle_deg = py * (s_transform.vfov_deg / s_transform.image_height);
-    int servo_angle = (int)angle_deg + 90;  // Offset to start at 90° (flat)
+    // Center coordinates: image center = 0°, edges = ±FOV/2
+    float center_y = s_transform.image_height / 2.0f;
+    float angle_deg = (py - center_y) * (s_transform.vfov_deg / s_transform.image_height);
 
-    // Clamp to servo range
+    // Offset to servo range (0-180°, center at 90°)
+    int servo_angle = (int)(angle_deg + 90.0f);
     return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
