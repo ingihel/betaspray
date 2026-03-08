@@ -40,12 +40,11 @@ static int pixel_to_servo_x(float px) {
 }
 
 static int pixel_to_servo_y(float py) {
-    // Center coordinates: image center = 0°, edges = ±FOV/2
-    float center_y = s_transform.image_height / 2.0f;
-    float angle_deg = (py - center_y) * (s_transform.vfov_deg / s_transform.image_height);
+    // Y axis: py=0 (top) maps to angle=FOV, py=240 (bottom) maps to angle=0
+    float angle_deg = (s_transform.image_height - py) * (s_transform.vfov_deg / s_transform.image_height);
 
-    // Offset to servo range (0-180°, center at 90°)
-    int servo_angle = (int)(angle_deg + 90.0f);
+    // Servo range: 90° at bottom, 90+FOV at top
+    int servo_angle = (int)(90.0f + angle_deg);
     return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
