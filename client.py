@@ -148,6 +148,24 @@ class BetaSprayClient:
         resp = self._post("/route/restart")
         print(f"Restart: {resp.text}")
 
+    def set_mapping(self, distance_m: float, reference_distance_m: float,
+                    x_scale: Optional[float] = None, x_offset: Optional[float] = None,
+                    y_scale: Optional[float] = None, y_offset: Optional[float] = None):
+        """Set XY to angular mapping (distance + optional scales)."""
+        data = {
+            "distance_m": distance_m,
+            "reference_distance_m": reference_distance_m,
+        }
+        if x_scale is not None:
+            data["x_scale"] = x_scale
+            data["x_offset"] = x_offset if x_offset is not None else 0.0
+        if y_scale is not None:
+            data["y_scale"] = y_scale
+            data["y_offset"] = y_offset if y_offset is not None else 90.0
+
+        resp = self._post("/route/mapping", json_data=data)
+        print(f"Mapping set: {resp.text}")
+
     # Utility endpoints
     def test(self, message: str = "hello"):
         """Echo test."""
@@ -258,6 +276,14 @@ def build_interactive_parser():
     subparsers.add_parser("next", help="Advance to next hold")
     subparsers.add_parser("restart", help="Restart route")
 
+    mapping_parser = subparsers.add_parser("mapping", help="Set XY to angular mapping")
+    mapping_parser.add_argument("distance_m", type=float, help="Current distance to wall (meters)")
+    mapping_parser.add_argument("reference_distance_m", type=float, help="Reference/calibration distance (meters)")
+    mapping_parser.add_argument("--x-scale", type=float, help="X scale factor (optional)")
+    mapping_parser.add_argument("--x-offset", type=float, help="X offset (optional)")
+    mapping_parser.add_argument("--y-scale", type=float, help="Y scale factor (optional)")
+    mapping_parser.add_argument("--y-offset", type=float, help="Y offset (optional)")
+
     # Servo command
     servo_parser = subparsers.add_parser("servo", help="Command a servo")
     servo_parser.add_argument("servo_id", type=int, help="Servo ID (0-N)")
@@ -313,6 +339,16 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "restart":
             client.restart_route()
+
+        elif args.command == "mapping":
+            client.set_mapping(
+                distance_m=args.distance_m,
+                reference_distance_m=args.reference_distance_m,
+                x_scale=args.x_scale if hasattr(args, 'x_scale') and args.x_scale is not None else None,
+                x_offset=args.x_offset if hasattr(args, 'x_offset') and args.x_offset is not None else None,
+                y_scale=args.y_scale if hasattr(args, 'y_scale') and args.y_scale is not None else None,
+                y_offset=args.y_offset if hasattr(args, 'y_offset') and args.y_offset is not None else None
+            )
 
         elif args.command == "save-route":
             holds = parse_holds(args.holds)
