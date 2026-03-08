@@ -89,10 +89,10 @@
 #define DOG_MAX_IMAGE_DIM    2048
 #define DOG_MAX_KEYPOINTS    1000
 #define DOG_THRESH           2
-#define DOG_CONTRAST_MIN     5
-#define DOG_NUM_OCTAVES      4
+#define DOG_CONTRAST_MIN     3
+#define DOG_NUM_OCTAVES      5
 #define DOG_SCALES_PER_OCTAVE 3
-#define DOG_SIGMA_INIT       1.6f
+#define DOG_SIGMA_INIT       2.0f
 #define DOG_KERN_TRUNC       3.0f
 #define DOG_NMS_RADIUS       4.0f
 
