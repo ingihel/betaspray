@@ -11,12 +11,14 @@ typedef struct {
     float y;
 } route_hold_t;
 
-// Configurable pixel-to-angle linear transform per axis
+// Configurable pixel-to-angle transform
 typedef struct {
-    float x_scale; // angle = x * x_scale + x_offset
+    float x_scale;                 // angle = x * x_scale + x_offset
     float x_offset;
     float y_scale;
     float y_offset;
+    float distance_m;              // current distance to wall (meters)
+    float reference_distance_m;    // reference distance (for distance scaling)
 } route_transform_t;
 
 // File management
@@ -34,6 +36,7 @@ void route_restart(void);
 
 // Transform config
 void route_set_transform(const route_transform_t *t);
+void route_set_distance(float distance_m);
 
 // Init — call once from app_main; starts playback FreeRTOS task
 void route_init(void);

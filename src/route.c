@@ -26,6 +26,8 @@ static route_transform_t s_transform = {
     .x_offset = 0.0f,
     .y_scale = 90.0f / 240.0f,
     .y_offset = 90.0f,
+    .distance_m = 3.0f,
+    .reference_distance_m = 3.0f,
 };
 
 static int pixel_to_servo_x(float px) {
@@ -190,9 +192,17 @@ void route_restart(void) {
 void route_set_transform(const route_transform_t *t) {
     if (t) {
         s_transform = *t;
-        ESP_LOGI(TAG, "Transform set: x_scale=%.4f x_offset=%.4f y_scale=%.4f y_offset=%.4f",
-                 t->x_scale, t->x_offset, t->y_scale, t->y_offset);
+        ESP_LOGI(TAG, "Transform set: x_scale=%.4f x_offset=%.4f y_scale=%.4f y_offset=%.4f distance=%.2f m (ref=%.2f m)",
+                 t->x_scale, t->x_offset, t->y_scale, t->y_offset, t->distance_m, t->reference_distance_m);
     }
+}
+
+void route_set_distance(float distance_m) {
+    xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+    s_transform.distance_m = distance_m;
+    float scale_factor = s_transform.reference_distance_m / s_transform.distance_m;
+    ESP_LOGI(TAG, "Distance set: %.2f m (scale_factor=%.4f)", distance_m, scale_factor);
+    xSemaphoreGive(s_state_mutex);
 }
 
 static void route_playback_task(void *arg) {

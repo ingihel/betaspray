@@ -451,6 +451,91 @@ static esp_err_t route_restart_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// POST /route/mapping - set XY to angular mapping (camera + distance parameters)
+static esp_err_t route_mapping_handler(httpd_req_t *req) {
+    log_request("POST", "/route/mapping", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 512) {
+        log_response("/route/mapping", "FAIL", "invalid content length");
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    uint8_t buf[512];
+    int ret = httpd_req_recv(req, (char *)buf, len);
+    if (ret <= 0) {
+        log_response("/route/mapping", "FAIL", "recv error");
+        httpd_resp_sendstr(req, "Request error");
+        return ESP_FAIL;
+    }
+
+    buf[ret] = '\0';
+    cJSON *json = cJSON_Parse((char *)buf);
+    if (!json) {
+        log_response("/route/mapping", "FAIL", "JSON parse error");
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    // Required fields
+    cJSON *distance = cJSON_GetObjectItem(json, "distance_m");
+    cJSON *ref_distance = cJSON_GetObjectItem(json, "reference_distance_m");
+
+    if (!distance || !ref_distance || !cJSON_IsNumber(distance) || !cJSON_IsNumber(ref_distance)) {
+        cJSON_Delete(json);
+        log_response("/route/mapping", "FAIL", "missing distance_m or reference_distance_m");
+        httpd_resp_sendstr(req, "Required: distance_m, reference_distance_m");
+        return ESP_OK;
+    }
+
+    float dist = (float)distance->valuedouble;
+    float ref_dist = (float)ref_distance->valuedouble;
+
+    if (dist <= 0.0f || ref_dist <= 0.0f) {
+        cJSON_Delete(json);
+        log_response("/route/mapping", "FAIL", "distances must be positive");
+        httpd_resp_sendstr(req, "Distances must be positive");
+        return ESP_OK;
+    }
+
+    // Optional scale overrides
+    cJSON *x_scale_item = cJSON_GetObjectItem(json, "x_scale");
+    cJSON *x_offset_item = cJSON_GetObjectItem(json, "x_offset");
+    cJSON *y_scale_item = cJSON_GetObjectItem(json, "y_scale");
+    cJSON *y_offset_item = cJSON_GetObjectItem(json, "y_offset");
+
+    bool has_scale_override = x_scale_item && x_offset_item && y_scale_item && y_offset_item &&
+                              cJSON_IsNumber(x_scale_item) && cJSON_IsNumber(x_offset_item) &&
+                              cJSON_IsNumber(y_scale_item) && cJSON_IsNumber(y_offset_item);
+
+    // Apply distances first
+    route_set_distance(dist);
+
+    // If scales provided, apply full transform
+    if (has_scale_override) {
+        route_transform_t t = {
+            .x_scale = (float)x_scale_item->valuedouble,
+            .x_offset = (float)x_offset_item->valuedouble,
+            .y_scale = (float)y_scale_item->valuedouble,
+            .y_offset = (float)y_offset_item->valuedouble,
+            .distance_m = dist,
+            .reference_distance_m = ref_dist,
+        };
+        route_set_transform(&t);
+        ESP_LOGI(TAG, "[MAPPING] Applied scales: x=%.4f y=%.4f", t.x_scale, t.y_scale);
+    }
+
+    cJSON_Delete(json);
+
+    char response[128];
+    snprintf(response, sizeof(response),
+             "{\"status\":\"ok\",\"distance_m\":%.2f,\"reference_distance_m\":%.2f}",
+             dist, ref_dist);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, response);
+    log_response("/route/mapping", "OK", "");
+    return ESP_OK;
+}
 // GET /start - begin projecting the loaded route
 static esp_err_t start_handler(httpd_req_t *req) {
     log_request("GET", "/start", "");
@@ -633,9 +718,15 @@ static const httpd_uri_t uri_route_restart = {
     .handler = route_restart_handler,
 };
 
+static const httpd_uri_t uri_route_mapping = {
+    .uri = "/route/mapping",
+    .method = HTTP_POST,
+    .handler = route_mapping_handler,
+};
+
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 16; // Increase from default 8
+    config.max_uri_handlers = 16; // 15 route+util handlers + 1 buffer
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -657,6 +748,7 @@ httpd_handle_t server_start(void) {
     httpd_register_uri_handler(server, &uri_route_pause);
     httpd_register_uri_handler(server, &uri_route_next);
     httpd_register_uri_handler(server, &uri_route_restart);
+    httpd_register_uri_handler(server, &uri_route_mapping);
 
     ESP_LOGI(TAG, "HTTP server started");
     return server;
