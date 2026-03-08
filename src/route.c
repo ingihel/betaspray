@@ -22,24 +22,30 @@ static SemaphoreHandle_t s_next_sem = NULL;
 static SemaphoreHandle_t s_state_mutex = NULL;
 
 static route_transform_t s_transform = {
-    .x_scale = 180.0f / 320.0f,
-    .x_offset = 0.0f,
-    .y_scale = 90.0f / 240.0f,
-    .y_offset = 90.0f,
+    .hfov_deg = 120.0f,
+    .vfov_deg = 60.0f,
+    .image_width = 320,
+    .image_height = 240,
     .distance_m = 3.0f,
-    .reference_distance_m = 3.0f,
 };
 
 static int pixel_to_servo_x(float px) {
-    float distance_scale = s_transform.reference_distance_m / s_transform.distance_m;
-    int angle = (int)(px * s_transform.x_scale * distance_scale + s_transform.x_offset);
-    return angle < 0 ? 0 : angle > 180 ? 180 : angle;
+    // Pixel to real-world angle: angle = px * (hfov / width)
+    float angle_deg = px * (s_transform.hfov_deg / s_transform.image_width);
+
+    // Clamp to servo range
+    int servo_angle = (int)angle_deg;
+    return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
 static int pixel_to_servo_y(float py) {
-    float distance_scale = s_transform.reference_distance_m / s_transform.distance_m;
-    int angle = (int)(py * s_transform.y_scale * distance_scale + s_transform.y_offset);
-    return angle < 0 ? 0 : angle > 180 ? 180 : angle;
+    // Pixel to real-world angle: angle = py * (vfov / height)
+    // Then offset to 90-180 range (flat to straight-up)
+    float angle_deg = py * (s_transform.vfov_deg / s_transform.image_height);
+    int servo_angle = (int)angle_deg + 90;  // Offset to start at 90° (flat)
+
+    // Clamp to servo range
+    return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
 esp_err_t route_create(int n, const route_hold_t *holds, int num_holds) {
@@ -194,16 +200,15 @@ void route_restart(void) {
 void route_set_transform(const route_transform_t *t) {
     if (t) {
         s_transform = *t;
-        ESP_LOGI(TAG, "Transform set: x_scale=%.4f x_offset=%.4f y_scale=%.4f y_offset=%.4f distance=%.2f m (ref=%.2f m)",
-                 t->x_scale, t->x_offset, t->y_scale, t->y_offset, t->distance_m, t->reference_distance_m);
+        ESP_LOGI(TAG, "Transform set: camera=%.0f°H×%.0f°V %d×%d px, distance=%.2f m",
+                 t->hfov_deg, t->vfov_deg, t->image_width, t->image_height, t->distance_m);
     }
 }
 
 void route_set_distance(float distance_m) {
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
     s_transform.distance_m = distance_m;
-    float scale_factor = s_transform.reference_distance_m / s_transform.distance_m;
-    ESP_LOGI(TAG, "Distance set: %.2f m (scale_factor=%.4f)", distance_m, scale_factor);
+    ESP_LOGI(TAG, "Distance set: %.2f m", distance_m);
     xSemaphoreGive(s_state_mutex);
 }
 

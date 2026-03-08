@@ -13,6 +13,7 @@ import sys
 import struct
 import shlex
 import subprocess
+import math
 from typing import List, Tuple, Optional
 from pathlib import Path
 
@@ -148,21 +149,16 @@ class BetaSprayClient:
         resp = self._post("/route/restart")
         print(f"Restart: {resp.text}")
 
-    def set_mapping(self, distance_m: float, reference_distance_m: float,
-                    x_scale: Optional[float] = None, x_offset: Optional[float] = None,
-                    y_scale: Optional[float] = None, y_offset: Optional[float] = None):
-        """Set XY to angular mapping (distance + optional scales)."""
+    def set_mapping(self, hfov_deg: float, vfov_deg: float, image_width: int, image_height: int,
+                    distance_m: float):
+        """Set XY to angular mapping from camera FOV and distance."""
         data = {
+            "hfov_deg": hfov_deg,
+            "vfov_deg": vfov_deg,
+            "image_width": image_width,
+            "image_height": image_height,
             "distance_m": distance_m,
-            "reference_distance_m": reference_distance_m,
         }
-        if x_scale is not None:
-            data["x_scale"] = x_scale
-            data["x_offset"] = x_offset if x_offset is not None else 0.0
-        if y_scale is not None:
-            data["y_scale"] = y_scale
-            data["y_offset"] = y_offset if y_offset is not None else 90.0
-
         resp = self._post("/route/mapping", json_data=data)
         print(f"Mapping set: {resp.text}")
 
@@ -171,6 +167,42 @@ class BetaSprayClient:
         """Echo test."""
         resp = self._post("/test", data=message.encode())
         print(f"Test: {resp.text}")
+
+
+def compute_scales_from_fov(hfov: float, vfov: float, width: int, height: int,
+                            distance_m: float, ref_distance_m: float) -> Tuple[float, float, float, float]:
+    """Compute servo scales from camera FOV parameters.
+
+    Args:
+        hfov: Horizontal field of view (degrees)
+        vfov: Vertical field of view (degrees)
+        width: Image width (pixels)
+        height: Image height (pixels)
+        distance_m: Current distance to wall (meters)
+        ref_distance_m: Reference/calibration distance (meters)
+
+    Returns:
+        (x_scale, x_offset, y_scale, y_offset)
+    """
+    deg_to_rad = math.pi / 180
+
+    # Real-world dimensions at current distance
+    wall_width = 2 * distance_m * math.tan(hfov / 2 * deg_to_rad)
+    wall_height = 2 * distance_m * math.tan(vfov / 2 * deg_to_rad)
+
+    # Basic pixel-to-angle mapping (full image → full servo range)
+    x_scale = 180.0 / width
+    y_scale = 90.0 / height
+
+    # Apply distance correction
+    distance_scale = ref_distance_m / distance_m
+    x_scale *= distance_scale
+    y_scale *= distance_scale
+
+    x_offset = 0.0
+    y_offset = 90.0
+
+    return x_scale, x_offset, y_scale, y_offset
 
 
 def parse_holds(holds_str: str) -> List[Tuple[float, float]]:
@@ -276,13 +308,12 @@ def build_interactive_parser():
     subparsers.add_parser("next", help="Advance to next hold")
     subparsers.add_parser("restart", help="Restart route")
 
-    mapping_parser = subparsers.add_parser("mapping", help="Set XY to angular mapping")
-    mapping_parser.add_argument("distance_m", type=float, help="Current distance to wall (meters)")
-    mapping_parser.add_argument("reference_distance_m", type=float, help="Reference/calibration distance (meters)")
-    mapping_parser.add_argument("--x-scale", type=float, help="X scale factor (optional)")
-    mapping_parser.add_argument("--x-offset", type=float, help="X offset (optional)")
-    mapping_parser.add_argument("--y-scale", type=float, help="Y scale factor (optional)")
-    mapping_parser.add_argument("--y-offset", type=float, help="Y offset (optional)")
+    mapping_parser = subparsers.add_parser("mapping", help="Set XY to angular mapping from camera FOV")
+    mapping_parser.add_argument("distance_m", type=float, help="Distance to wall (meters)")
+    mapping_parser.add_argument("--hfov", type=float, default=120.0, help="Horizontal FOV (degrees, default: 120)")
+    mapping_parser.add_argument("--vfov", type=float, default=60.0, help="Vertical FOV (degrees, default: 60)")
+    mapping_parser.add_argument("--width", type=int, default=320, help="Image width (pixels, default: 320)")
+    mapping_parser.add_argument("--height", type=int, default=240, help="Image height (pixels, default: 240)")
 
     # Servo command
     servo_parser = subparsers.add_parser("servo", help="Command a servo")
@@ -341,14 +372,22 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
             client.restart_route()
 
         elif args.command == "mapping":
-            client.set_mapping(
-                distance_m=args.distance_m,
-                reference_distance_m=args.reference_distance_m,
-                x_scale=args.x_scale if hasattr(args, 'x_scale') and args.x_scale is not None else None,
-                x_offset=args.x_offset if hasattr(args, 'x_offset') and args.x_offset is not None else None,
-                y_scale=args.y_scale if hasattr(args, 'y_scale') and args.y_scale is not None else None,
-                y_offset=args.y_offset if hasattr(args, 'y_offset') and args.y_offset is not None else None
-            )
+            print(f"\nSetting mapping:")
+            print(f"  Camera: {args.hfov}° H × {args.vfov}° V, {args.width}×{args.height} px")
+            print(f"  Distance: {args.distance_m} m\n")
+
+            # Ask for confirmation
+            confirm = input("Send this mapping to device? (y/n): ").strip().lower()
+            if confirm == 'y':
+                client.set_mapping(
+                    hfov_deg=args.hfov,
+                    vfov_deg=args.vfov,
+                    image_width=args.width,
+                    image_height=args.height,
+                    distance_m=args.distance_m
+                )
+            else:
+                print("Cancelled.")
 
         elif args.command == "save-route":
             holds = parse_holds(args.holds)

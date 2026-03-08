@@ -477,60 +477,51 @@ static esp_err_t route_mapping_handler(httpd_req_t *req) {
         return ESP_OK;
     }
 
-    // Required fields
+    // Required fields: camera params and distance
+    cJSON *hfov = cJSON_GetObjectItem(json, "hfov_deg");
+    cJSON *vfov = cJSON_GetObjectItem(json, "vfov_deg");
+    cJSON *width = cJSON_GetObjectItem(json, "image_width");
+    cJSON *height = cJSON_GetObjectItem(json, "image_height");
     cJSON *distance = cJSON_GetObjectItem(json, "distance_m");
-    cJSON *ref_distance = cJSON_GetObjectItem(json, "reference_distance_m");
 
-    if (!distance || !ref_distance || !cJSON_IsNumber(distance) || !cJSON_IsNumber(ref_distance)) {
+    if (!hfov || !vfov || !width || !height || !distance ||
+        !cJSON_IsNumber(hfov) || !cJSON_IsNumber(vfov) ||
+        !cJSON_IsNumber(width) || !cJSON_IsNumber(height) || !cJSON_IsNumber(distance)) {
         cJSON_Delete(json);
-        log_response("/route/mapping", "FAIL", "missing distance_m or reference_distance_m");
-        httpd_resp_sendstr(req, "Required: distance_m, reference_distance_m");
+        log_response("/route/mapping", "FAIL", "missing required fields");
+        httpd_resp_sendstr(req, "Required: hfov_deg, vfov_deg, image_width, image_height, distance_m");
         return ESP_OK;
     }
 
+    float h_fov = (float)hfov->valuedouble;
+    float v_fov = (float)vfov->valuedouble;
+    int w = (int)width->valuedouble;
+    int h = (int)height->valuedouble;
     float dist = (float)distance->valuedouble;
-    float ref_dist = (float)ref_distance->valuedouble;
 
-    if (dist <= 0.0f || ref_dist <= 0.0f) {
+    if (h_fov <= 0.0f || v_fov <= 0.0f || w <= 0 || h <= 0 || dist <= 0.0f) {
         cJSON_Delete(json);
-        log_response("/route/mapping", "FAIL", "distances must be positive");
-        httpd_resp_sendstr(req, "Distances must be positive");
+        log_response("/route/mapping", "FAIL", "all values must be positive");
+        httpd_resp_sendstr(req, "All values must be positive");
         return ESP_OK;
     }
 
-    // Optional scale overrides
-    cJSON *x_scale_item = cJSON_GetObjectItem(json, "x_scale");
-    cJSON *x_offset_item = cJSON_GetObjectItem(json, "x_offset");
-    cJSON *y_scale_item = cJSON_GetObjectItem(json, "y_scale");
-    cJSON *y_offset_item = cJSON_GetObjectItem(json, "y_offset");
-
-    bool has_scale_override = x_scale_item && x_offset_item && y_scale_item && y_offset_item &&
-                              cJSON_IsNumber(x_scale_item) && cJSON_IsNumber(x_offset_item) &&
-                              cJSON_IsNumber(y_scale_item) && cJSON_IsNumber(y_offset_item);
-
-    // Apply distances first
-    route_set_distance(dist);
-
-    // If scales provided, apply full transform
-    if (has_scale_override) {
-        route_transform_t t = {
-            .x_scale = (float)x_scale_item->valuedouble,
-            .x_offset = (float)x_offset_item->valuedouble,
-            .y_scale = (float)y_scale_item->valuedouble,
-            .y_offset = (float)y_offset_item->valuedouble,
-            .distance_m = dist,
-            .reference_distance_m = ref_dist,
-        };
-        route_set_transform(&t);
-        ESP_LOGI(TAG, "[MAPPING] Applied scales: x=%.4f y=%.4f", t.x_scale, t.y_scale);
-    }
+    // Set transform with camera params and distance
+    route_transform_t t = {
+        .hfov_deg = h_fov,
+        .vfov_deg = v_fov,
+        .image_width = w,
+        .image_height = h,
+        .distance_m = dist,
+    };
+    route_set_transform(&t);
 
     cJSON_Delete(json);
 
-    char response[128];
+    char response[256];
     snprintf(response, sizeof(response),
-             "{\"status\":\"ok\",\"distance_m\":%.2f,\"reference_distance_m\":%.2f}",
-             dist, ref_dist);
+             "{\"status\":\"ok\",\"hfov_deg\":%.1f,\"vfov_deg\":%.1f,\"image_width\":%d,\"image_height\":%d,\"distance_m\":%.2f}",
+             h_fov, v_fov, w, h, dist);
     httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, response);
     log_response("/route/mapping", "OK", "");

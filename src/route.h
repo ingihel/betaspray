@@ -11,14 +11,18 @@ typedef struct {
     float y;
 } route_hold_t;
 
-// Configurable pixel-to-angle transform
+// Camera and distance parameters for geometric pixel-to-angle conversion
 typedef struct {
-    float x_scale;                 // angle = x * x_scale + x_offset
-    float x_offset;
-    float y_scale;
-    float y_offset;
-    float distance_m;              // current distance to wall (meters)
-    float reference_distance_m;    // reference distance (for distance scaling)
+    // Camera optics (degrees)
+    float hfov_deg;                // horizontal field of view
+    float vfov_deg;                // vertical field of view
+
+    // Camera resolution (pixels)
+    int image_width;
+    int image_height;
+
+    // Distance to wall (meters)
+    float distance_m;
 } route_transform_t;
 
 // File management
