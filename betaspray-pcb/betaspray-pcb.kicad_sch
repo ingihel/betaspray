@@ -3638,7 +3638,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "60c43036-f5aa-4fd7-a29e-206526ec22f5")
-		(property "Reference" "SBOOT"
+		(property "Reference" "SBOOT1"
 			(at 246.38 53.3399 90)
 			(effects
 				(font
@@ -3692,7 +3692,7 @@
 		(instances
 			(project "betaspray-pcb"
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "SBOOT")
+					(reference "SBOOT1")
 					(unit 1)
 				)
 			)
@@ -4177,7 +4177,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a2ebb31a-c5c8-4f73-b4ca-7b975c7f5c0a")
-		(property "Reference" "SRST"
+		(property "Reference" "SRST1"
 			(at 200.66 54.6099 90)
 			(effects
 				(font
@@ -4231,7 +4231,7 @@
 		(instances
 			(project ""
 				(path "/5d34c70f-469d-43be-b671-484e3b695429"
-					(reference "SRST")
+					(reference "SRST1")
 					(unit 1)
 				)
 			)
