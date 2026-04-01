@@ -1,5 +1,6 @@
 #include "server.h"
 #include "camera.h"
+#include "conf.h"
 #include "route.h"
 #include "servo.h"
 #include "esp_log.h"
@@ -625,10 +626,112 @@ static esp_err_t test_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// POST /capture/tile — single tile of the tiled high-res capture workflow.
+//
+// Body:  {"col": N, "row": N}
+//   col: 0 .. CAMERA_TILE_COLS-1
+//   row: 0 .. CAMERA_TILE_ROWS-1
+//
+// The handler sets the OV5640 sensor crop window to the requested tile position
+// at 1:1 native pixels, discards one warm-up frame, captures the tile, then
+// restores the sensor to its normal framesize. Returns the tile as JPEG with
+// response headers X-Tile-Grid and X-Tile-Pos for the client to use when
+// stitching.
+//
+// CAMERA_USE_PSRAM == 1: tiling still works but is unnecessary; prefer a single
+// POST /capture + GET /get for full UXGA instead.
+static esp_err_t capture_tile_handler(httpd_req_t *req) {
+    log_request("POST", "/capture/tile", "");
+    if (!s_camera_enabled) {
+        httpd_resp_sendstr(req, "Camera disabled");
+        return ESP_OK;
+    }
+
+    int len = req->content_len;
+    if (len <= 0 || len > 128) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    char buf[128 + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) {
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    cJSON *jcol = cJSON_GetObjectItem(json, "col");
+    cJSON *jrow = cJSON_GetObjectItem(json, "row");
+    if (!jcol || !cJSON_IsNumber(jcol) || !jrow || !cJSON_IsNumber(jrow)) {
+        httpd_resp_sendstr(req, "Required: col, row");
+        cJSON_Delete(json);
+        return ESP_OK;
+    }
+
+    int col = jcol->valueint;
+    int row = jrow->valueint;
+    cJSON_Delete(json);
+
+    if (col < 0 || col >= CAMERA_TILE_COLS || row < 0 || row >= CAMERA_TILE_ROWS) {
+        httpd_resp_sendstr(req, "col/row out of bounds");
+        return ESP_OK;
+    }
+
+    uint16_t tile_w = OV5640_ACTIVE_W / CAMERA_TILE_COLS;
+    uint16_t tile_h = OV5640_ACTIVE_H / CAMERA_TILE_ROWS;
+    uint16_t x = (uint16_t)(col * tile_w);
+    uint16_t y = (uint16_t)(row * tile_h);
+
+    if (camera_set_window(x, y, tile_w, tile_h) != ESP_OK) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    camera_fb_t *fb = camera_capture_frame();
+    camera_reset_window(); // always restore, even on failure
+
+    if (!fb) {
+        ESP_LOGE(TAG, "/capture/tile: capture failed col=%d row=%d", col, row);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    size_t jpeg_len = fb->len; // save before release
+
+    char grid_hdr[16], pos_hdr[16];
+    snprintf(grid_hdr, sizeof(grid_hdr), "%dx%d", CAMERA_TILE_COLS, CAMERA_TILE_ROWS);
+    snprintf(pos_hdr, sizeof(pos_hdr), "%d,%d", col, row);
+
+    httpd_resp_set_type(req, "image/jpeg");
+    httpd_resp_set_hdr(req, "X-Tile-Grid", grid_hdr);
+    httpd_resp_set_hdr(req, "X-Tile-Pos", pos_hdr);
+
+    esp_err_t ret = httpd_resp_send(req, (const char *)fb->buf, fb->len);
+    camera_release_frame(fb);
+
+    char detail[64];
+    snprintf(detail, sizeof(detail), "col=%d row=%d tile=%ux%u bytes=%u", col, row, tile_w, tile_h,
+             (unsigned)jpeg_len);
+    log_response("/capture/tile", ret == ESP_OK ? "OK" : "FAIL", detail);
+    return ret;
+}
+
 static const httpd_uri_t uri_capture = {
     .uri = "/capture",
     .method = HTTP_POST,
     .handler = capture_handler,
+};
+
+static const httpd_uri_t uri_capture_tile = {
+    .uri = "/capture/tile",
+    .method = HTTP_POST,
+    .handler = capture_tile_handler,
 };
 
 static const httpd_uri_t uri_get = {
@@ -717,7 +820,7 @@ static const httpd_uri_t uri_route_mapping = {
 
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 16; // 15 route+util handlers + 1 buffer
+    config.max_uri_handlers = 17; // 16 route+util handlers + 1 buffer
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -726,6 +829,7 @@ httpd_handle_t server_start(void) {
     }
 
     httpd_register_uri_handler(server, &uri_capture);
+    httpd_register_uri_handler(server, &uri_capture_tile);
     httpd_register_uri_handler(server, &uri_get);
     httpd_register_uri_handler(server, &uri_configure);
     httpd_register_uri_handler(server, &uri_servo);

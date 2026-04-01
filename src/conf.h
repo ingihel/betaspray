@@ -2,6 +2,36 @@
 
 // TODO(Max): use calibration figures in the loop
 
+// ---------------------------------------------------------------------------
+// Hardware target selection
+// ---------------------------------------------------------------------------
+// Set to 1 when using the soldered PCB (ESP32-S3-WROOM-1-N16R8, 8 MB PSRAM).
+// Set to 0 for the dev board (ESP32-S3-WROOM-1-N8, DRAM only).
+//
+// PSRAM=1: camera inits at UXGA (1600x1200), full frame captured in one shot.
+// PSRAM=0: camera inits at QVGA (320x240) in DRAM; use /capture/tile for
+//          high-res coverage via OV5640 sensor-window tiling.
+// ---------------------------------------------------------------------------
+#define CAMERA_USE_PSRAM 0
+
+// Tiled capture grid (CAMERA_USE_PSRAM == 0 only).
+//
+// Each tile is one QVGA (CALIB_WIDTH x CALIB_HEIGHT) frame captured at 1:1
+// native sensor pixels from a different crop window on the OV5640 array.
+// Stitched image size: (CALIB_WIDTH * TILE_COLS) x (CALIB_HEIGHT * TILE_ROWS)
+//   Default 8x8 → 2560x1920 from the 2592x1944 active array.
+#define CAMERA_TILE_COLS 8
+#define CAMERA_TILE_ROWS 8
+
+// OV5640 active pixel array dimensions (per datasheet §2.1)
+#define OV5640_ACTIVE_W 2592
+#define OV5640_ACTIVE_H 1944
+
+// Hardware offset of the pixel array origin in register space.
+// If corner tiles show black borders, increment these by 8–16 until they clear.
+#define OV5640_ARRAY_X_OFFSET 0
+#define OV5640_ARRAY_Y_OFFSET 0
+
 /* Camera intrinsic calibration — OV5640, 320x240
  * Calibrated with calibrate_camera.py, RMS reprojection error: 0.7909 px */
 

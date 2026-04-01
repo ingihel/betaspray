@@ -6,6 +6,7 @@ Interfaces with the ESP32-S3 over HTTP for camera, route, and servo control.
 Modified by ingi on March 7 to add "interactive/terminal session" mode
 """
 
+import io
 import requests
 import json
 import argparse
@@ -162,6 +163,51 @@ class BetaSprayClient:
         resp = self._post("/route/mapping", json_data=data)
         print(f"Mapping set: {resp.text}")
 
+    def capture_tile(self, col: int, row: int, output_file: Optional[str] = None) -> bytes:
+        """Capture a single tile at (col, row) and return raw JPEG bytes.
+
+        Optionally saves to output_file if provided.
+        """
+        resp = self._post("/capture/tile", json_data={"col": col, "row": row})
+        data = resp.content
+        if output_file:
+            with open(output_file, "wb") as f:
+                f.write(data)
+            print(f"Tile ({col},{row}) saved to {output_file}")
+        return data
+
+    def capture_tiled(self, cols: int, rows: int, output: str = "board_full.jpg") -> None:
+        """Capture all col*row tiles and stitch into a single JPEG.
+
+        Requires Pillow (pip install Pillow).
+        Each tile is fetched via POST /capture/tile and stitched positionally.
+        """
+        try:
+            from PIL import Image
+        except ImportError:
+            print("Error: Pillow is required — pip install Pillow", file=sys.stderr)
+            return
+
+        full_img = None
+        tile_w = tile_h = None
+
+        for r in range(rows):
+            for c in range(cols):
+                print(f"  Capturing tile ({c},{r}) of ({cols},{rows})...", end=" ", flush=True)
+                data = self.capture_tile(c, r)
+                tile = Image.open(io.BytesIO(data))
+
+                if full_img is None:
+                    tile_w, tile_h = tile.size
+                    full_img = Image.new("RGB", (tile_w * cols, tile_h * rows))
+
+                full_img.paste(tile, (c * tile_w, r * tile_h))
+                print(f"{tile.size[0]}x{tile.size[1]} {len(data)} bytes")
+
+        if full_img:
+            full_img.save(output)
+            print(f"\nStitched image saved to {output} ({full_img.size[0]}x{full_img.size[1]})")
+
     # Utility endpoints
     def test(self, message: str = "hello"):
         """Echo test."""
@@ -273,6 +319,24 @@ def build_interactive_parser():
     camera_parser.add_argument("--get", action="store_true", help="Also retrieve and save frame")
     camera_parser.add_argument("--output", default="capture.jpg", help="Output filename for frame")
 
+    tiled_parser = subparsers.add_parser(
+        "capture-tiled",
+        help="Tiled high-res capture (N8 dev board). Captures TILE_COLS x TILE_ROWS tiles "
+             "via /capture/tile and stitches them into a full image (requires Pillow).",
+    )
+    tiled_parser.add_argument(
+        "--cols", type=int, default=8,
+        help="Tile columns — must match CAMERA_TILE_COLS in conf.h (default: 8)",
+    )
+    tiled_parser.add_argument(
+        "--rows", type=int, default=8,
+        help="Tile rows — must match CAMERA_TILE_ROWS in conf.h (default: 8)",
+    )
+    tiled_parser.add_argument(
+        "--output", "-o", default="board_full.jpg",
+        help="Output filename for stitched image (default: board_full.jpg)",
+    )
+
     get_parser = subparsers.add_parser("get", help="Retrieve last captured frame")
     get_parser.add_argument("--output", "-o", default="capture.jpg", help="Output filename")
 
@@ -341,6 +405,10 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
             client.capture()
             if args.get:
                 client.get_frame(args.output)
+
+        elif args.command == "capture-tiled":
+            print(f"Starting {args.cols}x{args.rows} tiled capture → {args.output}")
+            client.capture_tiled(args.cols, args.rows, args.output)
 
         elif args.command == "get":
             client.get_frame(args.output)

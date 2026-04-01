@@ -65,3 +65,21 @@ void camera_deinit(void);
 
 // Check if camera is currently initialized.
 bool camera_is_initialized(void);
+
+// Set OV5640 sensor crop window for tiled high-res capture.
+//
+// Writes OV5640 timing registers (0x3800–0x380b, 0x3814–0x3815, 0x3820–0x3821)
+// to capture a (w x h) region starting at sensor pixel (x, y) at 1:1 native
+// resolution — no binning or subsampling.
+//
+// For DRAM mode (CAMERA_USE_PSRAM == 0), keep w == CALIB_WIDTH and
+// h == CALIB_HEIGHT so the output fits in the existing QVGA frame buffer.
+// Iterate over CAMERA_TILE_COLS x CAMERA_TILE_ROWS positions to tile the full
+// OV5640_ACTIVE_W x OV5640_ACTIVE_H sensor array.
+//
+// Call camera_reset_window() after the tile capture to restore normal framing.
+esp_err_t camera_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+
+// Restore the sensor to the frame size set at camera_init() time.
+// Calls set_framesize() on the sensor, which re-applies all timing registers.
+void camera_reset_window(void);

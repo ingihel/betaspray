@@ -35,10 +35,19 @@ static camera_config_t s_cfg = {
     .ledc_channel = LEDC_CHANNEL_7,
 
     .pixel_format = PIXFORMAT_JPEG,
-    .frame_size = FRAMESIZE_QVGA,
-    .jpeg_quality = 12,               // 0-63; lower = better quality / larger file
-    .fb_count = 1,                    // single buffer to save memory
-    .fb_location = CAMERA_FB_IN_DRAM, // Use internal DRAM (PSRAM alloc failing)
+#if CAMERA_USE_PSRAM
+    // PCB: N16R8 — 8 MB PSRAM available, full UXGA single-shot capture
+    .frame_size  = FRAMESIZE_UXGA,        // 1600x1200
+    .jpeg_quality = 10,                   // higher quality; PSRAM has headroom
+    .fb_count    = 2,                     // double-buffer for grab latency
+    .fb_location = CAMERA_FB_IN_PSRAM,
+#else
+    // Dev board: N8 — DRAM only, QVGA fits; use /capture/tile for high-res
+    .frame_size  = FRAMESIZE_QVGA,        // 320x240
+    .jpeg_quality = 12,                   // 0-63; lower = better quality / larger file
+    .fb_count    = 1,                     // single buffer to conserve DRAM
+    .fb_location = CAMERA_FB_IN_DRAM,
+#endif
     .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
 };
 
@@ -152,3 +161,62 @@ void camera_deinit(void) {
 }
 
 bool camera_is_initialized(void) { return s_initialized; }
+
+esp_err_t camera_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    sensor_t *s = esp_camera_sensor_get();
+    if (!s) {
+        ESP_LOGE(TAG, "set_window: sensor unavailable");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Clamp to active array bounds
+    if ((uint32_t)x + w > OV5640_ACTIVE_W)
+        w = OV5640_ACTIVE_W - x;
+    if ((uint32_t)y + h > OV5640_ACTIVE_H)
+        h = OV5640_ACTIVE_H - y;
+
+    uint16_t xs = x + OV5640_ARRAY_X_OFFSET;
+    uint16_t ys = y + OV5640_ARRAY_Y_OFFSET;
+    uint16_t xe = xs + w - 1;
+    uint16_t ye = ys + h - 1;
+
+    // Sensor crop window — OV5640 timing registers (§12.2 of datasheet)
+    s->set_reg(s, 0x3800, 0x0F, (xs >> 8) & 0x0F); // TIMING_HS[11:8]
+    s->set_reg(s, 0x3801, 0xFF, xs & 0xFF);          // TIMING_HS[7:0]
+    s->set_reg(s, 0x3802, 0x07, (ys >> 8) & 0x07);  // TIMING_VS[10:8]
+    s->set_reg(s, 0x3803, 0xFF, ys & 0xFF);          // TIMING_VS[7:0]
+    s->set_reg(s, 0x3804, 0x0F, (xe >> 8) & 0x0F);  // TIMING_HW[11:8] (H end)
+    s->set_reg(s, 0x3805, 0xFF, xe & 0xFF);          // TIMING_HW[7:0]
+    s->set_reg(s, 0x3806, 0x07, (ye >> 8) & 0x07);  // TIMING_VH[10:8] (V end)
+    s->set_reg(s, 0x3807, 0xFF, ye & 0xFF);          // TIMING_VH[7:0]
+
+    // DVP output size is intentionally NOT changed here — the DMA buffer is
+    // allocated at esp_camera_init() time for the configured framesize (QVGA
+    // on DRAM builds) and cannot be resized at runtime. The ISP scales the
+    // crop window to the fixed output size (~1% scale for 324→320 / 243→240).
+
+    // Subsampling registers (0x3814, 0x3815) and binning bits (0x3820, 0x3821)
+    // are intentionally NOT changed. Altering them at runtime changes the DVP
+    // pixel-clock cadence; the LCD_CAM DMA was configured at esp_camera_init()
+    // for a specific clock count per line and loses sync on the next frame.
+    // The ISP scales whatever crop window we set here down to the fixed
+    // DVPHO x DVPVO output size, so the DMA never sees a timing change.
+    //
+    // NOTE: AE/AWB will re-converge for each tile window. For consistent
+    // exposure lock AE before the first tile and unlock after the last.
+
+    ESP_LOGI(TAG, "set_window (%u,%u)+%ux%u → sensor regs xs=%u xe=%u ys=%u ye=%u",
+             x, y, w, h, xs, xe, ys, ye);
+    return ESP_OK;
+}
+
+void camera_reset_window(void) {
+    sensor_t *s = esp_camera_sensor_get();
+    if (!s) {
+        ESP_LOGE(TAG, "reset_window: sensor unavailable");
+        return;
+    }
+    // Re-apply all timing registers for the configured framesize
+    s->set_framesize(s, s_cfg.frame_size);
+    ESP_LOGI(TAG, "reset_window → framesize %d", s_cfg.frame_size);
+}
