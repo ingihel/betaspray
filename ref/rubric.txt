@@ -1,0 +1,18 @@
+Description
+
+The Individual Progress Report (IPR) is a chance to put your contributions to the team's progress in writing. The report will discuss not only the components and subsystems you have personally been responsible for, but what components you have helped work on as well. It is important to talk about the relation between your work and your teammates' work as well.
+Requirements and Grading
+
+This report should be 5-12 pages of your own work. This means that you cannot take paragraphs/text from your Design Review document, since that was a collaborative effort. The IPR Grading Rubric describes what we look for in grading this assignment. The requirements are expanded on below:
+
+    General: Concise writing is encouraged, but it is important that all pertinent information is conveyed. All figures should be labeled and formatted consistently.
+    Formatting: Please refer to the Final Report Guidelines for general writing guidelines, since the format of this report should be very similar to that of the final report. Note that each component of the Final Report may be tailored to the parts of the project the individual has been active in.
+    Introduction: First, discuss what portion of the system you have been active in designing connects to which portion of a different subsystem, and how these interact to complete an overall objective. Then discuss what you have accomplished, what you are currently working on, and what you still have left to do.
+    Design: Discuss the design work you have done so far. It is expected that you have done calculations and/or found relevant equations, created circuits for your parts of the project, and simulated / drawn schematics for your parts. You may have already, at a high level, discussed how your part fits into the rest of the project, but you should expand on the technical details and interface between your module(s) and the other modules of the project.
+    Verification: Testing and verification is also very important. Make sure you describe each test that was performed and its procedure in detail, and give quantitative, meaningful results. Also describe tests that have yet to be performed. We should be convinced that if all your tests will pass, your part of the project will work.
+    Conclusion: Discuss a plan and timeline for completing your responsibilities and your project as a whole. Also explain the ethical considerations of your project by consulting the IEEE Code of Ethics, ACM Code of Ethics, or another relevant Code of Ethics.
+    Citations: You need citations. Cite sources for equations, Application Notes you referenced in your design, and any literature you used to help design or verify your work. If you checked something from another course's lecture slides, Google'd for things related to your project, or anything similar, then you have something you need to cite. At the very least, since you have talked about the ethical considerations of your project as it relates to a published code of ethics (e.g., IEEE or ACM), you should cite those!
+
+Submission and Deadlines
+
+The IPR should be submitted on canvas in PDF format by the deadline listed on the Course Calendar.
