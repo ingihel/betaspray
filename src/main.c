@@ -91,9 +91,9 @@ void app_main(void) {
     ESP_LOGI("MAIN", "Route system initialized");
 
     // TMP: perform servo tests
-    servo_testbench_x(0);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    servo_testbench_y(1);
+    // servo_testbench_x(0);
+    // vTaskDelay(500 / portTICK_PERIOD_MS);
+    // servo_testbench_y(1);
 
     // Set log level to ERROR now that initialization is complete
     // Frame streaming uses UART0, so INFO logs would corrupt binary data.

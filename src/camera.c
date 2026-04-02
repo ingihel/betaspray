@@ -42,8 +42,18 @@ static camera_config_t s_cfg = {
     .fb_count    = 2,                     // double-buffer for grab latency
     .fb_location = CAMERA_FB_IN_PSRAM,
 #else
-    // Dev board: N8 — DRAM only, QVGA fits; use /capture/tile for high-res
-    .frame_size  = FRAMESIZE_QVGA,        // 320x240
+    // Dev board: N8 — DRAM only.
+    // OV5640 hardware JPEG encoder compresses large frames before DMA transfer,
+    // so the fb only holds the compressed JPEG bitstream (~30-80 KB for SVGA),
+    // not a raw bitmap. SVGA at quality 12 fits comfortably in DRAM.
+    //
+    // NOTE: Tiled high-res capture via /capture/tile is NOT supported.
+    // In all subsampled modes the OV5640 reads the full 2592x1944 sensor array
+    // and subsamples it — you cannot select a sub-region over DVP.
+    // Changing only the crop window registers (0x3800-0x3807) without also
+    // updating HTS/VTS/DVPHO/DVPVO/ISP-scale stalls the sensor (no VSYNC).
+    // High-res on the dev board is achieved here via JPEG compression instead.
+    .frame_size  = FRAMESIZE_SVGA,        // 800x600
     .jpeg_quality = 12,                   // 0-63; lower = better quality / larger file
     .fb_count    = 1,                     // single buffer to conserve DRAM
     .fb_location = CAMERA_FB_IN_DRAM,
@@ -216,7 +226,12 @@ void camera_reset_window(void) {
         ESP_LOGE(TAG, "reset_window: sensor unavailable");
         return;
     }
-    // Re-apply all timing registers for the configured framesize
+    // Re-apply all timing registers for the configured framesize, then wait for
+    // the sensor pipeline to stabilize before any subsequent set_window call.
+    // Without this delay the next set_window writes timing regs while the
+    // sensor is still transitioning, leaving it in an inconsistent state that
+    // stalls DVP sync and causes esp_camera_fb_get() to time out.
     s->set_framesize(s, s_cfg.frame_size);
+    vTaskDelay(pdMS_TO_TICKS(100));
     ESP_LOGI(TAG, "reset_window → framesize %d", s_cfg.frame_size);
 }

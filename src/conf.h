@@ -16,12 +16,20 @@
 
 // Tiled capture grid (CAMERA_USE_PSRAM == 0 only).
 //
-// Each tile is one QVGA (CALIB_WIDTH x CALIB_HEIGHT) frame captured at 1:1
-// native sensor pixels from a different crop window on the OV5640 array.
+// Each tile is one QVGA (CALIB_WIDTH x CALIB_HEIGHT) frame captured from a
+// different crop window on the OV5640 array, stitched on the host.
 // Stitched image size: (CALIB_WIDTH * TILE_COLS) x (CALIB_HEIGHT * TILE_ROWS)
-//   Default 8x8 → 2560x1920 from the 2592x1944 active array.
-#define CAMERA_TILE_COLS 8
-#define CAMERA_TILE_ROWS 8
+//
+// MAX TILE COUNT is constrained by the sensor's 2x subsampling mode (QVGA):
+//   register 0x3814/0x3815 = 0x31 → every-other-pixel readout (2x H and V).
+//   The ISP requires at least CALIB_WIDTH * 2 = 640 input pixels per tile row
+//   to down-scale to the 320-pixel DVP output. Narrower crops produce an
+//   upscale the ISP cannot perform → sensor stalls, no frames generated.
+//   Max cols = OV5640_ACTIVE_W / (CALIB_WIDTH * 2) = 2592 / 640 = 4 (648 px/tile)
+//   Max rows = OV5640_ACTIVE_H / (CALIB_HEIGHT * 2) = 1944 / 480 = 4 (486 px/tile)
+//   Stitched output at 4x4: 1280x960.
+#define CAMERA_TILE_COLS 4
+#define CAMERA_TILE_ROWS 4
 
 // OV5640 active pixel array dimensions (per datasheet §2.1)
 #define OV5640_ACTIVE_W 2592

@@ -167,8 +167,15 @@ class BetaSprayClient:
         """Capture a single tile at (col, row) and return raw JPEG bytes.
 
         Optionally saves to output_file if provided.
+        Raises RuntimeError if the ESP returns a non-JPEG response (e.g. "Camera disabled").
         """
         resp = self._post("/capture/tile", json_data={"col": col, "row": row})
+        ct = resp.headers.get("content-type", "")
+        if "image/jpeg" not in ct:
+            raise RuntimeError(
+                f"Tile ({col},{row}): expected image/jpeg, got '{ct}' — "
+                f"ESP body: {resp.text!r}"
+            )
         data = resp.content
         if output_file:
             with open(output_file, "wb") as f:
@@ -325,12 +332,12 @@ def build_interactive_parser():
              "via /capture/tile and stitches them into a full image (requires Pillow).",
     )
     tiled_parser.add_argument(
-        "--cols", type=int, default=8,
-        help="Tile columns — must match CAMERA_TILE_COLS in conf.h (default: 8)",
+        "--cols", type=int, default=4,
+        help="Tile columns — must match CAMERA_TILE_COLS in conf.h (default: 4)",
     )
     tiled_parser.add_argument(
-        "--rows", type=int, default=8,
-        help="Tile rows — must match CAMERA_TILE_ROWS in conf.h (default: 8)",
+        "--rows", type=int, default=4,
+        help="Tile rows — must match CAMERA_TILE_ROWS in conf.h (default: 4)",
     )
     tiled_parser.add_argument(
         "--output", "-o", default="board_full.jpg",
