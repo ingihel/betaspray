@@ -45,8 +45,7 @@
 \maketitle
 \thispagestyle{fancy}
 
-\tableofcontents
-\newpage
+\setstretch{0.95}
 
 % ===========================================================================
 \section{Introduction}
@@ -145,22 +144,16 @@ internal 24\,MHz oscillator~\cite{adafruit_ov5640}).  I also added laser
 module connections (2N2222 BJT switch from GPIO, 5\,V rail), servo signal
 labels, and a debug LED.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.7\textwidth]{img/cad.png}
-  \caption{Fusion~360 CAD model of the BetaSpray enclosure, showing PCB bay,
-  camera mount (right), and gimbal mounting regions.}
-  \label{fig:enclosure_cad}
-\end{figure}
-
 \subsection{PCB Layout---Initial 4-Layer Board (v0)}
 
 I performed the initial PCB layout on a 99.4\,mm~$\times$~99.4\,mm board
 with a 4-layer stackup: component placement, DVP/I\textsuperscript{2}C/PWM
 signal routing, ground and power plane stitching, and mounting holes per
-machine shop specs.  After discussion with the team and TA, we moved to a
-2-layer stackup for lower fabrication cost; Ingi led the 2-layer revision,
-carrying forward my v0 placement and routing decisions.
+machine shop specs.  The 4-layer stackup provided clean power/ground planes,
+but after reviewing PCBWay pricing (significantly higher for 4-layer) and
+the fact that our signal frequencies (24\,MHz PCLK, 50\,Hz PWM) do not
+strictly require inner planes, the team moved to a 2-layer board.  Ingi led
+the 2-layer revision, carrying forward my v0 placement and routing.
 
 During assembly I discovered a footprint error: the camera connector was
 3.96\,mm pitch instead of 2.54\,mm.  I fixed the footprint immediately and
@@ -186,8 +179,11 @@ initially written by me and later extended by Max with fade/hold tuning logic.
 \subsubsection{Wi-Fi Soft Access Point}
 
 The \texttt{wifi.c} module configures the ESP32-S3 as a Wi-Fi soft access
-point (SSID: \texttt{BetaSpray}, WPA2), creating a local network that the
-host PC connects to directly without an external router.
+point (SSID: \texttt{BetaSpray}, WPA2).  We chose soft AP over station mode
+(connecting to an existing router) to eliminate dependence on gym
+infrastructure---the device works anywhere without credentials or network
+access.  A wired serial fallback was considered in the proposal but proved
+unnecessary once soft AP demonstrated reliable short-range performance.
 
 During bringup, the board crashed on boot with
 \texttt{ESP\_ERR\_INVALID\_STATE} inside
@@ -244,9 +240,11 @@ for PSRAM-aware allocation) resolved this.
 
 \subsubsection{FatFS Flash Storage}
 
-I proposed using the ESP32-S3's internal SPI flash for persistent route
-storage early in the design phase.  The \texttt{fatfs.c} module provides a
-FatFS filesystem on top of ESP-IDF's wear-levelling layer.  A custom
+I proposed using the ESP32-S3 WROOM module's integrated SPI flash for
+persistent route storage rather than adding an external SD card---the
+internal flash requires no additional hardware, and ESP-IDF provides a
+mature FatFS integration with wear-levelling.  The \texttt{fatfs.c} module
+implements this filesystem layer.  A custom
 \texttt{partitions.csv} was required since the default partition table does
 not include a FAT partition:
 
@@ -274,7 +272,14 @@ loading entire files into DRAM.
 
 The \texttt{camera.c} module wraps the Espressif \texttt{esp32-camera}
 component, configuring the OV5640 for QVGA (320$\times$240) JPEG capture
-over the DVP parallel interface.  Key configuration decisions:
+over the DVP parallel interface.  We originally planned to run hold detection
+entirely on the ESP32-S3, but early testing showed that even downsampled
+images took several seconds to process on-device.  We shifted the CV pipeline
+to a host PC, freeing the ESP32-S3 for HTTP serving, route management, and
+servo control.  The initial PCB uses the WROOM-1U module (integrated crystal,
+flash, antenna matching); the final revision targets the bare ESP32-S3FH4R2
+with wirebonded 8\,MB PSRAM for full-resolution captures.  Key configuration
+decisions:
 
 \begin{itemize}
   \item \textbf{Frame buffer location}: \texttt{CAMERA\_FB\_IN\_DRAM} on the
@@ -309,11 +314,14 @@ hold detection output to servo actuation.  It provides:
 
 \begin{enumerate}
   \item \textbf{Route CRUD}: routes are stored as binary files on FatFS at
-        \texttt{/fatfs/routeN.xy}.  The binary format is a 4-byte hold count
-        (little-endian \texttt{uint32}) followed by interleaved
-        \texttt{float32} $(x, y)$ pixel coordinates.  This compact format
-        (maximum 516 bytes for 64 holds) enables fast read/write without JSON
-        parsing overhead on the microcontroller.
+        \texttt{/fatfs/routeN.xy}.  We debated storing servo angles directly,
+        but this would couple route data to a specific device placement---if
+        the device moves, all saved routes break.  Instead, the binary format
+        stores camera-space pixel coordinates (4-byte hold count followed by
+        interleaved \texttt{float32} $x, y$ pairs, max 516~bytes for 64
+        holds), and the angular conversion is computed at playback time via
+        the runtime-configurable transform.  This also avoids JSON parsing
+        overhead on the microcontroller.
 
   \item \textbf{Playback task}: a dedicated FreeRTOS task
         (\texttt{route\_playback\_task}) runs at priority~5 and iterates
@@ -384,6 +392,14 @@ staggered heights for laser clearance, and a protruding camera mount.  Max
 provided camera mounting hole measurements (1.8\,cm center-to-center, 3\,mm
 holes) and submitted the STL to the X1~Carbon print queue ($\sim$4~hour
 print time).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{img/cad.png}
+  \caption{Fusion~360 CAD model of the BetaSpray enclosure, showing PCB bay,
+  camera mount (right), and gimbal mounting regions.}
+  \label{fig:enclosure_cad}
+\end{figure}
 
 
 % ===========================================================================
