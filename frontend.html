@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetaSpray</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+  header { background: #16213e; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f3460; }
+  header h1 { font-size: 1.4em; color: #e94560; }
+  header .status { font-size: 0.85em; color: #888; }
+
+  .container { display: grid; grid-template-columns: 1fr 320px; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+
+  .panel { background: #16213e; border-radius: 8px; padding: 16px; border: 1px solid #0f3460; }
+  .panel h2 { font-size: 1em; color: #e94560; margin-bottom: 12px; border-bottom: 1px solid #0f3460; padding-bottom: 6px; }
+
+  button { background: #0f3460; color: #e0e0e0; border: 1px solid #e94560; border-radius: 4px; padding: 6px 14px; cursor: pointer; font-size: 0.85em; transition: background 0.15s; }
+  button:hover { background: #e94560; color: #fff; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.active { background: #e94560; color: #fff; }
+  button.danger { border-color: #ff6b6b; }
+  button.danger:hover { background: #ff6b6b; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+  /* Canvas area */
+  .canvas-wrap { position: relative; background: #0a0a1a; border-radius: 6px; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center; }
+  .canvas-wrap canvas { display: block; max-width: 100%; cursor: crosshair; }
+  .canvas-wrap .placeholder { color: #555; font-size: 0.9em; }
+
+  /* Mode banner */
+  .mode-banner { background: #e94560; color: #fff; text-align: center; padding: 6px; font-size: 0.85em; font-weight: bold; border-radius: 4px; margin-bottom: 10px; }
+
+  /* Sidebar controls */
+  .control-group { margin-bottom: 14px; }
+  .control-group label { display: block; font-size: 0.8em; color: #aaa; margin-bottom: 4px; }
+  .control-group input, .control-group select { width: 100%; padding: 5px 8px; background: #0a0a1a; border: 1px solid #0f3460; color: #e0e0e0; border-radius: 4px; font-size: 0.85em; }
+  .control-group input[type="range"] { padding: 0; }
+
+  /* Hold list */
+  .hold-list { max-height: 200px; overflow-y: auto; font-size: 0.8em; }
+  .hold-list .hold-item { display: flex; justify-content: space-between; padding: 3px 6px; border-bottom: 1px solid #0f3460; }
+  .hold-list .hold-item:hover { background: #0f3460; }
+  .hold-item .remove-hold { color: #ff6b6b; cursor: pointer; border: none; background: none; font-size: 0.85em; }
+
+  /* Log */
+  #log { background: #0a0a1a; border: 1px solid #0f3460; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 0.75em; height: 120px; overflow-y: auto; color: #8f8; }
+  #log .err { color: #ff6b6b; }
+  #log .info { color: #88f; }
+
+  /* Servo sliders */
+  .servo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.85em; }
+  .servo-row label { width: 70px; }
+  .servo-row input[type="range"] { flex: 1; }
+  .servo-row span { width: 36px; text-align: right; }
+
+  /* Route list in sidebar */
+  .route-num-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .route-num-row input { width: 60px; }
+
+  @media (max-width: 800px) {
+    .container { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BetaSpray</h1>
+  <span class="status" id="connStatus">ESP: <span id="espAddr">--</span></span>
+</header>
+
+<div class="container">
+
+  <!-- Main area: canvas + controls -->
+  <div>
+    <div id="modeBanner" class="mode-banner" style="display:none;"></div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <span class="placeholder" id="canvasPlaceholder">No image captured</span>
+      <canvas id="wallCanvas" style="display:none;"></canvas>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Camera</h2>
+      <div class="btn-row">
+        <button id="btnEnableCam">Enable Camera</button>
+        <button id="btnCapture" disabled>Capture</button>
+        <button id="btnFetchImage" disabled>Fetch Image</button>
+      </div>
+
+      <h2 style="margin-top:12px;">Route Creation</h2>
+      <div class="btn-row">
+        <button id="btnNewRoute">New Route (detect holds)</button>
+        <button id="btnManualRoute">New Route (manual clicks)</button>
+        <button id="btnFinishRoute" disabled>Save Route</button>
+        <button id="btnCancelRoute" class="danger" disabled>Cancel</button>
+      </div>
+      <div class="hold-list" id="holdList"></div>
+
+      <h2 style="margin-top:12px;">Playback</h2>
+      <div class="btn-row">
+        <button id="btnPlay">Play</button>
+        <button id="btnPause">Pause</button>
+        <button id="btnNext">Next</button>
+        <button id="btnRestart">Restart</button>
+        <button id="btnStop" class="danger">Stop</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="panel">
+      <h2>Connection</h2>
+      <div class="control-group">
+        <label>ESP32 Address</label>
+        <input type="text" id="inputEspAddr" value="192.168.4.1" />
+      </div>
+      <div class="control-group">
+        <label>Detection Server (if host mode)</label>
+        <input type="text" id="inputDetectAddr" value="localhost:5000" />
+      </div>
+      <div class="control-group">
+        <label>Detection Mode</label>
+        <select id="selectDetectMode">
+          <option value="esp">On-device (ESP)</option>
+          <option value="host" selected>Host (Python)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Route</h2>
+      <div class="route-num-row">
+        <label style="font-size:0.85em;">Route #</label>
+        <input type="number" id="inputRouteNum" value="0" min="0" max="99" />
+      </div>
+      <div class="btn-row">
+        <button id="btnLoadRoute">Load</button>
+        <button id="btnDeleteRoute" class="danger">Delete</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Mapping</h2>
+      <div class="control-group">
+        <label>H-FOV (deg)</label>
+        <input type="number" id="inputHfov" value="120" step="0.1" />
+      </div>
+      <div class="control-group">
+        <label>V-FOV (deg)</label>
+        <input type="number" id="inputVfov" value="60" step="0.1" />
+      </div>
+      <div class="control-group">
+        <label>Image Width (px)</label>
+        <input type="number" id="inputWidth" value="320" />
+      </div>
+      <div class="control-group">
+        <label>Image Height (px)</label>
+        <input type="number" id="inputHeight" value="240" />
+      </div>
+      <div class="control-group">
+        <label>Distance (m)</label>
+        <input type="number" id="inputDist" value="3.0" step="0.1" />
+      </div>
+      <button id="btnSetMapping">Set Mapping</button>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Servo Control</h2>
+      <div id="servoControls"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const NUM_SERVOS = 2;
+const CENTROID_RADIUS = 8;
+const SELECTED_COLOR = '#e94560';
+const UNSELECTED_COLOR = 'rgba(0, 200, 255, 0.7)';
+const ROUTE_LINE_COLOR = 'rgba(233, 69, 96, 0.5)';
+
+// ============================================================
+// STATE
+// ============================================================
+let espBase = '';
+let detectBase = '';
+let detectMode = 'host';
+
+let wallImage = null;          // Image object for the captured wall
+let allCentroids = [];         // [{x, y}, ...] from detection
+let selectedHolds = [];        // [{x, y}, ...] user-selected for route
+let routeMode = null;          // null | 'detect' | 'manual'
+let cameraEnabled = false;
+
+const canvas = document.getElementById('wallCanvas');
+const ctx = canvas.getContext('2d');
+
+// ============================================================
+// HELPERS
+// ============================================================
+function espUrl(path) { return `http://${espBase}${path}`; }
+function detectUrl(path) { return `http://${detectBase}${path}`; }
+
+function log(msg, cls = '') {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function espPost(path, body = null) {
+  try {
+    const opts = { method: 'POST' };
+    if (body !== null) {
+      opts.headers = { 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify(body);
+    }
+    const res = await fetch(espUrl(path), opts);
+    const text = await res.text();
+    log(`POST ${path} → ${res.status} ${text}`);
+    return { ok: res.ok, status: res.status, text };
+  } catch (e) {
+    log(`POST ${path} FAILED: ${e.message}`, 'err');
+    return { ok: false, status: 0, text: e.message };
+  }
+}
+
+async function espGet(path) {
+  try {
+    const res = await fetch(espUrl(path));
+    const text = await res.text();
+    log(`GET ${path} → ${res.status}`);
+    return { ok: res.ok, status: res.status, text, response: res };
+  } catch (e) {
+    log(`GET ${path} FAILED: ${e.message}`, 'err');
+    return { ok: false, status: 0, text: e.message };
+  }
+}
+
+function updateConfigFromUI() {
+  espBase = document.getElementById('inputEspAddr').value.trim();
+  detectBase = document.getElementById('inputDetectAddr').value.trim();
+  detectMode = document.getElementById('selectDetectMode').value;
+  document.getElementById('espAddr').textContent = espBase;
+}
+
+// ============================================================
+// CANVAS DRAWING
+// ============================================================
+function drawScene() {
+  if (!wallImage) return;
+
+  canvas.width = wallImage.naturalWidth;
+  canvas.height = wallImage.naturalHeight;
+  canvas.style.display = 'block';
+  document.getElementById('canvasPlaceholder').style.display = 'none';
+
+  ctx.drawImage(wallImage, 0, 0);
+
+  // Draw unselected centroids (only in detect mode)
+  if (routeMode === 'detect') {
+    for (const c of allCentroids) {
+      if (selectedHolds.find(h => h.x === c.x && h.y === c.y)) continue;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, CENTROID_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = UNSELECTED_COLOR;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // Draw route line
+  if (selectedHolds.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(selectedHolds[0].x, selectedHolds[0].y);
+    for (let i = 1; i < selectedHolds.length; i++) {
+      ctx.lineTo(selectedHolds[i].x, selectedHolds[i].y);
+    }
+    ctx.strokeStyle = ROUTE_LINE_COLOR;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // Draw selected holds
+  for (let i = 0; i < selectedHolds.length; i++) {
+    const h = selectedHolds[i];
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, CENTROID_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = SELECTED_COLOR;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Number label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), h.x, h.y);
+  }
+}
+
+function updateHoldList() {
+  const el = document.getElementById('holdList');
+  el.innerHTML = '';
+  selectedHolds.forEach((h, i) => {
+    const div = document.createElement('div');
+    div.className = 'hold-item';
+    div.innerHTML = `<span>#${i + 1}: (${Math.round(h.x)}, ${Math.round(h.y)})</span>
+      <button class="remove-hold" data-idx="${i}">&times;</button>`;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('.remove-hold').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedHolds.splice(parseInt(btn.dataset.idx), 1);
+      updateHoldList();
+      drawScene();
+    });
+  });
+}
+
+// ============================================================
+// CANVAS CLICK HANDLING
+// ============================================================
+canvas.addEventListener('click', (e) => {
+  if (!routeMode) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx = (e.clientX - rect.left) * scaleX;
+  const cy = (e.clientY - rect.top) * scaleY;
+
+  if (routeMode === 'detect') {
+    // Find nearest centroid within click radius
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const c of allCentroids) {
+      const d = Math.hypot(c.x - cx, c.y - cy);
+      if (d < nearestDist) { nearest = c; nearestDist = d; }
+    }
+    if (nearest && nearestDist < CENTROID_RADIUS * 3) {
+      // Toggle: if already selected, remove it; else add
+      const idx = selectedHolds.findIndex(h => h.x === nearest.x && h.y === nearest.y);
+      if (idx >= 0) {
+        selectedHolds.splice(idx, 1);
+      } else {
+        selectedHolds.push({ x: nearest.x, y: nearest.y });
+      }
+    }
+  } else if (routeMode === 'manual') {
+    // Place a hold wherever the user clicks
+    selectedHolds.push({ x: Math.round(cx), y: Math.round(cy) });
+  }
+
+  updateHoldList();
+  drawScene();
+});
+
+// ============================================================
+// CAMERA
+// ============================================================
+document.getElementById('btnEnableCam').addEventListener('click', async () => {
+  updateConfigFromUI();
+  if (!cameraEnabled) {
+    await espPost('/configure', { enabled: true, format: 'JPEG' });
+    cameraEnabled = true;
+    document.getElementById('btnEnableCam').textContent = 'Disable Camera';
+    document.getElementById('btnEnableCam').classList.add('active');
+    document.getElementById('btnCapture').disabled = false;
+    document.getElementById('btnFetchImage').disabled = false;
+  } else {
+    await espPost('/configure', { enabled: false });
+    cameraEnabled = false;
+    document.getElementById('btnEnableCam').textContent = 'Enable Camera';
+    document.getElementById('btnEnableCam').classList.remove('active');
+    document.getElementById('btnCapture').disabled = true;
+    document.getElementById('btnFetchImage').disabled = true;
+  }
+});
+
+document.getElementById('btnCapture').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espPost('/capture');
+});
+
+document.getElementById('btnFetchImage').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await fetchAndDisplayImage();
+});
+
+async function fetchAndDisplayImage() {
+  try {
+    const res = await fetch(espUrl('/get'));
+    if (!res.ok) { log(`GET /get failed: ${res.status}`, 'err'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      wallImage = img;
+      drawScene();
+      log(`Image loaded: ${img.naturalWidth}x${img.naturalHeight}`, 'info');
+    };
+    img.src = url;
+  } catch (e) {
+    log(`Fetch image failed: ${e.message}`, 'err');
+  }
+}
+
+// ============================================================
+// ROUTE CREATION MODES
+// ============================================================
+function enterRouteMode(mode) {
+  routeMode = mode;
+  selectedHolds = [];
+  allCentroids = [];
+  updateHoldList();
+  document.getElementById('btnFinishRoute').disabled = false;
+  document.getElementById('btnCancelRoute').disabled = false;
+  document.getElementById('btnNewRoute').disabled = true;
+  document.getElementById('btnManualRoute').disabled = true;
+
+  const banner = document.getElementById('modeBanner');
+  if (mode === 'detect') {
+    banner.textContent = 'ROUTE CREATION — Click detected holds to add to route';
+  } else {
+    banner.textContent = 'ROUTE CREATION — Click anywhere on image to place holds';
+  }
+  banner.style.display = 'block';
+}
+
+function exitRouteMode() {
+  routeMode = null;
+  document.getElementById('modeBanner').style.display = 'none';
+  document.getElementById('btnFinishRoute').disabled = true;
+  document.getElementById('btnCancelRoute').disabled = true;
+  document.getElementById('btnNewRoute').disabled = false;
+  document.getElementById('btnManualRoute').disabled = false;
+  drawScene();
+}
+
+document.getElementById('btnNewRoute').addEventListener('click', async () => {
+  updateConfigFromUI();
+  if (!wallImage) {
+    log('Capture an image first', 'err');
+    return;
+  }
+
+  enterRouteMode('detect');
+  log('Running hold detection...', 'info');
+
+  try {
+    let centroids;
+    if (detectMode === 'esp') {
+      // ESP-side detection: POST /detect (expects JSON response with centroids)
+      const res = await fetch(espUrl('/detect'), { method: 'POST' });
+      if (!res.ok) throw new Error(`ESP /detect returned ${res.status}`);
+      const data = await res.json();
+      centroids = data.centroids || data.holds || [];
+    } else {
+      // Host-side detection: send the current JPEG to the Python server
+      const res = await fetch(espUrl('/get'));
+      if (!res.ok) throw new Error('Failed to fetch image from ESP');
+      const blob = await res.blob();
+
+      const formData = new FormData();
+      formData.append('image', blob, 'capture.jpg');
+
+      const detectRes = await fetch(detectUrl('/detect'), {
+        method: 'POST',
+        body: formData,
+      });
+      if (!detectRes.ok) throw new Error(`Detection server returned ${detectRes.status}`);
+      const data = await detectRes.json();
+      centroids = data.centroids || data.holds || [];
+    }
+
+    allCentroids = centroids.map(c => {
+      if (Array.isArray(c)) return { x: c[0], y: c[1] };
+      return { x: c.x, y: c.y };
+    });
+
+    log(`Detected ${allCentroids.length} holds`, 'info');
+    drawScene();
+  } catch (e) {
+    log(`Hold detection failed: ${e.message}`, 'err');
+    exitRouteMode();
+  }
+});
+
+document.getElementById('btnManualRoute').addEventListener('click', () => {
+  if (!wallImage) {
+    log('Capture an image first', 'err');
+    return;
+  }
+  enterRouteMode('manual');
+});
+
+document.getElementById('btnFinishRoute').addEventListener('click', async () => {
+  updateConfigFromUI();
+  if (selectedHolds.length === 0) {
+    log('No holds selected', 'err');
+    return;
+  }
+  const routeNum = parseInt(document.getElementById('inputRouteNum').value);
+  const holds = selectedHolds.map(h => [h.x, h.y]);
+  await espPost('/route/create', { route: routeNum, holds });
+  log(`Route ${routeNum} saved with ${holds.length} holds`, 'info');
+  exitRouteMode();
+});
+
+document.getElementById('btnCancelRoute').addEventListener('click', () => {
+  exitRouteMode();
+  log('Route creation cancelled');
+});
+
+// ============================================================
+// ROUTE MANAGEMENT
+// ============================================================
+document.getElementById('btnLoadRoute').addEventListener('click', async () => {
+  updateConfigFromUI();
+  const n = parseInt(document.getElementById('inputRouteNum').value);
+  await espPost('/route/load', { route: n });
+});
+
+document.getElementById('btnDeleteRoute').addEventListener('click', async () => {
+  updateConfigFromUI();
+  const n = parseInt(document.getElementById('inputRouteNum').value);
+  await espPost('/route/delete', { route: n });
+});
+
+// ============================================================
+// PLAYBACK
+// ============================================================
+document.getElementById('btnPlay').addEventListener('click', async () => {
+  updateConfigFromUI();
+  const n = parseInt(document.getElementById('inputRouteNum').value);
+  await espPost('/route/play', { route: n });
+});
+
+document.getElementById('btnPause').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espGet('/route/pause');
+});
+
+document.getElementById('btnNext').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espGet('/route/next');
+});
+
+document.getElementById('btnRestart').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espPost('/route/restart');
+});
+
+document.getElementById('btnStop').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espGet('/stop');
+});
+
+// ============================================================
+// MAPPING
+// ============================================================
+document.getElementById('btnSetMapping').addEventListener('click', async () => {
+  updateConfigFromUI();
+  await espPost('/route/mapping', {
+    hfov_deg: parseFloat(document.getElementById('inputHfov').value),
+    vfov_deg: parseFloat(document.getElementById('inputVfov').value),
+    image_width: parseInt(document.getElementById('inputWidth').value),
+    image_height: parseInt(document.getElementById('inputHeight').value),
+    distance_m: parseFloat(document.getElementById('inputDist').value),
+  });
+});
+
+// ============================================================
+// SERVO CONTROLS
+// ============================================================
+function buildServoControls() {
+  const container = document.getElementById('servoControls');
+  for (let i = 0; i < NUM_SERVOS; i++) {
+    const row = document.createElement('div');
+    row.className = 'servo-row';
+    row.innerHTML = `
+      <label>Servo ${i}</label>
+      <input type="range" min="0" max="180" value="90" data-servo="${i}" />
+      <span>90</span>°`;
+    container.appendChild(row);
+
+    const slider = row.querySelector('input[type="range"]');
+    const display = row.querySelector('span');
+    let debounce = null;
+    slider.addEventListener('input', () => {
+      display.textContent = slider.value;
+      clearTimeout(debounce);
+      debounce = setTimeout(async () => {
+        updateConfigFromUI();
+        await espPost('/servo', { servo: i, angle: parseInt(slider.value) });
+      }, 150);
+    });
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+updateConfigFromUI();
+buildServoControls();
+log('BetaSpray frontend loaded. Connect to BetaSpray WiFi and enable camera.', 'info');
+</script>
+</body>
+</html>
