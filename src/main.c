@@ -48,21 +48,21 @@ void app_main(void) {
 
     // LED strip
     // NOTE: This should be removed for non-devkit configurations
-    ESP_LOGI("MAIN", "Initializing LED strip");
-    led_strip_handle_t led_strip;
-    led_strip_config_t strip_config = {
-        .strip_gpio_num = LED_PIN,
-        .max_leds = 1,
-        .led_pixel_format = LED_PIXEL_FORMAT_GRB,
-        .led_model = LED_MODEL_WS2812,
-    };
-    led_strip_rmt_config_t rmt_config = {
-        .resolution_hz = 10 * 1000 * 1000,
-    };
-    led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip);
-    ESP_LOGI("MAIN", "LED strip created");
-    led_strip_clear(led_strip);
-    ESP_LOGI("MAIN", "LED strip cleared");
+    // ESP_LOGI("MAIN", "Initializing LED strip");
+    // led_strip_handle_t led_strip;
+    // led_strip_config_t strip_config = {
+    //     .strip_gpio_num = LED_PIN,
+    //     .max_leds = 1,
+    //     .led_pixel_format = LED_PIXEL_FORMAT_GRB,
+    //     .led_model = LED_MODEL_WS2812,
+    // };
+    // led_strip_rmt_config_t rmt_config = {
+    //     .resolution_hz = 10 * 1000 * 1000,
+    // };
+    // led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip);
+    // ESP_LOGI("MAIN", "LED strip created");
+    // led_strip_clear(led_strip);
+    // ESP_LOGI("MAIN", "LED strip cleared");
 
     // Initialize FatFS on internal SPI flash
     ESP_LOGI("MAIN", "Initializing FatFS");
@@ -78,22 +78,22 @@ void app_main(void) {
     server_start();
     ESP_LOGI("MAIN", "HTTP server started");
 
-    // Servo init — GPIO1 (servo0), GPIO2 (servo1).  GPIO5-11 conflict with camera;
-    // do not increase NUM_SERVOS beyond 2 without first reassigning those pins.
-    // SG90 power note: use a dedicated supply, NOT the ESP32 3.3 V pin (40 mA max).
-    ESP_LOGI("MAIN", "Initializing servos");
-    servo_init();
-    ESP_LOGI("MAIN", "Servos initialized");
+    // // Servo init — GPIO1 (servo0), GPIO2 (servo1).  GPIO5-11 conflict with camera;
+    // // do not increase NUM_SERVOS beyond 2 without first reassigning those pins.
+    // // SG90 power note: use a dedicated supply, NOT the ESP32 3.3 V pin (40 mA max).
+    // ESP_LOGI("MAIN", "Initializing servos");
+    // servo_init();
+    // ESP_LOGI("MAIN", "Servos initialized");
 
-    // Route management system
-    ESP_LOGI("MAIN", "Initializing route system");
-    route_init();
-    ESP_LOGI("MAIN", "Route system initialized");
+    // // Route management system
+    // ESP_LOGI("MAIN", "Initializing route system");
+    // route_init();
+    // ESP_LOGI("MAIN", "Route system initialized");
 
     // TMP: perform servo tests
-    servo_testbench_x(0);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    servo_testbench_y(1);
+    // servo_testbench_x(0);
+    // vTaskDelay(500 / portTICK_PERIOD_MS);
+    // servo_testbench_y(1);
 
     // Set log level to ERROR now that initialization is complete
     // Frame streaming uses UART0, so INFO logs would corrupt binary data.
@@ -105,34 +105,7 @@ void app_main(void) {
     esp_log_level_set("server", ESP_LOG_INFO);
     esp_log_level_set("servo", ESP_LOG_INFO);
 
-    uint8_t colors[][3] = {
-        {20, 0, 0},  // Red
-        {0, 20, 0},  // Green
-        {0, 0, 20},  // Blue
-        {20, 20, 0}, // Yellow
-        {0, 20, 20}, // Cyan
-        {20, 0, 20}, // Magenta
-    };
-    int num_colors = sizeof(colors) / sizeof(colors[0]);
-    int current_color = 0;
-
-    // Take a picture every 10s
-    // As is, the LED cycles every 500 ms so we count ticks.
-    const int ticks_per_photo = 10000 / 500; // 20 ticks
-    int ticks = 0;
-
     while (1) {
-        led_strip_set_pixel(led_strip, 0, colors[current_color][0], colors[current_color][1],
-                            colors[current_color][2]);
-        led_strip_refresh(led_strip);
-        current_color = (current_color + 1) % num_colors;
-
-        if (++ticks >= ticks_per_photo) {
-            ticks = 0;
-            // Virtual slower event loop
-            // Remove?
-        }
-
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

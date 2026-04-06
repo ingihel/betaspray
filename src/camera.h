@@ -10,22 +10,22 @@
 // (D2 = LSB, D9 = MSB). RT and XC are noConn right as-is: the Adafruit board
 // has its own 24 MHz oscillator so xtal clock not necessary
 
-#define CAM_PIN_PWDN 15  // PD
+#define CAM_PIN_PWDN 19  // PD
 #define CAM_PIN_RESET -1 // RT is noConn
-#define CAM_PIN_XCLK -1  // XC is noConn
-#define CAM_PIN_SIOD 4   // SDA
-#define CAM_PIN_SIOC 5   // SCL
-#define CAM_PIN_D7 16    // D9 (MSB)
-#define CAM_PIN_D6 17    // D8
-#define CAM_PIN_D5 18    // D7
-#define CAM_PIN_D4 12    // D6
-#define CAM_PIN_D3 10    // D5
-#define CAM_PIN_D2 8     // D4
-#define CAM_PIN_D1 9     // D3
-#define CAM_PIN_D0 11    // D2 (LSB)
-#define CAM_PIN_VSYNC 6  // VS
-#define CAM_PIN_HREF 7   // HS
-#define CAM_PIN_PCLK 13  // PC
+#define CAM_PIN_XCLK 35  // XC is noConn
+#define CAM_PIN_SIOD 25   // SDA
+#define CAM_PIN_SIOC 39   // SCL
+#define CAM_PIN_D7 34    // D9 (MSB)
+#define CAM_PIN_D6 23    // D8
+#define CAM_PIN_D5 33    // D7
+#define CAM_PIN_D4 22    // D6
+#define CAM_PIN_D3 32    // D5
+#define CAM_PIN_D2 21     // D4
+#define CAM_PIN_D1 31     // D3
+#define CAM_PIN_D0 20    // D2 (LSB)
+#define CAM_PIN_VSYNC 24  // VS
+#define CAM_PIN_HREF 38   // HS
+#define CAM_PIN_PCLK 35  // PC
 
 // META(Ingi): do we actually anticipate needing this? What is the business logic
 // to initiate this?
