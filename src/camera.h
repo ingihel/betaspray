@@ -23,8 +23,8 @@
 #define CAM_PIN_D2 13     // D4
 #define CAM_PIN_D1 38     // D3
 #define CAM_PIN_D0 12    // D2 (LSB)
-#define CAM_PIN_VSYNC 47  // VS
-#define CAM_PIN_HREF 2   // HS
+#define CAM_PIN_VSYNC 2   // VS
+#define CAM_PIN_HREF 47  // HS
 #define CAM_PIN_PCLK 42  // PC
 
 // META(Ingi): do we actually anticipate needing this? What is the business logic

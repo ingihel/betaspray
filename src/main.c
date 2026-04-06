@@ -81,9 +81,9 @@ void app_main(void) {
     // // Servo init — GPIO1 (servo0), GPIO2 (servo1).  GPIO5-11 conflict with camera;
     // // do not increase NUM_SERVOS beyond 2 without first reassigning those pins.
     // // SG90 power note: use a dedicated supply, NOT the ESP32 3.3 V pin (40 mA max).
-    // ESP_LOGI("MAIN", "Initializing servos");
-    // servo_init();
-    // ESP_LOGI("MAIN", "Servos initialized");
+    ESP_LOGI("MAIN", "Initializing servos");
+    servo_init();
+    ESP_LOGI("MAIN", "Servos initialized");
 
     // // Route management system
     // ESP_LOGI("MAIN", "Initializing route system");

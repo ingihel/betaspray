@@ -1,19 +1,17 @@
 #pragma once
 
 // GPIO pin assignments
-// GPIO1: ADC1_CH0, free from camera/JTAG/USB/PSRAM/strapping conflicts
-// Alternate iomux options are listed for posterity's sake
-#define SERVO_PIN_0 1  // ADC1_0
-#define SERVO_PIN_1 2  // ADC1_1, TOUCH2
-#define SERVO_PIN_2 6  // ADC1_5, TOUCH6
-#define SERVO_PIN_3 7  // ADC1_6, TOUCH7
-#define SERVO_PIN_4 8  // ADC1_7, TOUCH8
-#define SERVO_PIN_5 9  // ADC1_8, TOUCH9, FSPIHD
-#define SERVO_PIN_6 10 // ADC1_9, TOUCH10, FSPICS0
-#define SERVO_PIN_7 11 // ADC2_0, TOUCH11, FSPID
+#define SERVO_PIN_0  4  // SERVO0
+#define SERVO_PIN_1  6  // SERVO1
+#define SERVO_PIN_2 18  // SERVO2
+#define SERVO_PIN_3  8  // SERVO3
+#define SERVO_PIN_4  9  // SERVO4
+#define SERVO_PIN_5  5  // SERVO5
+#define SERVO_PIN_6  7  // SERVO6
+#define SERVO_PIN_7 10  // SERVO7
 
 // How many servos are being used in the current configuration
-#define NUM_SERVOS 2
+#define NUM_SERVOS 8
 
 // Time (ms) for a full 180° hardware fade.  Partial moves scale proportionally.
 // 2000 ms ≈ 4× the SG90's natural ~0.5 s traversal time.

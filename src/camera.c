@@ -37,9 +37,9 @@ static camera_config_t s_cfg = {
     .pixel_format = PIXFORMAT_JPEG,
     .frame_size = FRAMESIZE_QVGA,
     .jpeg_quality = 12,               // 0-63; lower = better quality / larger file
-    .fb_count = 1,                    // single buffer to save memory
-    .fb_location = CAMERA_FB_IN_DRAM, // Use internal DRAM (PSRAM alloc failing)
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
+    .fb_count = 2,
+    .fb_location = CAMERA_FB_IN_PSRAM,
+    .grab_mode = CAMERA_GRAB_LATEST,
 };
 
 static bool s_initialized = false;
@@ -90,6 +90,14 @@ esp_err_t camera_init(void) {
     }
 
     s_initialized = true;
+
+    // Discard first few frames — OV5640 outputs garbage until the sensor stabilizes.
+    for (int i = 0; i < 3; i++) {
+        camera_fb_t *fb = esp_camera_fb_get();
+        if (fb) esp_camera_fb_return(fb);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
     ESP_LOGI(TAG, "Camera ready - framesize=%d format=%d fb_count=%d loc=%s", s_cfg.frame_size,
              s_cfg.pixel_format, s_cfg.fb_count,
              s_cfg.fb_location == CAMERA_FB_IN_PSRAM ? "PSRAM" : "DRAM");
