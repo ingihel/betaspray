@@ -105,27 +105,12 @@ void servo_drive(int id, int angle) {
 
         ESP_LOGI(TAG, "Servo %d: %d -> %d deg (fade %d ms)", id, from, angle, fade_ms);
 
-        // After the previous release the LEDC duty is 0.  Restore it to the
-        // tracked position so the hardware fade starts from the correct level.
-        // Wait one full PWM period (25 ms > 20 ms at 50 Hz) so ledc_update_duty
-        // is applied before ledc_set_fade_with_time reads the duty register.
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(from));
-        ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
-        vTaskDelay(pdMS_TO_TICKS(SERVO_PERIOD_MS + 5)); // +5 ms margin for tick quantisation
-
-        // Hardware-driven duty ramp — no FreeRTOS timing involvement.
         ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle), fade_ms);
         ledc_fade_start(LEDC_LOW_SPEED_MODE, ch, LEDC_FADE_WAIT_DONE);
     }
 
     servo_current_angle[id] = angle;
-    vTaskDelay(pdMS_TO_TICKS(SERVO_DURATION_MS));
-
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, 0);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
-
-    // servo_current_angle[id] = -1;  // Position unknown after release (slow ramp-up on next move)
-    ESP_LOGI(TAG, "Servo %d released at %d deg", id, angle);
+    ESP_LOGI(TAG, "Servo %d holding at %d deg", id, angle);
 }
 
 void servo_testbench_x(int id) {
