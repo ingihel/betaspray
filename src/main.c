@@ -10,6 +10,7 @@
 #include "route.h"
 #include "server.h"
 #include "servo.h"
+#include "smoketest.h"
 #include "wifi.h"
 #include <stdio.h>
 
@@ -85,6 +86,7 @@ void app_main(void) {
     servo_init();
     ESP_LOGI("MAIN", "Servos initialized");
 
+    smoketest_run();
     // // Route management system
     // ESP_LOGI("MAIN", "Initializing route system");
     // route_init();
@@ -104,6 +106,7 @@ void app_main(void) {
     esp_log_level_set("fatfs", ESP_LOG_INFO);
     esp_log_level_set("server", ESP_LOG_INFO);
     esp_log_level_set("servo", ESP_LOG_INFO);
+    esp_log_level_set("smoketest", ESP_LOG_INFO);
 
     while (1) {
         vTaskDelay(500 / portTICK_PERIOD_MS);

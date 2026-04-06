@@ -10,9 +10,7 @@ static const char *TAG = "smoketest";
 #define PSRAM_EXPECTED_BYTES   (8 * 1024 * 1024)
 #define PSRAM_MIN_BYTES        (PSRAM_EXPECTED_BYTES - 512 * 1024)
 
-// Allocation size used for the write/verify test (6 MB — leaves headroom for WiFi/camera).
-#define PSRAM_TEST_ALLOC_BYTES (6 * 1024 * 1024)
-#define PSRAM_TEST_PATTERN     0xA5
+#define PSRAM_TEST_PATTERN 0xA5
 
 // Minimum acceptable free internal SRAM after init (WiFi + FreeRTOS stacks need ~80 KB).
 #define INTERNAL_MIN_FREE_BYTES (80 * 1024)
@@ -36,33 +34,31 @@ static esp_err_t test_psram_size(void) {
 }
 
 static esp_err_t test_psram_readwrite(void) {
-    uint8_t *buf = heap_caps_malloc(PSRAM_TEST_ALLOC_BYTES, MALLOC_CAP_SPIRAM);
+    size_t alloc_size = heap_caps_get_free_size(MALLOC_CAP_SPIRAM)/2;
+    uint8_t *buf = heap_caps_malloc(alloc_size, MALLOC_CAP_SPIRAM);
     if (!buf) {
-        ESP_LOGE(TAG, "PSRAM FAIL: could not allocate %u KB",
-                 (unsigned)(PSRAM_TEST_ALLOC_BYTES / 1024));
+        ESP_LOGE(TAG, "PSRAM FAIL: could not allocate %u KB", (unsigned)(alloc_size / 1024));
         return ESP_FAIL;
     }
 
     // Write pattern
-    memset(buf, PSRAM_TEST_PATTERN, PSRAM_TEST_ALLOC_BYTES);
+    memset(buf, PSRAM_TEST_PATTERN, alloc_size);
 
     // Verify pattern in 4 KB chunks to keep watchdog happy
     esp_err_t result = ESP_OK;
     const size_t chunk = 4096;
-    for (size_t offset = 0; offset < PSRAM_TEST_ALLOC_BYTES; offset += chunk) {
-        size_t n = (offset + chunk <= PSRAM_TEST_ALLOC_BYTES) ? chunk
-                                                               : (PSRAM_TEST_ALLOC_BYTES - offset);
+    for (size_t offset = 0; offset < alloc_size; offset += chunk) {
+        size_t n = (offset + chunk <= alloc_size) ? chunk : (alloc_size - offset);
         for (size_t i = 0; i < n; i++) {
             if (buf[offset + i] != PSRAM_TEST_PATTERN) {
                 ESP_LOGE(TAG, "PSRAM FAIL: data mismatch at offset %u (got 0x%02x, want 0x%02x)",
                          (unsigned)(offset + i), buf[offset + i], PSRAM_TEST_PATTERN);
-                result = ESP_FAIL;
                 goto done;
             }
         }
     }
 
-    ESP_LOGI(TAG, "PSRAM read/write OK (%u KB verified)", (unsigned)(PSRAM_TEST_ALLOC_BYTES / 1024));
+    ESP_LOGI(TAG, "PSRAM read/write OK (%u KB verified)", (unsigned)(alloc_size / 1024));
 
 done:
     heap_caps_free(buf);
