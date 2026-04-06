@@ -38,7 +38,7 @@ static camera_config_t s_cfg = {
     .frame_size = FRAMESIZE_QVGA,
     .jpeg_quality = 12,               // 0-63; lower = better quality / larger file
     .fb_count = 2,
-    .fb_location = CAMERA_FB_IN_DRAM,
+    .fb_location = CAMERA_FB_IN_PSRAM, // DRAM insufficient after WiFi — must use PSRAM
     .grab_mode = CAMERA_GRAB_LATEST,
 };
 
