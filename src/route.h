@@ -6,6 +6,11 @@
 #define ROUTE_MAX_HOLDS 64
 #define ROUTE_FILE_PATH "/fatfs/route%d.xy"
 
+typedef enum {
+    ROUTE_MODE_SEQUENTIAL = 0, // all gimbals advance together each step (default)
+    ROUTE_MODE_LEAPFROG,       // gimbals advance one at a time in rotation
+} route_play_mode_t;
+
 typedef struct {
     float x;
     float y;
@@ -37,6 +42,11 @@ void route_play(void);
 void route_pause(void);
 void route_next(void);
 void route_restart(void);
+
+// Set playback mode and number of active gimbals for leapfrog.
+// leap_num is ignored in SEQUENTIAL mode.
+// leap_num must be 2 or 4 for LEAPFROG mode (capped to NUM_SERVOS/2).
+void route_set_mode(route_play_mode_t mode, int leap_num);
 
 // Transform config
 void route_set_transform(const route_transform_t *t);

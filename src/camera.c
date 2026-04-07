@@ -89,6 +89,15 @@ esp_err_t camera_init(void) {
         return err;
     }
 
+    // Slow PCLK via OV5640 register writes to reduce DMA sampling errors.
+    // 0x460C[1]=1 enables manual PCLK period; 0x3824 sets the divider (higher = slower).
+    sensor_t *s = esp_camera_sensor_get();
+    if (s) {
+        s->set_reg(s, 0x460C, 0xFF, 0x35); // manual PCLK period mode
+        s->set_reg(s, 0x3824, 0xFF, 0x01); // PCLK divider = 4
+        ESP_LOGI(TAG, "PCLK divider set to 1");
+    }
+
     s_initialized = true;
 
     // Discard first few frames — OV5640 outputs garbage until the sensor stabilizes.

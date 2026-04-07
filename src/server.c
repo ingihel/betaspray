@@ -3,7 +3,7 @@
 #include "route.h"
 #include "servo.h"
 #include "esp_log.h"
-#include "esp_heap_caps.ha
+#include "esp_heap_caps.h"
 #include <cJSON.h>
 #include <stdio.h>
 
@@ -403,6 +403,22 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
     }
 
     int route_num = route_item->valueint;
+
+    // Optional: "mode" = "sequential" (default) or "leapfrog"
+    // Optional: "gimbals" = active gimbal count for leapfrog (default 2, future: 4)
+    route_play_mode_t mode = ROUTE_MODE_SEQUENTIAL;
+    int leap_num = 2;
+    cJSON *mode_item = cJSON_GetObjectItem(json, "mode");
+    if (mode_item && cJSON_IsString(mode_item)) {
+        if (strcmp(mode_item->valuestring, "leapfrog") == 0) {
+            mode = ROUTE_MODE_LEAPFROG;
+            cJSON *gimbals_item = cJSON_GetObjectItem(json, "gimbals");
+            if (gimbals_item && cJSON_IsNumber(gimbals_item)) {
+                leap_num = gimbals_item->valueint;
+            }
+        }
+    }
+    route_set_mode(mode, leap_num);
     cJSON_Delete(json);
 
     // Load the route first
@@ -418,7 +434,10 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
     // Start playback
     route_play();
     char log_msg[128];
-    snprintf(log_msg, sizeof(log_msg), "route=%d", route_num);
+    snprintf(log_msg, sizeof(log_msg), "route=%d mode=%s gimbals=%d",
+             route_num,
+             mode == ROUTE_MODE_LEAPFROG ? "leapfrog" : "sequential",
+             mode == ROUTE_MODE_LEAPFROG ? leap_num : NUM_SERVOS / 2);
     log_response("/route/play", "OK", log_msg);
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
