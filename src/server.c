@@ -12,6 +12,7 @@ static const char *TAG = "server";
 static uint8_t *s_frame_buf = NULL;
 static size_t s_frame_len = 0;
 static bool s_camera_enabled = false;
+static bool s_use_psram = false;
 
 /// --------- HELPERS ----------
 
@@ -63,10 +64,9 @@ static esp_err_t capture_handler(httpd_req_t *req) {
         heap_caps_free(s_frame_buf);
     }
 
-    // Allocate new buffer in PSRAM for the frame
-    // TODO(FUTURE): make this a PSRAM allocation
-    // :)
-    s_frame_buf = malloc(fb->len);
+    s_frame_buf = s_use_psram
+        ? heap_caps_malloc(fb->len, MALLOC_CAP_SPIRAM)
+        : malloc(fb->len);
     if (!s_frame_buf) {
         ESP_LOGE(TAG, "Failed to allocate frame buffer");
         camera_release_frame(fb);
@@ -167,6 +167,13 @@ static esp_err_t configure_handler(httpd_req_t *req) {
     //     camera_set_resolution(size);
     //     ESP_LOGI(TAG, "Resolution set to %s", resolution->valuestring);
     // }
+
+    // Handle psram field
+    cJSON *psram = cJSON_GetObjectItem(json, "psram");
+    if (psram && cJSON_IsBool(psram)) {
+        s_use_psram = cJSON_IsTrue(psram);
+        ESP_LOGI(TAG, "Frame buffer allocation: %s", s_use_psram ? "PSRAM" : "DRAM");
+    }
 
     // Handle format field
     cJSON *format = cJSON_GetObjectItem(json, "format");

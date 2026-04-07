@@ -74,7 +74,7 @@ class BetaSprayClient:
             print(f"Response: {resp.text}")
 
     def configure_camera(self, enabled: Optional[bool] = None, resolution: Optional[str] = None,
-                         format: Optional[str] = None):
+                         format: Optional[str] = None, psram: Optional[bool] = None):
         """Configure camera settings."""
         config = {}
         if enabled is not None:
@@ -83,6 +83,8 @@ class BetaSprayClient:
             config["resolution"] = resolution
         if format:
             config["format"] = format
+        if psram is not None:
+            config["psram"] = psram
 
         resp = self._post("/configure", json_data=config)
         print(f"Configure: {resp.text}")
@@ -281,6 +283,8 @@ def build_interactive_parser():
     config_parser.add_argument("--disable", action="store_true", help="Disable camera")
     config_parser.add_argument("--res", choices=["QVGA", "VGA", "SVGA"], help="Resolution")
     config_parser.add_argument("--fmt", choices=["JPEG", "RGB565", "GRAYSCALE"], help="Format")
+    config_parser.add_argument("--psram", action="store_true", default=None, help="Use PSRAM for frame buffer")
+    config_parser.add_argument("--no-psram", action="store_true", default=None, help="Use DRAM for frame buffer")
 
     # Route commands
     route_create_parser = subparsers.add_parser("create-route", help="Create a route")
@@ -347,7 +351,8 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "config":
             enabled = True if args.enable else (False if args.disable else None)
-            client.configure_camera(enabled=enabled, resolution=args.res, format=args.fmt)
+            psram = True if args.psram else (False if args.no_psram else None)
+            client.configure_camera(enabled=enabled, resolution=args.res, format=args.fmt, psram=psram)
 
         elif args.command == "create-route":
             holds = parse_holds(args.holds)
