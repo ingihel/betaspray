@@ -154,19 +154,21 @@ static esp_err_t configure_handler(httpd_req_t *req) {
     }
 
     // TODO: Handle resolution field (currently fixed to QVGA)
-    // cJSON *resolution = cJSON_GetObjectItem(json, "resolution");
-    // if (resolution && resolution->type == cJSON_String) {
-    //     framesize_t size = FRAMESIZE_QVGA;
-    //     if (strcmp(resolution->valuestring, "QVGA") == 0) {
-    //         size = FRAMESIZE_QVGA;
-    //     } else if (strcmp(resolution->valuestring, "VGA") == 0) {
-    //         size = FRAMESIZE_VGA;
-    //     } else if (strcmp(resolution->valuestring, "SVGA") == 0) {
-    //         size = FRAMESIZE_SVGA;
-    //     }
-    //     camera_set_resolution(size);
-    //     ESP_LOGI(TAG, "Resolution set to %s", resolution->valuestring);
-    // }
+    cJSON *resolution = cJSON_GetObjectItem(json, "resolution");
+    if (resolution && resolution->type == cJSON_String) {
+        framesize_t size = FRAMESIZE_QVGA;
+        if (strcmp(resolution->valuestring, "QVGA") == 0) {
+            size = FRAMESIZE_QVGA;
+        } else if (strcmp(resolution->valuestring, "VGA") == 0) {
+            size = FRAMESIZE_VGA;
+        } else if (strcmp(resolution->valuestring, "SVGA") == 0) {
+            size = FRAMESIZE_SVGA;
+        } else if (strcmp(resolution->valuestring, "5MP") == 0) {
+            size = FRAMESIZE_5MP;
+        }
+        camera_set_resolution(size);
+        ESP_LOGI(TAG, "Resolution set to %s", resolution->valuestring);
+    }
 
     // Handle psram field
     cJSON *psram = cJSON_GetObjectItem(json, "psram");

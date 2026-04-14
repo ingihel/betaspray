@@ -25,7 +25,6 @@ except ImportError:
 DEFAULT_HOST = "192.168.4.1"
 DEFAULT_PORT = 80
 
-
 class BetaSprayClient:
     def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         self.base_url = f"http://{host}:{port}"
@@ -170,7 +169,6 @@ class BetaSprayClient:
         resp = self._post("/test", data=message.encode())
         print(f"Test: {resp.text}")
 
-
 def compute_scales_from_fov(hfov: float, vfov: float, width: int, height: int,
                             distance_m: float, ref_distance_m: float) -> Tuple[float, float, float, float]:
     """Compute servo scales from camera FOV parameters.
@@ -206,7 +204,6 @@ def compute_scales_from_fov(hfov: float, vfov: float, width: int, height: int,
 
     return x_scale, x_offset, y_scale, y_offset
 
-
 def parse_holds(holds_str: str) -> List[Tuple[float, float]]:
     """Parse holds from format: '160,120;80,60;240,180' or JSON array."""
     if holds_str.startswith("["):
@@ -218,7 +215,6 @@ def parse_holds(holds_str: str) -> List[Tuple[float, float]]:
             x, y = map(float, pair.split(","))
             holds.append((x, y))
         return holds
-
 
 def load_route_binary(route_num: int, filepath: str = None) -> List[Tuple[float, float]]:
     """Load route from binary file (.bin) and return holds list."""
@@ -248,7 +244,6 @@ def load_route_binary(route_num: int, filepath: str = None) -> List[Tuple[float,
         print(f"Error loading {filepath}: {e}", file=sys.stderr)
     return holds
 
-
 def save_route_binary(route_num: int, holds: List[Tuple[float, float]], filepath: str = None) -> None:
     """Save route to binary file (.bin) format."""
     if not filepath:
@@ -263,7 +258,6 @@ def save_route_binary(route_num: int, holds: List[Tuple[float, float]], filepath
         print(f"Saved {len(holds)} holds to {filepath}")
     except Exception as e:
         print(f"Error saving {filepath}: {e}", file=sys.stderr)
-
 
 def build_interactive_parser():
     """Builds the argparse parser for interactive shell commands."""
@@ -281,7 +275,7 @@ def build_interactive_parser():
     config_parser = subparsers.add_parser("config", help="Configure camera")
     config_parser.add_argument("--enable", action="store_true", help="Enable camera")
     config_parser.add_argument("--disable", action="store_true", help="Disable camera")
-    config_parser.add_argument("--res", choices=["QVGA", "VGA", "SVGA"], help="Resolution")
+    config_parser.add_argument("--res", choices=["QVGA", "VGA", "SVGA", "5MP"], help="Resolution")
     config_parser.add_argument("--fmt", choices=["JPEG", "RGB565", "GRAYSCALE"], help="Format")
     config_parser.add_argument("--psram", action="store_true", default=None, help="Use PSRAM for frame buffer")
     config_parser.add_argument("--no-psram", action="store_true", default=None, help="Use DRAM for frame buffer")
@@ -333,7 +327,6 @@ def build_interactive_parser():
     help_parser = subparsers.add_parser("help", help="Show help message")
 
     return parser
-
 
 def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: argparse.ArgumentParser):
     """Executes the mapped command. Exceptions are caught to prevent crashing the interactive loop."""
@@ -427,12 +420,11 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
     except Exception as e:
         print(f"Command Error: {e}", file=sys.stderr)
 
-
 def main():
     base_parser = argparse.ArgumentParser(description="BetaSpray HTTP Client Initialization")
     base_parser.add_argument("--host", default=DEFAULT_HOST, help=f"Device IP (default: {DEFAULT_HOST})")
     base_parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"Device port (default: {DEFAULT_PORT})")
-    
+
     base_args, remaining_args = base_parser.parse_known_args()
 
     client = BetaSprayClient(base_args.host, base_args.port)
@@ -457,11 +449,11 @@ def main():
             line = input("betaspray> ").strip()
             if not line:
                 continue
-            
+
             if line.lower() in ["exit", "quit"]:
                 print("Exiting...")
                 break
- 
+
             # recreate shell-style argument fmt
             args_list = shlex.split(line)
             args = cmd_parser.parse_args(args_list)
@@ -469,7 +461,7 @@ def main():
             if not args.command:
                 cmd_parser.print_help()
                 continue
-            
+
             execute_command(client, args, cmd_parser)
 
         except KeyboardInterrupt:

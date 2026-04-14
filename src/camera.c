@@ -35,11 +35,11 @@ static camera_config_t s_cfg = {
     .ledc_channel = LEDC_CHANNEL_7,
 
     .pixel_format = PIXFORMAT_JPEG,
-    .frame_size = FRAMESIZE_QVGA,
-    .jpeg_quality = 12,               // 0-63; lower = better quality / larger file
-    .fb_count = 2,
+    .frame_size = FRAMESIZE_5MP,
+    .jpeg_quality = 63,               // 0-63; lower = better quality / larger file
+    .fb_count = 1,
     .fb_location = CAMERA_FB_IN_PSRAM, // DRAM insufficient after WiFi — must use PSRAM
-    .grab_mode = CAMERA_GRAB_LATEST,
+    .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
 };
 
 static bool s_initialized = false;
@@ -94,8 +94,8 @@ esp_err_t camera_init(void) {
     sensor_t *s = esp_camera_sensor_get();
     if (s) {
         s->set_reg(s, 0x460C, 0xFF, 0x35); // manual PCLK period mode
-        s->set_reg(s, 0x3824, 0xFF, 0x01); // PCLK divider = 4
-        ESP_LOGI(TAG, "PCLK divider set to 1");
+        s->set_reg(s, 0x3824, 0xFF, 0x04); // PCLK divider = 4
+        ESP_LOGI(TAG, "PCLK divider set to 4");
     }
 
     s_initialized = true;
