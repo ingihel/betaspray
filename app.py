@@ -85,9 +85,9 @@ def esp_url(path: str) -> str:
     return f"{ESP_BASE}{path}"
 
 
-def proxy_get(path: str) -> Response:
+def proxy_get(path: str, throttle: bool = True) -> Response:
     """Proxy a GET request to the ESP and return the response."""
-    if not rate_limit():
+    if throttle and not rate_limit():
         slog(f"-- GET {path} dropped (rate limited)", "warn")
         return jsonify({"error": "rate limited"}), 429
     slog(f"-> GET {path}")
@@ -202,6 +202,37 @@ def esp_stop():
 @app.route('/esp/test', methods=['POST'])
 def esp_test():
     return proxy_post('/test', data=request.get_data())
+
+
+@app.route('/esp/state', methods=['GET'])
+def esp_get_state():
+    return proxy_get('/state', throttle=False)
+
+
+@app.route('/esp/state', methods=['POST'])
+def esp_set_state():
+    return proxy_post('/state', json=request.get_json(force=True))
+
+
+@app.route('/esp/laser', methods=['POST'])
+def esp_laser():
+    return proxy_post('/laser', json=request.get_json(force=True))
+
+
+@app.route('/esp/centroids/upload', methods=['POST'])
+def esp_centroids_upload():
+    return proxy_post('/centroids/upload', json=request.get_json(force=True))
+
+
+@app.route('/esp/centroids', methods=['GET'])
+def esp_centroids_get():
+    scan_id = request.args.get('scan_id', '0')
+    return proxy_get(f'/centroids?scan_id={scan_id}')
+
+
+@app.route('/esp/scan/save', methods=['POST'])
+def esp_scan_save():
+    return proxy_post('/scan/save', json=request.get_json(force=True))
 
 
 # ---------------------------------------------------------------------------
@@ -393,6 +424,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnEnableCam">Enable Camera</button>
         <button id="btnCapture" disabled>Capture</button>
         <button id="btnFetchImage" disabled>Fetch Image</button>
+        <button id="btnLiveView" disabled>Live View</button>
       </div>
 
       <h2 style="margin-top:12px;">Route Creation</h2>
@@ -422,6 +454,49 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
 
   <div>
     <div class="panel">
+      <h2>FSM State</h2>
+      <div style="font-size:0.85em; margin-bottom:8px;">
+        <div><strong>Mode:</strong> <span id="stateMode">--</span></div>
+        <div><strong>User:</strong> <span id="stateUser">--</span></div>
+        <div><strong>Climb:</strong> <span id="stateClimb">--</span></div>
+        <div><strong>Proceed:</strong> <span id="stateProceed">--</span></div>
+        <div><strong>Scan:</strong> <span id="stateScan">--</span> &nbsp; <strong>Route:</strong> <span id="stateRoute">--</span></div>
+      </div>
+      <div class="control-group">
+        <label>Mode</label>
+        <select id="selectMode"><option value="">--</option><option>MANUAL</option><option>USER</option></select>
+      </div>
+      <div class="control-group">
+        <label>User State</label>
+        <select id="selectUserState"><option value="">--</option><option>SCAN_WALL</option><option>SET_ROUTE</option><option>CLIMB_WALL</option></select>
+      </div>
+      <div class="control-group">
+        <label>Climb State</label>
+        <select id="selectClimbState"><option value="">--</option><option>IDLE</option><option>RUNNING</option><option>PAUSED</option></select>
+      </div>
+      <div class="control-group">
+        <label>Proceed Mode</label>
+        <select id="selectProceedMode"><option value="">--</option><option>MANUAL</option><option>TIMED</option><option>AUTO</option></select>
+      </div>
+      <div class="control-group">
+        <label>Interval (ms)</label>
+        <input type="number" id="inputInterval" value="3000" min="100" step="100" />
+      </div>
+      <div class="btn-row">
+        <button id="btnSetState">Set State</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Laser</h2>
+      <div class="btn-row">
+        <button id="btnLaserOn">ON</button>
+        <button id="btnLaserOff">OFF</button>
+        <button id="btnLaserToggle">Toggle</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
       <h2>Route</h2>
       <div class="route-num-row">
         <label style="font-size:0.85em;">Route #</label>
@@ -634,6 +709,7 @@ document.getElementById('btnEnableCam').addEventListener('click', async () => {
     document.getElementById('btnEnableCam').classList.add('active');
     document.getElementById('btnCapture').disabled = false;
     document.getElementById('btnFetchImage').disabled = false;
+    document.getElementById('btnLiveView').disabled = false;
   } else {
     await post('/esp/configure', { enabled: false });
     cameraEnabled = false;
@@ -641,6 +717,8 @@ document.getElementById('btnEnableCam').addEventListener('click', async () => {
     document.getElementById('btnEnableCam').classList.remove('active');
     document.getElementById('btnCapture').disabled = true;
     document.getElementById('btnFetchImage').disabled = true;
+    document.getElementById('btnLiveView').disabled = true;
+    if (liveViewActive) { liveViewActive = false; clearInterval(liveViewTimer); document.getElementById('btnLiveView').textContent = 'Live View'; document.getElementById('btnLiveView').classList.remove('active'); }
   }
 });
 
@@ -802,6 +880,75 @@ async function pollServerLogs() {
   } catch (e) { /* ignore poll failures */ }
 }
 setInterval(pollServerLogs, 1000);
+
+// -- FSM state polling --
+async function pollState() {
+  try {
+    const res = await fetch(API + '/esp/state');
+    if (!res.ok) return;
+    const s = await res.json();
+    document.getElementById('stateMode').textContent = s.mode || '--';
+    document.getElementById('stateUser').textContent = s.user_state || '--';
+    document.getElementById('stateClimb').textContent = s.climb_state || '--';
+    document.getElementById('stateProceed').textContent = s.proceed_mode || '--';
+    document.getElementById('stateScan').textContent = s.active_scan ?? '--';
+    document.getElementById('stateRoute').textContent = s.active_route ?? '--';
+  } catch (e) { /* ignore */ }
+}
+setInterval(pollState, 2000);
+pollState();
+
+// -- FSM state set --
+document.getElementById('btnSetState').addEventListener('click', async () => {
+  const body = {};
+  const mode = document.getElementById('selectMode').value;
+  if (mode) body.mode = mode;
+  const us = document.getElementById('selectUserState').value;
+  if (us) body.user_state = us;
+  const cs = document.getElementById('selectClimbState').value;
+  if (cs) body.climb_state = cs;
+  const pm = document.getElementById('selectProceedMode').value;
+  if (pm) {
+    body.proceed_mode = pm;
+    body.interval_ms = parseInt(document.getElementById('inputInterval').value) || 3000;
+  }
+  await post('/esp/state', body);
+  pollState();
+});
+
+// -- Laser --
+document.getElementById('btnLaserOn').addEventListener('click', () => post('/esp/laser', { on: true }));
+document.getElementById('btnLaserOff').addEventListener('click', () => post('/esp/laser', { on: false }));
+document.getElementById('btnLaserToggle').addEventListener('click', () => post('/esp/laser', {}));
+
+// -- Live view --
+let liveViewActive = false;
+let liveViewTimer = null;
+document.getElementById('btnLiveView').addEventListener('click', () => {
+  liveViewActive = !liveViewActive;
+  const btn = document.getElementById('btnLiveView');
+  if (liveViewActive) {
+    btn.textContent = 'Stop Live';
+    btn.classList.add('active');
+    liveViewTimer = setInterval(async () => {
+      try {
+        await fetch(API + '/esp/capture', { method: 'POST' });
+        await new Promise(r => setTimeout(r, 200));
+        const res = await fetch(API + '/esp/get');
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { wallImage = img; drawScene(); };
+        img.src = url;
+      } catch (e) { /* ignore */ }
+    }, 1500);
+  } else {
+    btn.textContent = 'Live View';
+    btn.classList.remove('active');
+    clearInterval(liveViewTimer);
+  }
+});
 
 log('BetaSpray frontend loaded. Enable camera to begin.', 'info');
 </script>
