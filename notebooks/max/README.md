@@ -115,3 +115,29 @@ Added `camera_set_window()` and `camera_reset_window()` to `camera.c/h`. Added `
 Key constraint: AE/AWB re-converges per tile. For consistent exposure, lock AE before the first tile. Subsampling and binning registers are intentionally not touched at runtime to avoid losing DMA sync.
 
 Commit: `2a6c89f`
+
+---
+
+### Apr 14, 2026
+
+**Camera — JPEG quality floor established**
+
+Through on-device testing, determined that the minimum viable JPEG quality setting on the OV5640 is **3** (on the firmware's 0–63 scale, where 0 = best quality, 63 = most compressed). Values below 3 produce artifacts severe enough to break the hold detection pipeline. Camera is running at full 5MP (2592×1944) for maximum detection accuracy.
+
+At 5MP a decoded RGB888 frame is ~15 MB, which exceeds the 8 MB PSRAM ceiling — on-device image processing is not feasible at this resolution. All CV work runs host-side.
+
+**CV — Ported ImageJ hold detector to Python/OpenCV in `client.py`**
+
+Ported `Betaspray-hold-extractor.ijm` to a native Python/OpenCV pipeline (`detect_holds()` in `client.py`). Pipeline mirrors the IJM: median blur → Gaussian background subtraction (approximates rolling ball r=100) → CLAHE → second median + despeckle → HSV threshold (V ≤ 183) → fill holes → morphological open → connected components (area ≥ 150 px). Outputs a list of hold centroids and an annotated image.
+
+Added `select_holds_interactive()`: matplotlib window showing detected holds overlaid on the captured image. Clicking toggles selection (red → green); closing the window confirms and optionally sends the hold list to the ESP32 via `POST /route/create`.
+
+Added `detect` command to the `client.py` interactive shell.
+
+**App — Wired CV pipeline into `app.py` web UI**
+
+Modified `app.py` to replace the DoG binary subprocess in `/detect` with a direct call to `detect_holds()` imported from `client.py`. "New Route (detect holds)" in the web UI now runs the full OpenCV pipeline server-side. Mapping panel kept in codebase but hidden from the UI.
+
+All work on branch `codev2`.
+
+Commits: `ac1fb4f` (pushed image quality jpeg=3, added hold recognition pipeline), `404f85c` (flask app now?), `32907e7` (app.py modified to run hold detection)
