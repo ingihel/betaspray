@@ -163,6 +163,13 @@ class BetaSprayClient:
         resp = self._post("/route/mapping", json_data=data)
         print(f"Mapping set: {resp.text}")
 
+    # Laser endpoints
+    def laser(self, on: Optional[bool] = None):
+        """Control laser. If on is None, toggles."""
+        data = {"on": on} if on is not None else {}
+        resp = self._post("/laser", json_data=data)
+        print(f"Laser: {resp.text}")
+
     # Utility endpoints
     def test(self, message: str = "hello"):
         """Echo test."""
@@ -318,6 +325,11 @@ def build_interactive_parser():
     servo_parser.add_argument("servo_id", type=int, help="Servo ID (0-N)")
     servo_parser.add_argument("angle", type=int, help="Target angle (0-180)")
 
+    # Laser
+    laser_parser = subparsers.add_parser("laser", help="Control laser")
+    laser_parser.add_argument("--on", action="store_true", default=None, help="Turn laser on")
+    laser_parser.add_argument("--off", action="store_true", default=None, help="Turn laser off")
+
     # Utility
     test_parser = subparsers.add_parser("test", help="Echo test")
     test_parser.add_argument("message", nargs="?", default="hello", help="Message to echo")
@@ -398,6 +410,10 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "servo":
             client.command_servo(args.servo_id, args.angle)
+
+        elif args.command == "laser":
+            on = True if args.on else (False if args.off else None)
+            client.laser(on)
 
         elif args.command == "test":
             client.test(args.message)

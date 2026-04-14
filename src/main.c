@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "laser.h"
 #include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -85,6 +86,10 @@ void app_main(void) {
     ESP_LOGI("MAIN", "Initializing servos");
     servo_init();
     ESP_LOGI("MAIN", "Servos initialized");
+
+    ESP_LOGI("MAIN", "Initializing laser");
+    ESP_ERROR_CHECK(laser_init());
+    ESP_LOGI("MAIN", "Laser initialized");
 
     smoketest_run();
     // // Route management system

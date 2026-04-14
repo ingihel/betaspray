@@ -1,5 +1,6 @@
 #include "server.h"
 #include "camera.h"
+#include "laser.h"
 #include "route.h"
 #include "servo.h"
 #include "esp_log.h"
@@ -635,6 +636,41 @@ static esp_err_t servo_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// POST /laser - turn laser on or off: {"on": true} or {"on": false}
+static esp_err_t laser_handler(httpd_req_t *req) {
+    log_request("POST", "/laser", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 256) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    char buf[len + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) {
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    cJSON *on = cJSON_GetObjectItem(json, "on");
+    if (on && cJSON_IsBool(on)) {
+        laser_set(cJSON_IsTrue(on));
+    } else {
+        laser_toggle();
+    }
+    cJSON_Delete(json);
+
+    log_response("/laser", "OK", laser_is_on() ? "on" : "off");
+    httpd_resp_sendstr(req, laser_is_on() ? "ON" : "OFF");
+    return ESP_OK;
+}
+
 // POST /test - echo back the request body prefixed with "ECHO: "
 static esp_err_t test_handler(httpd_req_t *req) {
     log_request("POST", "/test", "");
@@ -743,9 +779,15 @@ static const httpd_uri_t uri_route_mapping = {
     .handler = route_mapping_handler,
 };
 
+static const httpd_uri_t uri_laser = {
+    .uri = "/laser",
+    .method = HTTP_POST,
+    .handler = laser_handler,
+};
+
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 16; // 15 route+util handlers + 1 buffer
+    config.max_uri_handlers = 17;
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -768,6 +810,7 @@ httpd_handle_t server_start(void) {
     httpd_register_uri_handler(server, &uri_route_next);
     httpd_register_uri_handler(server, &uri_route_restart);
     httpd_register_uri_handler(server, &uri_route_mapping);
+    httpd_register_uri_handler(server, &uri_laser);
 
     ESP_LOGI(TAG, "HTTP server started");
     return server;
