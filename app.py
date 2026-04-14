@@ -16,7 +16,6 @@ import collections
 import io
 import json
 import struct
-import subprocess
 import sys
 import tempfile
 import time
@@ -26,6 +25,12 @@ from typing import List, Tuple
 
 import requests
 from flask import Flask, Response, jsonify, request, send_file
+
+try:
+    from client import detect_holds as _cv_detect_holds
+    HAS_CV_PIPELINE = True
+except ImportError:
+    HAS_CV_PIPELINE = False
 
 # ---------------------------------------------------------------------------
 # Config
@@ -42,7 +47,6 @@ app = Flask(__name__)
 _last_esp_request_time = 0.0
 RATE_LIMIT_INTERVAL = 1.0  # seconds
 
-
 def rate_limit():
     """Return True if the request is allowed, False if it should be dropped."""
     global _last_esp_request_time
@@ -55,12 +59,10 @@ def rate_limit():
 # Set at startup from CLI args
 ESP_BASE = ""
 DETECT_MODE = "host"  # "host" or "esp"
-DOG_BINARY = "./differenceofgaussian"
 
 # Server-side log ring buffer (last 200 entries)
 _server_logs = collections.deque(maxlen=200)
 _log_counter = 0
-
 
 def slog(msg: str, level: str = "info"):
     """Append a timestamped message to the server log buffer."""
@@ -84,7 +86,6 @@ def slog(msg: str, level: str = "info"):
 def esp_url(path: str) -> str:
     return f"{ESP_BASE}{path}"
 
-
 def proxy_get(path: str, throttle: bool = True) -> Response:
     """Proxy a GET request to the ESP and return the response."""
     if throttle and not rate_limit():
@@ -103,7 +104,6 @@ def proxy_get(path: str, throttle: bool = True) -> Response:
     except requests.RequestException as e:
         slog(f"<- GET {path} FAILED: {e}", "err")
         return jsonify({"error": str(e)}), 502
-
 
 def proxy_post(path: str, **kwargs) -> Response:
     """Proxy a POST request to the ESP and return the response."""
@@ -124,7 +124,6 @@ def proxy_post(path: str, **kwargs) -> Response:
         slog(f"<- POST {path} FAILED: {e}", "err")
         return jsonify({"error": str(e)}), 502
 
-
 # ---------------------------------------------------------------------------
 # ESP proxy routes — all under /esp/
 # ---------------------------------------------------------------------------
@@ -133,107 +132,86 @@ def proxy_post(path: str, **kwargs) -> Response:
 def esp_capture():
     return proxy_post('/capture')
 
-
 @app.route('/esp/get', methods=['GET'])
 def esp_get_frame():
     return proxy_get('/get')
-
 
 @app.route('/esp/configure', methods=['POST'])
 def esp_configure():
     return proxy_post('/configure', json=request.get_json(force=True))
 
-
 @app.route('/esp/servo', methods=['POST'])
 def esp_servo():
     return proxy_post('/servo', json=request.get_json(force=True))
-
 
 @app.route('/esp/route/create', methods=['POST'])
 def esp_route_create():
     return proxy_post('/route/create', json=request.get_json(force=True))
 
-
 @app.route('/esp/route/delete', methods=['POST'])
 def esp_route_delete():
     return proxy_post('/route/delete', json=request.get_json(force=True))
-
 
 @app.route('/esp/route/load', methods=['POST'])
 def esp_route_load():
     return proxy_post('/route/load', json=request.get_json(force=True))
 
-
 @app.route('/esp/route/play', methods=['POST'])
 def esp_route_play():
     return proxy_post('/route/play', json=request.get_json(force=True))
-
 
 @app.route('/esp/route/pause', methods=['GET'])
 def esp_route_pause():
     return proxy_get('/route/pause')
 
-
 @app.route('/esp/route/next', methods=['GET'])
 def esp_route_next():
     return proxy_get('/route/next')
-
 
 @app.route('/esp/route/restart', methods=['POST'])
 def esp_route_restart():
     return proxy_post('/route/restart')
 
-
 @app.route('/esp/route/mapping', methods=['POST'])
 def esp_route_mapping():
     return proxy_post('/route/mapping', json=request.get_json(force=True))
-
 
 @app.route('/esp/start', methods=['GET'])
 def esp_start():
     return proxy_get('/start')
 
-
 @app.route('/esp/stop', methods=['GET'])
 def esp_stop():
     return proxy_get('/stop')
-
 
 @app.route('/esp/test', methods=['POST'])
 def esp_test():
     return proxy_post('/test', data=request.get_data())
 
-
 @app.route('/esp/state', methods=['GET'])
 def esp_get_state():
     return proxy_get('/state', throttle=False)
-
 
 @app.route('/esp/state', methods=['POST'])
 def esp_set_state():
     return proxy_post('/state', json=request.get_json(force=True))
 
-
 @app.route('/esp/laser', methods=['POST'])
 def esp_laser():
     return proxy_post('/laser', json=request.get_json(force=True))
 
-
 @app.route('/esp/centroids/upload', methods=['POST'])
 def esp_centroids_upload():
     return proxy_post('/centroids/upload', json=request.get_json(force=True))
-
 
 @app.route('/esp/centroids', methods=['GET'])
 def esp_centroids_get():
     scan_id = request.args.get('scan_id', '0')
     return proxy_get(f'/centroids?scan_id={scan_id}')
 
-
 @app.route('/esp/scan/save', methods=['POST'])
 def esp_scan_save():
     return proxy_post('/scan/save', json=request.get_json(force=True))
-
 
 # ---------------------------------------------------------------------------
 # Hold detection
@@ -254,6 +232,10 @@ def detect_holds():
         slog("Detection mode: ESP (proxying to /detect)")
         return proxy_post('/detect')
 
+    if not HAS_CV_PIPELINE:
+        slog("CV pipeline unavailable — pip install opencv-python numpy", "err")
+        return jsonify({"error": "CV pipeline not available (pip install opencv-python numpy)"}), 500
+
     # Get JPEG bytes
     if 'image' in request.files:
         jpeg_bytes = request.files['image'].read()
@@ -264,56 +246,22 @@ def detect_holds():
         slog("No image provided for detection", "err")
         return jsonify({"error": "No image provided"}), 400
 
-    slog(f"Running host detection on {len(jpeg_bytes)} byte JPEG using {DOG_BINARY}")
+    slog(f"Running hold detection on {len(jpeg_bytes)} byte image")
 
-    # Write to temp file, run DoG binary
     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as f:
         f.write(jpeg_bytes)
         tmp_path = f.name
 
     try:
-        result = subprocess.run(
-            [DOG_BINARY, tmp_path],
-            capture_output=True, text=True, timeout=30
-        )
-
-        if result.returncode != 0:
-            slog(f"DoG exited with code {result.returncode}: {result.stderr.strip()}", "err")
-            return jsonify({"error": f"DoG failed: {result.stderr}"}), 500
-
-        if result.stderr.strip():
-            slog(f"DoG stderr: {result.stderr.strip()}", "warn")
-
-        # Parse DoG output: lines like "(x,y) of Blob N: 123.4,567.8"
-        centroids = []
-        for line in result.stdout.strip().split('\n'):
-            line = line.strip()
-            if 'Blob' in line and ':' in line:
-                coords_str = line.split(':')[-1].strip()
-                parts = coords_str.split(',')
-                if len(parts) == 2:
-                    try:
-                        x = float(parts[0])
-                        y = float(parts[1])
-                        centroids.append([x, y])
-                    except ValueError:
-                        continue
-
+        _, holds = _cv_detect_holds(tmp_path)
+        centroids = [[h['centroid'][0], h['centroid'][1]] for h in holds]
         slog(f"Detection complete: {len(centroids)} holds found")
         return jsonify({"centroids": centroids})
-
-    except subprocess.TimeoutExpired:
-        slog("DoG detection timed out after 30s", "err")
-        return jsonify({"error": "DoG detection timed out"}), 500
-    except FileNotFoundError:
-        slog(f"DoG binary not found at {DOG_BINARY}", "err")
-        return jsonify({"error": f"DoG binary not found at {DOG_BINARY}"}), 500
     except Exception as e:
         slog(f"Detection exception: {traceback.format_exc()}", "err")
         return jsonify({"error": str(e)}), 500
     finally:
         Path(tmp_path).unlink(missing_ok=True)
-
 
 # ---------------------------------------------------------------------------
 # Server log endpoint
@@ -326,7 +274,6 @@ def get_logs():
     entries = [e for e in _server_logs if e['id'] > since]
     return jsonify(entries)
 
-
 # ---------------------------------------------------------------------------
 # Frontend
 # ---------------------------------------------------------------------------
@@ -334,7 +281,6 @@ def get_logs():
 @app.route('/')
 def index():
     return FRONTEND_HTML
-
 
 # ---------------------------------------------------------------------------
 # Frontend HTML (inline)
@@ -508,7 +454,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
       </div>
     </div>
 
-    <div class="panel" style="margin-top:12px;">
+    <div class="panel" style="margin-top:12px;display:none;">
       <h2>Mapping</h2>
       <div class="control-group">
         <label>H-FOV (deg)</label>
@@ -520,7 +466,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
       </div>
       <div class="control-group">
         <label>Image Width (px)</label>
-        <input type="number" id="inputWidth" value="320" />
+        <input type="number" id="inputWidth" value="" />
       </div>
       <div class="control-group">
         <label>Image Height (px)</label>
@@ -971,18 +917,15 @@ def main():
     parser.add_argument("--port", type=int, default=DEFAULT_APP_PORT,
                         help=f"Flask server port (default: {DEFAULT_APP_PORT})")
     parser.add_argument("--detect", choices=["host", "esp"], default="host",
-                        help="Hold detection mode: 'host' runs DoG locally, 'esp' proxies to device (default: host)")
-    parser.add_argument("--dog-binary", default=DOG_BINARY,
-                        help=f"Path to DoG detection binary (default: {DOG_BINARY})")
+                        help="Hold detection mode: 'host' runs CV pipeline locally, 'esp' proxies to device (default: host)")
 
     args = parser.parse_args()
     ESP_BASE = f"http://{args.esp}:{args.esp_port}"
     DETECT_MODE = args.detect
-    DOG_BINARY = args.dog_binary
 
     print(f"BetaSpray Web App")
     print(f"  ESP32:     {ESP_BASE}")
-    print(f"  Detection: {DETECT_MODE}" + (f" ({DOG_BINARY})" if DETECT_MODE == "host" else ""))
+    print(f"  Detection: {DETECT_MODE}" + (" (OpenCV pipeline)" if DETECT_MODE == "host" else ""))
     print(f"  Frontend:  http://localhost:{args.port}")
     print()
 
@@ -995,7 +938,6 @@ def main():
     logging.getLogger('werkzeug').addFilter(QuietLogFilter())
 
     app.run(host="0.0.0.0", port=args.port, debug=False)
-
 
 if __name__ == "__main__":
     main()
