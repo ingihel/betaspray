@@ -14,6 +14,8 @@ import struct
 import shlex
 import subprocess
 import math
+import threading
+import time
 from typing import List, Tuple, Optional
 from pathlib import Path
 
@@ -169,6 +171,43 @@ class BetaSprayClient:
         data = {"on": on} if on is not None else {}
         resp = self._post("/laser", json_data=data)
         print(f"Laser: {resp.text}")
+
+    # FSM endpoints
+    def get_state(self) -> dict:
+        """Get current FSM state."""
+        resp = self._get("/state")
+        data = resp.json()
+        return data
+
+    def set_state(self, **kwargs):
+        """Set FSM state. kwargs: mode, user_state, climb_state, proceed_mode, interval_ms."""
+        resp = self._post("/state", json_data=kwargs)
+        if resp.status_code == 409:
+            print(f"State transition rejected: {resp.text}", file=sys.stderr)
+        else:
+            print(f"State: {resp.text}")
+
+    def upload_centroids(self, scan_id: int, centroids: List[Tuple[float, float]]):
+        """Upload centroids to ESP fatfs."""
+        data = {
+            "scan_id": scan_id,
+            "centroids": [[x, y] for x, y in centroids],
+        }
+        resp = self._post("/centroids/upload", json_data=data)
+        print(f"Upload centroids (scan {scan_id}, {len(centroids)} points): {resp.text}")
+
+    def get_centroids(self, scan_id: int = 0) -> Optional[List[Tuple[float, float]]]:
+        """Fetch centroids from ESP fatfs."""
+        resp = self._get(f"/centroids?scan_id={scan_id}")
+        data = resp.json()
+        centroids = [(c[0], c[1]) for c in data.get("centroids", [])]
+        print(f"Got {len(centroids)} centroids from scan {scan_id}")
+        return centroids
+
+    def save_scan(self, scan_id: int):
+        """Save current frame buffer to fatfs as scanN.jpg."""
+        resp = self._post("/scan/save", json_data={"scan_id": scan_id})
+        print(f"Save scan {scan_id}: {resp.text}")
 
     # Utility endpoints
     def test(self, message: str = "hello"):
@@ -330,6 +369,29 @@ def build_interactive_parser():
     laser_parser.add_argument("--on", action="store_true", default=None, help="Turn laser on")
     laser_parser.add_argument("--off", action="store_true", default=None, help="Turn laser off")
 
+    # FSM commands
+    mode_parser = subparsers.add_parser("mode", help="Set FSM mode (manual/user)")
+    mode_parser.add_argument("mode", choices=["manual", "user"], help="Mode to set")
+
+    subparsers.add_parser("status", help="Show current FSM state")
+
+    scan_parser = subparsers.add_parser("scan", help="Full scan workflow: capture, download, run CV, upload centroids, save scan")
+    scan_parser.add_argument("--scan-id", type=int, default=0, help="Scan ID (default: 0)")
+    scan_parser.add_argument("--output", "-o", default="capture.jpg", help="Local image filename")
+
+    set_route_parser = subparsers.add_parser("set-route", help="Create route from stored centroids")
+    set_route_parser.add_argument("route_num", type=int, help="Route number")
+    set_route_parser.add_argument("hold_indices", help="Comma-separated centroid indices, e.g. '0,1,5,10'")
+    set_route_parser.add_argument("--scan-id", type=int, default=0, help="Scan ID to fetch centroids from")
+
+    climb_parser = subparsers.add_parser("climb", help="Enter CLIMB_WALL state and load route")
+    climb_parser.add_argument("route_num", type=int, help="Route number to climb")
+    climb_parser.add_argument("--mode", dest="proceed_mode", choices=["manual", "timed", "auto"], default="manual", help="Proceed mode")
+    climb_parser.add_argument("--interval", type=int, default=3000, help="Timed interval in ms (default: 3000)")
+
+    subparsers.add_parser("start", help="Start climbing (RUNNING)")
+    subparsers.add_parser("stop", help="Stop climbing (IDLE + reset)")
+
     # Utility
     test_parser = subparsers.add_parser("test", help="Echo test")
     test_parser.add_argument("message", nargs="?", default="hello", help="Message to echo")
@@ -417,6 +479,93 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "test":
             client.test(args.message)
+        elif args.command == "mode":
+            client.set_state(mode=args.mode.upper())
+
+        elif args.command == "status":
+            state = client.get_state()
+            mode = state.get("mode", "?")
+            line = f"Mode: {mode}"
+            if mode == "USER":
+                us = state.get("user_state", "?")
+                line += f"  |  User state: {us}"
+                if us == "CLIMB_WALL":
+                    line += f"  |  Climb: {state.get('climb_state', '?')}"
+                    line += f"  |  Proceed: {state.get('proceed_mode', '?')}"
+            line += f"  |  Scan: {state.get('active_scan', -1)}  Route: {state.get('active_route', -1)}"
+            print(line)
+
+        elif args.command == "scan":
+            sid = args.scan_id
+            out = args.output
+            print(f"--- Scan workflow (scan_id={sid}) ---")
+            # 1. Capture
+            client.capture()
+            # 2. Download
+            client.get_frame(out)
+            # 3. Run local CV
+            centroids = []
+            try:
+                result = subprocess.run(
+                    ["./differenceofgaussian", out],
+                    capture_output=True, text=True, check=True,
+                )
+                # Parse centroids from stdout: expect lines like "x,y"
+                for line in result.stdout.strip().splitlines():
+                    parts = line.strip().split(",")
+                    if len(parts) >= 2:
+                        try:
+                            centroids.append((float(parts[0]), float(parts[1])))
+                        except ValueError:
+                            pass
+                print(f"CV found {len(centroids)} centroids")
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                print(f"CV failed ({e}), enter centroids manually or re-run", file=sys.stderr)
+                return
+            # 4. Upload centroids
+            if centroids:
+                client.upload_centroids(sid, centroids)
+            # 5. Save scan image
+            client.save_scan(sid)
+            print(f"--- Scan complete (scan_id={sid}, {len(centroids)} centroids) ---")
+
+        elif args.command == "set-route":
+            # Fetch centroids from ESP
+            centroids = client.get_centroids(args.scan_id)
+            if not centroids:
+                print("No centroids available", file=sys.stderr)
+                return
+            # Parse indices
+            indices = [int(i) for i in args.hold_indices.split(",")]
+            selected = []
+            for i in indices:
+                if 0 <= i < len(centroids):
+                    selected.append(centroids[i])
+                else:
+                    print(f"Warning: index {i} out of range (0-{len(centroids)-1})", file=sys.stderr)
+            if not selected:
+                print("No valid holds selected", file=sys.stderr)
+                return
+            client.create_route(args.route_num, selected)
+            print(f"Route {args.route_num} created with {len(selected)} holds")
+
+        elif args.command == "climb":
+            # Transition: USER -> CLIMB_WALL, set proceed mode, load route
+            client.set_state(user_state="CLIMB_WALL")
+            client.set_state(
+                proceed_mode=args.proceed_mode.upper(),
+                interval_ms=args.interval,
+            )
+            client.load_route(args.route_num)
+            print(f"Ready to climb route {args.route_num} ({args.proceed_mode} mode)")
+            print("Use 'start' to begin, 'next' to advance, 'stop' to halt")
+
+        elif args.command == "start":
+            client.set_state(climb_state="RUNNING")
+
+        elif args.command == "stop":
+            client.set_state(climb_state="IDLE")
+
         elif args.command == "process_local":
             try:
                 # Run the differenceofgaussian program
@@ -436,6 +585,78 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
     except Exception as e:
         print(f"Command Error: {e}", file=sys.stderr)
 
+def get_prompt(client: BetaSprayClient) -> str:
+    """Build state-aware prompt string."""
+    try:
+        state = client.get_state()
+        mode = state.get("mode", "?")
+        if mode == "USER":
+            us = state.get("user_state", "?")
+            if us == "CLIMB_WALL":
+                cs = state.get("climb_state", "?")
+                return f"betaspray[USER/{us}:{cs}]> "
+            return f"betaspray[USER/{us}]> "
+        return f"betaspray[{mode}]> "
+    except Exception:
+        return "betaspray> "
+
+
+class AutoModeThread:
+    """Background thread for AUTO proceed mode: captures frames, runs CV, sends /route/next."""
+
+    def __init__(self, client: BetaSprayClient, interval: float = 0.2):
+        self.client = client
+        self.interval = interval
+        self._stop = threading.Event()
+        self._thread = None
+
+    def start(self):
+        if self._thread and self._thread.is_alive():
+            return
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+        print("AUTO mode thread started")
+
+    def stop(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2)
+            self._thread = None
+        print("AUTO mode thread stopped")
+
+    def _run(self):
+        while not self._stop.is_set():
+            try:
+                # Check if still in RUNNING state
+                state = self.client.get_state()
+                if state.get("climb_state") != "RUNNING":
+                    print("\n[AUTO] Climb no longer RUNNING, stopping auto thread")
+                    break
+
+                # Capture + download
+                self.client.session.post(f"{self.client.base_url}/capture", timeout=5)
+                resp = self.client.session.get(f"{self.client.base_url}/get", timeout=5)
+                if resp.headers.get("content-type") == "image/jpeg":
+                    with open("auto_frame.jpg", "wb") as f:
+                        f.write(resp.content)
+
+                    # Run CV
+                    result = subprocess.run(
+                        ["./differenceofgaussian", "auto_frame.jpg"],
+                        capture_output=True, text=True, timeout=5,
+                    )
+                    # If CV detects climber near hold, advance
+                    # For now: always advance (placeholder for real CV logic)
+                    if result.returncode == 0:
+                        self.client.session.get(f"{self.client.base_url}/route/next", timeout=5)
+
+            except Exception as e:
+                print(f"\n[AUTO] Error: {e}", file=sys.stderr)
+
+            self._stop.wait(self.interval)
+
+
 def main():
     base_parser = argparse.ArgumentParser(description="BetaSpray HTTP Client Initialization")
     base_parser.add_argument("--host", default=DEFAULT_HOST, help=f"Device IP (default: {DEFAULT_HOST})")
@@ -445,6 +666,7 @@ def main():
 
     client = BetaSprayClient(base_args.host, base_args.port)
     cmd_parser = build_interactive_parser()
+    auto_thread = AutoModeThread(client)
 
     # Infer that CLI intent can exist too...
     # if an argument was provided directly via command line, just do that then exit
@@ -462,11 +684,13 @@ def main():
 
     while True:
         try:
-            line = input("betaspray> ").strip()
+            prompt = get_prompt(client)
+            line = input(prompt).strip()
             if not line:
                 continue
 
             if line.lower() in ["exit", "quit"]:
+                auto_thread.stop()
                 print("Exiting...")
                 break
 
@@ -480,10 +704,22 @@ def main():
 
             execute_command(client, args, cmd_parser)
 
+            # Auto-start/stop AUTO thread based on state transitions
+            if args.command == "start":
+                try:
+                    state = client.get_state()
+                    if state.get("proceed_mode") == "AUTO" and state.get("climb_state") == "RUNNING":
+                        auto_thread.start()
+                except Exception:
+                    pass
+            elif args.command in ("stop", "pause", "mode"):
+                auto_thread.stop()
+
         except KeyboardInterrupt:
             print("\n(Cancelled) Press Ctrl-D or type 'exit' to quit.")
             continue
         except EOFError: # catch user EOF (C-d)
+            auto_thread.stop()
             print("\nExiting...")
             break
         except ValueError as e: # shlex

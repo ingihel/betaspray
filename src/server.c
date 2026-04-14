@@ -1,5 +1,7 @@
 #include "server.h"
 #include "camera.h"
+#include "fatfs.h"
+#include "fsm.h"
 #include "laser.h"
 #include "route.h"
 #include "servo.h"
@@ -7,6 +9,7 @@
 #include "esp_heap_caps.h"
 #include <cJSON.h>
 #include <stdio.h>
+#include <string.h>
 
 static const char *TAG = "server";
 
@@ -14,6 +17,16 @@ static uint8_t *s_frame_buf = NULL;
 static size_t s_frame_len = 0;
 static bool s_camera_enabled = false;
 static bool s_use_psram = false;
+
+/// --------- FSM GUARD ----------
+
+#define FSM_GUARD(op) do { \
+    if (fsm_check_op(op) != ESP_OK) { \
+        httpd_resp_set_status(req, "409 Conflict"); \
+        httpd_resp_sendstr(req, "Not allowed in current state"); \
+        return ESP_OK; \
+    } \
+} while (0)
 
 /// --------- HELPERS ----------
 
@@ -48,6 +61,7 @@ static void log_response(const char *uri, const char *status, const char *detail
 // POST /capture - trigger camera capture and store frame
 static esp_err_t capture_handler(httpd_req_t *req) {
     log_request("POST", "/capture", "");
+    FSM_GUARD("capture");
     if (!s_camera_enabled) {
         httpd_resp_sendstr(req, "Camera disabled");
         return ESP_OK;
@@ -88,6 +102,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 // GET /get - return the stored frame as JPEG
 static esp_err_t get_handler(httpd_req_t *req) {
     log_request("GET", "/get", "");
+    FSM_GUARD("get");
     if (s_frame_len == 0) {
         httpd_resp_sendstr(req, "No frame captured");
         return ESP_OK;
@@ -109,6 +124,7 @@ static esp_err_t get_handler(httpd_req_t *req) {
 // POST /configure - configure camera settings
 static esp_err_t configure_handler(httpd_req_t *req) {
     log_request("POST", "/configure", "");
+    FSM_GUARD("configure");
     int len = req->content_len;
     if (len <= 0 || len > 512) {
         httpd_resp_sendstr(req, "Invalid content length");
@@ -203,6 +219,7 @@ static esp_err_t configure_handler(httpd_req_t *req) {
 static esp_err_t route_create_handler(httpd_req_t *req) {
     int len = req->content_len;
     log_request("POST", "/route/create", "");
+    FSM_GUARD("route/create");
     if (len <= 0 || len > 2048) { // Reduced from 4096
         log_response("/route/create", "FAIL", "invalid content length");
         httpd_resp_sendstr(req, "Invalid content length");
@@ -377,6 +394,7 @@ static esp_err_t route_load_handler(httpd_req_t *req) {
 // POST /route/play - load route and start playback
 static esp_err_t route_play_handler(httpd_req_t *req) {
     log_request("POST", "/route/play", "");
+    FSM_GUARD("route/play");
     int len = req->content_len;
     if (len <= 0 || len > 256) {
         httpd_resp_sendstr(req, "Invalid content length");
@@ -456,6 +474,7 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
 // GET /route/pause - pause playback
 static esp_err_t route_pause_handler(httpd_req_t *req) {
     log_request("GET", "/route/pause", "");
+    FSM_GUARD("route/pause");
     route_pause();
     log_response("/route/pause", "OK", "");
     httpd_resp_sendstr(req, "OK");
@@ -465,6 +484,7 @@ static esp_err_t route_pause_handler(httpd_req_t *req) {
 // GET /route/next - advance to next hold
 static esp_err_t route_next_handler(httpd_req_t *req) {
     log_request("GET", "/route/next", "");
+    FSM_GUARD("route/next");
     route_next();
     log_response("/route/next", "OK", "");
     httpd_resp_sendstr(req, "OK");
@@ -474,6 +494,7 @@ static esp_err_t route_next_handler(httpd_req_t *req) {
 // POST /route/restart - restart route from beginning
 static esp_err_t route_restart_handler(httpd_req_t *req) {
     log_request("POST", "/route/restart", "");
+    FSM_GUARD("route/restart");
     route_restart();
     log_response("/route/restart", "OK", "");
     httpd_resp_sendstr(req, "OK");
@@ -573,6 +594,7 @@ static esp_err_t stop_handler(httpd_req_t *req) {
 // POST /servo - command an arbitrary servo
 static esp_err_t servo_handler(httpd_req_t *req) {
     log_request("POST", "/servo", "");
+    FSM_GUARD("servo");
     int len = req->content_len;
     if (len <= 0 || len > 256) {
         log_response("/servo", "FAIL", "invalid content length");
@@ -639,6 +661,7 @@ static esp_err_t servo_handler(httpd_req_t *req) {
 // POST /laser - turn laser on or off: {"on": true} or {"on": false}
 static esp_err_t laser_handler(httpd_req_t *req) {
     log_request("POST", "/laser", "");
+    FSM_GUARD("laser");
     int len = req->content_len;
     if (len <= 0 || len > 256) {
         httpd_resp_sendstr(req, "Invalid content length");
@@ -668,6 +691,334 @@ static esp_err_t laser_handler(httpd_req_t *req) {
 
     log_response("/laser", "OK", laser_is_on() ? "on" : "off");
     httpd_resp_sendstr(req, laser_is_on() ? "ON" : "OFF");
+    return ESP_OK;
+}
+
+// POST /test - echo back the request body prefixed with "ECHO: "
+// GET /state - return FSM state as JSON
+static esp_err_t state_get_handler(httpd_req_t *req) {
+    log_request("GET", "/state", "");
+
+    const char *mode_str = fsm_get_mode() == FSM_MODE_MANUAL ? "MANUAL" : "USER";
+    const char *user_names[] = {"SCAN_WALL", "SET_ROUTE", "CLIMB_WALL"};
+    const char *climb_names[] = {"IDLE", "RUNNING", "PAUSED"};
+    const char *proceed_names[] = {"MANUAL", "TIMED", "AUTO"};
+
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "mode", mode_str);
+
+    if (fsm_get_mode() == FSM_MODE_USER) {
+        cJSON_AddStringToObject(json, "user_state", user_names[fsm_get_user_state()]);
+        if (fsm_get_user_state() == FSM_USER_CLIMB_WALL) {
+            cJSON_AddStringToObject(json, "climb_state", climb_names[fsm_get_climb_state()]);
+            cJSON_AddStringToObject(json, "proceed_mode", proceed_names[fsm_get_proceed_mode()]);
+        }
+    }
+    cJSON_AddNumberToObject(json, "active_scan", fsm_get_active_scan());
+    cJSON_AddNumberToObject(json, "active_route", fsm_get_active_route());
+
+    char *str = cJSON_PrintUnformatted(json);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, str);
+    free(str);
+    cJSON_Delete(json);
+    return ESP_OK;
+}
+
+// POST /state - transition FSM state
+static esp_err_t state_set_handler(httpd_req_t *req) {
+    log_request("POST", "/state", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 512) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    char *buf = (char *)malloc(len + 1);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+    if (httpd_req_recv(req, buf, len) != len) {
+        free(buf);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    free(buf);
+    if (!json) {
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    esp_err_t err = ESP_OK;
+
+    // Handle mode change
+    cJSON *mode = cJSON_GetObjectItem(json, "mode");
+    if (mode && mode->type == cJSON_String) {
+        if (strcmp(mode->valuestring, "MANUAL") == 0) {
+            err = fsm_set_mode(FSM_MODE_MANUAL);
+        } else if (strcmp(mode->valuestring, "USER") == 0) {
+            err = fsm_set_mode(FSM_MODE_USER);
+        }
+        if (err != ESP_OK) goto fail;
+    }
+
+    // Handle user_state change
+    cJSON *ustate = cJSON_GetObjectItem(json, "user_state");
+    if (ustate && ustate->type == cJSON_String) {
+        if (strcmp(ustate->valuestring, "SCAN_WALL") == 0) {
+            err = fsm_set_user_state(FSM_USER_SCAN_WALL);
+        } else if (strcmp(ustate->valuestring, "SET_ROUTE") == 0) {
+            err = fsm_set_user_state(FSM_USER_SET_ROUTE);
+        } else if (strcmp(ustate->valuestring, "CLIMB_WALL") == 0) {
+            err = fsm_set_user_state(FSM_USER_CLIMB_WALL);
+        }
+        if (err != ESP_OK) goto fail;
+    }
+
+    // Handle proceed_mode
+    cJSON *pmode = cJSON_GetObjectItem(json, "proceed_mode");
+    if (pmode && pmode->type == cJSON_String) {
+        fsm_proceed_mode_t pm = FSM_PROCEED_MANUAL;
+        int interval = 3000;
+        if (strcmp(pmode->valuestring, "TIMED") == 0) pm = FSM_PROCEED_TIMED;
+        else if (strcmp(pmode->valuestring, "AUTO") == 0) pm = FSM_PROCEED_AUTO;
+
+        cJSON *ival = cJSON_GetObjectItem(json, "interval_ms");
+        if (ival && cJSON_IsNumber(ival)) interval = ival->valueint;
+
+        err = fsm_set_proceed_mode(pm, interval);
+        if (err != ESP_OK) goto fail;
+    }
+
+    // Handle climb_state change
+    cJSON *cstate = cJSON_GetObjectItem(json, "climb_state");
+    if (cstate && cstate->type == cJSON_String) {
+        if (strcmp(cstate->valuestring, "RUNNING") == 0) {
+            err = fsm_set_climb_state(FSM_CLIMB_RUNNING);
+        } else if (strcmp(cstate->valuestring, "PAUSED") == 0) {
+            err = fsm_set_climb_state(FSM_CLIMB_PAUSED);
+        } else if (strcmp(cstate->valuestring, "IDLE") == 0) {
+            err = fsm_set_climb_state(FSM_CLIMB_IDLE);
+        }
+        if (err != ESP_OK) goto fail;
+    }
+
+    cJSON_Delete(json);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+
+fail:
+    cJSON_Delete(json);
+    httpd_resp_set_status(req, "409 Conflict");
+    httpd_resp_sendstr(req, "Invalid state transition");
+    return ESP_OK;
+}
+
+// POST /centroids/upload - store centroids to fatfs
+static esp_err_t centroids_upload_handler(httpd_req_t *req) {
+    log_request("POST", "/centroids/upload", "");
+    FSM_GUARD("centroids/upload");
+
+    int len = req->content_len;
+    if (len <= 0 || len > 8192) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    char *buf = heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!buf) buf = (char *)malloc(len + 1);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+
+    if (httpd_req_recv(req, buf, len) != len) {
+        free(buf);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    free(buf);
+    if (!json) {
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    cJSON *scan_id_j = cJSON_GetObjectItem(json, "scan_id");
+    cJSON *centroids = cJSON_GetObjectItem(json, "centroids");
+    if (!scan_id_j || !cJSON_IsNumber(scan_id_j) ||
+        !centroids || centroids->type != cJSON_Array) {
+        cJSON_Delete(json);
+        httpd_resp_sendstr(req, "Required: scan_id (int), centroids (array)");
+        return ESP_OK;
+    }
+
+    int scan_id = scan_id_j->valueint;
+    int count = cJSON_GetArraySize(centroids);
+    if (count <= 0 || count > 1024) {
+        cJSON_Delete(json);
+        httpd_resp_sendstr(req, "Invalid centroid count");
+        return ESP_OK;
+    }
+
+    // Build binary: [uint32 count][float x, float y]...
+    int data_size = 4 + count * 8;
+    uint8_t *data = (uint8_t *)malloc(data_size);
+    if (!data) {
+        cJSON_Delete(json);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    *(uint32_t *)data = (uint32_t)count;
+    float *coords = (float *)(data + 4);
+    cJSON *item = NULL;
+    int idx = 0;
+    cJSON_ArrayForEach(item, centroids) {
+        if (item->type == cJSON_Array && cJSON_GetArraySize(item) >= 2) {
+            coords[idx * 2] = (float)cJSON_GetArrayItem(item, 0)->valuedouble;
+            coords[idx * 2 + 1] = (float)cJSON_GetArrayItem(item, 1)->valuedouble;
+            idx++;
+        }
+    }
+    *(uint32_t *)data = (uint32_t)idx;
+    int actual_size = 4 + idx * 8;
+
+    char path[64];
+    snprintf(path, sizeof(path), "/fatfs/scan%d.dat", scan_id);
+    esp_err_t err = fatfs_create(path);
+    if (err == ESP_OK) err = fatfs_write(path, data, 0, actual_size);
+    free(data);
+    cJSON_Delete(json);
+
+    if (err != ESP_OK) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    fsm_set_active_scan(scan_id);
+    char detail[64];
+    snprintf(detail, sizeof(detail), "scan_id=%d centroids=%d", scan_id, idx);
+    log_response("/centroids/upload", "OK", detail);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
+// GET /centroids - read centroids from fatfs as JSON
+static esp_err_t centroids_get_handler(httpd_req_t *req) {
+    log_request("GET", "/centroids", "");
+    FSM_GUARD("centroids/get");
+
+    // Parse scan_id from query string
+    char query[32] = {0};
+    int scan_id = 0;
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+        char val[8];
+        if (httpd_query_key_value(query, "scan_id", val, sizeof(val)) == ESP_OK) {
+            scan_id = atoi(val);
+        }
+    }
+
+    char path[64];
+    snprintf(path, sizeof(path), "/fatfs/scan%d.dat", scan_id);
+
+    // Read header
+    uint32_t count = 0;
+    size_t bytes_read = 0;
+    esp_err_t err = fatfs_read(path, &count, 0, 4, &bytes_read);
+    if (err != ESP_OK || bytes_read != 4 || count == 0 || count > 1024) {
+        httpd_resp_sendstr(req, "Scan not found");
+        return ESP_OK;
+    }
+
+    // Read coordinates
+    int coords_size = count * 8;
+    uint8_t *buf = (uint8_t *)malloc(coords_size);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+
+    err = fatfs_read(path, buf, 4, coords_size, &bytes_read);
+    if (err != ESP_OK || bytes_read != (size_t)coords_size) {
+        free(buf);
+        httpd_resp_sendstr(req, "Read error");
+        return ESP_OK;
+    }
+
+    // Build JSON response
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json, "scan_id", scan_id);
+    cJSON_AddNumberToObject(json, "count", count);
+    cJSON *arr = cJSON_AddArrayToObject(json, "centroids");
+
+    float *coords = (float *)buf;
+    for (int i = 0; i < (int)count; i++) {
+        cJSON *pair = cJSON_CreateArray();
+        cJSON_AddItemToArray(pair, cJSON_CreateNumber(coords[i * 2]));
+        cJSON_AddItemToArray(pair, cJSON_CreateNumber(coords[i * 2 + 1]));
+        cJSON_AddItemToArray(arr, pair);
+    }
+    free(buf);
+
+    char *str = cJSON_PrintUnformatted(json);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, str);
+    free(str);
+    cJSON_Delete(json);
+    return ESP_OK;
+}
+
+// POST /scan/save - save frame buffer to fatfs
+static esp_err_t scan_save_handler(httpd_req_t *req) {
+    log_request("POST", "/scan/save", "");
+    FSM_GUARD("scan/save");
+
+    int len = req->content_len;
+    if (len <= 0 || len > 256) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+
+    char buf[len + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) {
+        httpd_resp_sendstr(req, "Invalid JSON");
+        return ESP_OK;
+    }
+
+    cJSON *scan_id_j = cJSON_GetObjectItem(json, "scan_id");
+    if (!scan_id_j || !cJSON_IsNumber(scan_id_j)) {
+        cJSON_Delete(json);
+        httpd_resp_sendstr(req, "Required: scan_id");
+        return ESP_OK;
+    }
+    int scan_id = scan_id_j->valueint;
+    cJSON_Delete(json);
+
+    if (s_frame_len == 0 || !s_frame_buf) {
+        httpd_resp_sendstr(req, "No frame captured");
+        return ESP_OK;
+    }
+
+    char path[64];
+    snprintf(path, sizeof(path), "/fatfs/scan%d.jpg", scan_id);
+
+    esp_err_t err = fatfs_create(path);
+    if (err == ESP_OK) err = fatfs_write(path, s_frame_buf, 0, s_frame_len);
+
+    if (err != ESP_OK) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    char detail[64];
+    snprintf(detail, sizeof(detail), "scan_id=%d size=%u", scan_id, (unsigned)s_frame_len);
+    log_response("/scan/save", "OK", detail);
+    httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
 
@@ -785,9 +1136,39 @@ static const httpd_uri_t uri_laser = {
     .handler = laser_handler,
 };
 
+static const httpd_uri_t uri_state_get = {
+    .uri = "/state",
+    .method = HTTP_GET,
+    .handler = state_get_handler,
+};
+
+static const httpd_uri_t uri_state_set = {
+    .uri = "/state",
+    .method = HTTP_POST,
+    .handler = state_set_handler,
+};
+
+static const httpd_uri_t uri_centroids_upload = {
+    .uri = "/centroids/upload",
+    .method = HTTP_POST,
+    .handler = centroids_upload_handler,
+};
+
+static const httpd_uri_t uri_centroids_get = {
+    .uri = "/centroids",
+    .method = HTTP_GET,
+    .handler = centroids_get_handler,
+};
+
+static const httpd_uri_t uri_scan_save = {
+    .uri = "/scan/save",
+    .method = HTTP_POST,
+    .handler = scan_save_handler,
+};
+
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 17;
+    config.max_uri_handlers = 24;
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -811,6 +1192,11 @@ httpd_handle_t server_start(void) {
     httpd_register_uri_handler(server, &uri_route_restart);
     httpd_register_uri_handler(server, &uri_route_mapping);
     httpd_register_uri_handler(server, &uri_laser);
+    httpd_register_uri_handler(server, &uri_state_get);
+    httpd_register_uri_handler(server, &uri_state_set);
+    httpd_register_uri_handler(server, &uri_centroids_upload);
+    httpd_register_uri_handler(server, &uri_centroids_get);
+    httpd_register_uri_handler(server, &uri_scan_save);
 
     ESP_LOGI(TAG, "HTTP server started");
     return server;

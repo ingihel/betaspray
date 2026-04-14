@@ -42,6 +42,10 @@ void route_play(void);
 void route_pause(void);
 void route_next(void);
 void route_restart(void);
+void route_stop(void);  // pause + restart atomically
+
+// Set timed auto-advance interval in ms. 0 = manual (wait for route_next).
+void route_set_timed_interval(int ms);
 
 // Set playback mode and number of active gimbals for leapfrog.
 // leap_num is ignored in SEQUENTIAL mode.

@@ -11,8 +11,7 @@
 
 static const char *TAG = "route";
 
-#define ROUTE_AUTO_ADVANCE 1
-#define ROUTE_DWELL_MS 3000
+#define ROUTE_DEFAULT_DWELL_MS 3000
 
 static route_hold_t s_holds[ROUTE_MAX_HOLDS];
 static int s_num_holds = 0;
@@ -25,6 +24,7 @@ static volatile route_play_mode_t s_mode = ROUTE_MODE_SEQUENTIAL;
 static volatile int s_leap_num = 2;              // active gimbals in leapfrog (2 or 4)
 static volatile int s_leap_next = 0;             // which gimbal advances next
 static volatile int s_leap_hold[4] = {0,1,2,3}; // current hold index per gimbal
+static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
 
 static route_transform_t s_transform = {
     .hfov_deg = 120.0f,
@@ -227,6 +227,22 @@ void route_set_mode(route_play_mode_t mode, int leap_num) {
              mode == ROUTE_MODE_LEAPFROG ? "LEAPFROG" : "SEQUENTIAL", s_leap_num);
 }
 
+void route_stop(void) {
+    xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+    s_playing = false;
+    s_current_hold = 0;
+    int total = s_num_holds;
+    xSemaphoreGive(s_state_mutex);
+    ESP_LOGI(TAG, "[PLAYBACK] STOP: halted and reset to hold 0/%d", total);
+}
+
+void route_set_timed_interval(int ms) {
+    xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+    s_timed_interval_ms = ms;
+    xSemaphoreGive(s_state_mutex);
+    ESP_LOGI(TAG, "Timed interval set: %d ms (%s)", ms, ms > 0 ? "auto" : "manual");
+}
+
 // Drive one gimbal (X+Y servo pair) to a hold's pixel coordinates.
 static void drive_gimbal(int g, const route_hold_t *hold) {
     int angle_x = pixel_to_servo_x(hold->x);
@@ -272,11 +288,11 @@ static void route_playback_task(void *arg) {
                 leapfrog_initialized = true;
             }
 
-#if ROUTE_AUTO_ADVANCE
-            xSemaphoreTake(s_next_sem, pdMS_TO_TICKS(ROUTE_DWELL_MS));
-#else
-            xSemaphoreTake(s_next_sem, portMAX_DELAY);
-#endif
+            {
+                int interval = s_timed_interval_ms;
+                TickType_t timeout = interval > 0 ? pdMS_TO_TICKS(interval) : portMAX_DELAY;
+                xSemaphoreTake(s_next_sem, timeout);
+            }
 
             // Advance the next gimbal in rotation by leap_num holds.
             xSemaphoreTake(s_state_mutex, portMAX_DELAY);
@@ -310,11 +326,11 @@ static void route_playback_task(void *arg) {
                 drive_gimbal(g, &s_holds[hold_idx]);
             }
 
-#if ROUTE_AUTO_ADVANCE
-            xSemaphoreTake(s_next_sem, pdMS_TO_TICKS(ROUTE_DWELL_MS));
-#else
-            xSemaphoreTake(s_next_sem, portMAX_DELAY);
-#endif
+            {
+                int interval = s_timed_interval_ms;
+                TickType_t timeout = interval > 0 ? pdMS_TO_TICKS(interval) : portMAX_DELAY;
+                xSemaphoreTake(s_next_sem, timeout);
+            }
 
             xSemaphoreTake(s_state_mutex, portMAX_DELAY);
             int old_hold = s_current_hold;

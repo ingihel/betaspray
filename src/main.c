@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "fsm.h"
 #include "laser.h"
 #include "driver/uart.h"
 #include "esp_event.h"
@@ -71,6 +72,10 @@ void app_main(void) {
     ESP_ERROR_CHECK(fatfs_init(true));
     ESP_LOGI("MAIN", "FatFS initialized");
 
+    ESP_LOGI("MAIN", "Initializing FSM");
+    fsm_init();
+    ESP_LOGI("MAIN", "FSM initialized");
+
     // Initialize AP and HTTP server component
     ESP_LOGI("MAIN", "Initializing WiFi (SoftAP)");
     wifi_init_softap();
@@ -92,10 +97,10 @@ void app_main(void) {
     ESP_LOGI("MAIN", "Laser initialized");
 
     smoketest_run();
-    // // Route management system
-    // ESP_LOGI("MAIN", "Initializing route system");
-    // route_init();
-    // ESP_LOGI("MAIN", "Route system initialized");
+
+    ESP_LOGI("MAIN", "Initializing route system");
+    route_init();
+    ESP_LOGI("MAIN", "Route system initialized");
 
     // TMP: perform servo tests
     // servo_testbench_x(0);
@@ -112,6 +117,7 @@ void app_main(void) {
     esp_log_level_set("server", ESP_LOG_INFO);
     esp_log_level_set("servo", ESP_LOG_INFO);
     esp_log_level_set("smoketest", ESP_LOG_INFO);
+    esp_log_level_set("fsm", ESP_LOG_INFO);
 
     while (1) {
         vTaskDelay(500 / portTICK_PERIOD_MS);
