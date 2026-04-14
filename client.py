@@ -24,6 +24,20 @@ try:
 except ImportError:
     pass
 
+try:
+    import cv2
+    import numpy as np
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
 DEFAULT_HOST = "192.168.4.1"
 DEFAULT_PORT = 80
 
@@ -32,6 +46,7 @@ class BetaSprayClient:
         self.base_url = f"http://{host}:{port}"
         self.session = requests.Session()
         self.session.timeout = 10
+        self.pending_holds: List[Tuple[float, float]] = []  # holds from last detect run
 
     def _post(self, endpoint: str, json_data: Optional[dict] = None, data: Optional[bytes] = None):
         """Send POST request."""
@@ -215,6 +230,189 @@ class BetaSprayClient:
         resp = self._post("/test", data=message.encode())
         print(f"Test: {resp.text}")
 
+def detect_holds(image_path: str, min_area: int = 150) -> Tuple["np.ndarray", List[dict]]:
+    """
+    Port of Betaspray-hold-extractor.ijm using OpenCV.
+
+    Pipeline (mirrors the IJM):
+      median blur (r=5)  →  background subtraction (Gaussian approx of rolling ball r=100)
+      →  CLAHE (blocksize=300)  →  median blur + despeckle
+      →  HSV threshold (V ≤ 183, all H/S)
+      →  fill holes  →  morphological open
+      →  connected components (area ≥ min_area)
+
+    Returns (annotated_bgr_image, holds) where each hold dict has:
+      'id', 'centroid' (cx, cy), 'area', 'bbox' (x, y, w, h)
+    """
+    if not HAS_CV2:
+        raise ImportError("pip install opencv-python numpy")
+
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"Could not load image: {image_path}")
+
+    original = img.copy()
+    h, w = img.shape[:2]
+    print(f"  Image: {w}×{h}  ({w * h / 1e6:.1f} MP)")
+
+    # 1. Median filter — IJM radius=5, kernel must be odd → ksize=11
+    print("  Median filter...")
+    working = cv2.medianBlur(img, 11)
+
+    # 2. Subtract background — IJM rolling ball r=100, light background.
+    #    Approximated as large Gaussian blur subtracted per channel, then shifted
+    #    back to mid-grey so downstream steps see a normalised image.
+    print("  Background subtraction...")
+    bg = cv2.GaussianBlur(working.astype(np.float32), (0, 0), 50)
+    working = np.clip(working.astype(np.float32) - bg + 127, 0, 255).astype(np.uint8)
+
+    # 3. CLAHE — IJM blocksize=300; map to OpenCV tileGridSize
+    print("  CLAHE...")
+    tile_cols = max(1, round(w / 300))
+    tile_rows = max(1, round(h / 300))
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(tile_cols, tile_rows))
+    lab = cv2.cvtColor(working, cv2.COLOR_BGR2LAB)
+    lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+    working = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
+    # 4. Second median + despeckle (3×3 median)
+    print("  Median + despeckle...")
+    working = cv2.medianBlur(working, 11)
+    working = cv2.medianBlur(working, 3)
+
+    # 5. HSV threshold: H 0–255 (all), S 0–255 (all), V 0–183.
+    #    ImageJ HSB all channels 0–255; OpenCV H is 0–179, S/V are 0–255.
+    print("  HSV threshold (V ≤ 183)...")
+    hsv = cv2.cvtColor(working, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, (0, 0, 0), (179, 255, 183))
+
+    # 6. Fill holes — flood fill from border, OR back into mask
+    print("  Fill holes...")
+    flooded = mask.copy()
+    flood_fill_mask = np.zeros((h + 2, w + 2), np.uint8)
+    cv2.floodFill(flooded, flood_fill_mask, (0, 0), 255)
+    mask = cv2.bitwise_or(mask, cv2.bitwise_not(flooded))
+
+    # 7. Morphological open — removes thin noise bridges, mirrors IJM "Open"
+    print("  Morphological open...")
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    # 8. Connected components — mirrors IJM "Analyze Particles" size=150–Infinity
+    print("  Connected components...")
+    num_labels, _, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
+
+    holds = []
+    for i in range(1, num_labels):  # label 0 is background
+        area = int(stats[i, cv2.CC_STAT_AREA])
+        if area >= min_area:
+            holds.append({
+                'id':       len(holds),
+                'centroid': (float(centroids[i][0]), float(centroids[i][1])),
+                'area':     area,
+                'bbox':     (int(stats[i, cv2.CC_STAT_LEFT]),  int(stats[i, cv2.CC_STAT_TOP]),
+                             int(stats[i, cv2.CC_STAT_WIDTH]), int(stats[i, cv2.CC_STAT_HEIGHT])),
+            })
+
+    print(f"  Detected {len(holds)} holds")
+
+    # Annotate original with bounding boxes, centroids, and IDs
+    annotated = original.copy()
+    thickness  = max(1, round(w / 1296))
+    marker_r   = max(5, round(w / 260))
+    font_scale = max(0.5, w / 2592.0)
+
+    for hold in holds:
+        cx, cy = int(hold['centroid'][0]), int(hold['centroid'][1])
+        x, y, bw, bh = hold['bbox']
+        cv2.rectangle(annotated, (x, y), (x + bw, y + bh), (0, 0, 255), thickness)
+        cv2.circle(annotated, (cx, cy), marker_r, (0, 0, 255), -1)
+        cv2.putText(annotated, str(hold['id']), (cx + marker_r + 2, cy - marker_r),
+                    cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 255), thickness)
+
+    return annotated, holds
+
+
+def select_holds_interactive(image_path: str, holds: List[dict]) -> List[Tuple[float, float]]:
+    """
+    Show the image with all detected holds overlaid. Click a hold to select it
+    (turns green); click again to deselect (back to red). Close the window to
+    confirm. Returns centroids in the order they were clicked.
+    """
+    if not HAS_MATPLOTLIB:
+        raise ImportError("pip install matplotlib")
+    if not HAS_CV2:
+        raise ImportError("pip install opencv-python")
+
+    img_rgb = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+    h, w = img_rgb.shape[:2]
+
+    marker_r  = max(15, round(w / 130))
+    font_size = max(7,  round(w / 370))
+
+    selected_ids: List[int] = []  # ordered
+
+    fig, ax = plt.subplots(figsize=(14, 9))
+    ax.imshow(img_rgb)
+    ax.set_title(
+        f"{len(holds)} holds detected  —  click to select/deselect, close window to confirm",
+        fontsize=11,
+    )
+    ax.axis("off")
+
+    circles: dict = {}
+    texts:   dict = {}
+    for hold in holds:
+        cx, cy = hold['centroid']
+        hid = hold['id']
+        c = plt.Circle((cx, cy), radius=marker_r, color="red", fill=False, linewidth=2)
+        ax.add_patch(c)
+        t = ax.text(cx + marker_r + 3, cy, str(hid), color="red",
+                    fontsize=font_size, fontweight="bold", va="center")
+        circles[hid] = c
+        texts[hid]   = t
+
+    def on_click(event):
+        if event.inaxes is not ax or event.button != 1:
+            return
+        mx, my = event.xdata, event.ydata
+        if mx is None or my is None:
+            return
+        # Nearest hold within 3× marker radius
+        best, best_dist = None, float("inf")
+        for hold in holds:
+            cx, cy = hold['centroid']
+            d = ((cx - mx) ** 2 + (cy - my) ** 2) ** 0.5
+            if d < best_dist:
+                best_dist = d
+                best = hold['id']
+        if best is None or best_dist > marker_r * 3:
+            return
+        if best in selected_ids:
+            selected_ids.remove(best)
+            circles[best].set_edgecolor("red")
+            texts[best].set_color("red")
+        else:
+            selected_ids.append(best)
+            circles[best].set_edgecolor("lime")
+            texts[best].set_color("lime")
+        # Update title with running count
+        ax.set_title(
+            f"{len(holds)} holds detected  —  {len(selected_ids)} selected  —  "
+            "click to select/deselect, close window to confirm",
+            fontsize=11,
+        )
+        fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect("button_press_event", on_click)
+    plt.tight_layout()
+    plt.show()
+
+    selected = [(holds[i]["centroid"][0], holds[i]["centroid"][1]) for i in selected_ids]
+    print(f"Selected {len(selected)} holds (IDs: {selected_ids})")
+    return selected
+
+
 def compute_scales_from_fov(hfov: float, vfov: float, width: int, height: int,
                             distance_m: float, ref_distance_m: float) -> Tuple[float, float, float, float]:
     """Compute servo scales from camera FOV parameters.
@@ -396,6 +594,14 @@ def build_interactive_parser():
     test_parser = subparsers.add_parser("test", help="Echo test")
     test_parser.add_argument("message", nargs="?", default="hello", help="Message to echo")
 
+    detect_parser = subparsers.add_parser("detect", help="Detect holds in image, select interactively, optionally send as route")
+    detect_parser.add_argument("--input", "-i", default="capture.jpg",
+                               help="Input JPEG (default: capture.jpg)")
+    detect_parser.add_argument("--min-area", type=int, default=150,
+                               help="Minimum blob area in pixels (default: 150)")
+    detect_parser.add_argument("--save-annotated", metavar="PATH",
+                               help="Save annotated detection image to PATH")
+
     process_local_parser = subparsers.add_parser("process_local", help="Run local differenceofgaussian on capture.jpg and display blobs")
 
     help_parser = subparsers.add_parser("help", help="Show help message")
@@ -565,6 +771,31 @@ def execute_command(client: BetaSprayClient, args: argparse.Namespace, parser: a
 
         elif args.command == "stop":
             client.set_state(climb_state="IDLE")
+        elif args.command == "detect":
+            if not HAS_CV2 or not HAS_MATPLOTLIB:
+                print("Error: pip install opencv-python numpy matplotlib", file=sys.stderr)
+                return
+            input_file = args.input
+            if not Path(input_file).exists():
+                print(f"Error: '{input_file}' not found. Run 'capture --get' first.", file=sys.stderr)
+                return
+            print(f"Running hold detection on {input_file}...")
+            annotated, holds = detect_holds(input_file, min_area=args.min_area)
+            if args.save_annotated:
+                cv2.imwrite(args.save_annotated, annotated)
+                print(f"Annotated image saved to {args.save_annotated}")
+            if not holds:
+                print("No holds detected. Try lowering --min-area or check image quality.")
+                return
+            selected = select_holds_interactive(input_file, holds)
+            if not selected:
+                print("No holds selected.")
+                return
+            client.pending_holds = selected
+            print(f"\n{len(selected)} hold(s) stored in session.")
+            route_q = input("Send to device as route? Enter route number (or Enter to skip): ").strip()
+            if route_q.isdigit():
+                client.create_route(int(route_q), selected)
 
         elif args.command == "process_local":
             try:
