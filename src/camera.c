@@ -36,7 +36,7 @@ static camera_config_t s_cfg = {
 
     .pixel_format = PIXFORMAT_JPEG,
     .frame_size = FRAMESIZE_5MP,
-    .jpeg_quality = 3,               // 0-63; lower = better quality / larger file
+    .jpeg_quality = 4,               // 0-63; lower = better quality / larger file
     .fb_count = 1,
     .fb_location = CAMERA_FB_IN_PSRAM, // DRAM insufficient after WiFi — must use PSRAM
     .grab_mode = CAMERA_GRAB_WHEN_EMPTY,

@@ -259,12 +259,17 @@ def detect_holds(image_path: str, min_area: int = 150) -> Tuple["np.ndarray", Li
     print("  Median filter...")
     working = cv2.medianBlur(img, 11)
 
-    # 2. Subtract background — IJM rolling ball r=100, light background.
-    #    Approximated as large Gaussian blur subtracted per channel, then shifted
-    #    back to mid-grey so downstream steps see a normalised image.
-    print("  Background subtraction...")
-    bg = cv2.GaussianBlur(working.astype(np.float32), (0, 0), 50)
-    working = np.clip(working.astype(np.float32) - bg + 127, 0, 255).astype(np.uint8)
+    # 2. Subtract background — IJM: rolling ball r=100, "light" background.
+    #    "light" mode = invert → subtract background → invert back:
+    #      result_inv = clip(inv - Gaussian(inv), 0, 255)
+    #      result     = 255 - result_inv
+    #    Uniform wood background: inv≈bg_inv → result_inv=0 → result=255 (V>183, excluded).
+    #    Dark hold surrounded by background: inv>>bg_inv → large result_inv → result<183 (selected).
+    print("  Background subtraction (light)...")
+    inv = 255.0 - working.astype(np.float32)
+    bg_inv = cv2.GaussianBlur(inv, (0, 0), 50)
+    result_inv = np.clip(inv - bg_inv, 0.0, 255.0)
+    working = (255.0 - result_inv).astype(np.uint8)
 
     # 3. CLAHE — IJM blocksize=300; map to OpenCV tileGridSize
     print("  CLAHE...")
@@ -298,7 +303,21 @@ def detect_holds(image_path: str, min_area: int = 150) -> Tuple["np.ndarray", Li
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
-    # 8. Connected components — mirrors IJM "Analyze Particles" size=150–Infinity
+    # 8. Watershed — IJM line 67: run("Watershed").  Separates touching blobs by
+    #    flooding from the local maxima of the distance transform.
+    print("  Watershed...")
+    dist = cv2.distanceTransform(mask, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+    # Regional maxima of the distance transform = object centres (UEPs in ImageJ).
+    k_ws = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    peaks = np.uint8((dist >= cv2.dilate(dist, k_ws) - 0.01) & (dist >= 1.0)) * 255
+    _, markers = cv2.connectedComponents(peaks)
+    markers = markers + 1          # 1 = background, 2..N+1 = hold seeds
+    markers[mask == 0] = 1         # sure background
+    dist_inv = np.uint8(255 - cv2.normalize(dist, None, 0, 255, cv2.NORM_MINMAX))
+    cv2.watershed(cv2.cvtColor(dist_inv, cv2.COLOR_GRAY2BGR), markers)
+    mask[markers == -1] = 0        # watershed boundaries become background
+
+    # 9. Connected components — mirrors IJM "Analyze Particles" size=150–Infinity
     print("  Connected components...")
     num_labels, _, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
 

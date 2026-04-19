@@ -371,6 +371,8 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnCapture" disabled>Capture</button>
         <button id="btnFetchImage" disabled>Fetch Image</button>
         <button id="btnLiveView" disabled>Live View</button>
+        <button id="btnUploadImage">Upload Image</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none;">
       </div>
 
       <h2 style="margin-top:12px;">Route Creation</h2>
@@ -670,6 +672,19 @@ document.getElementById('btnEnableCam').addEventListener('click', async () => {
 
 document.getElementById('btnCapture').addEventListener('click', () => post('/esp/capture'));
 
+document.getElementById('btnUploadImage').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => { wallImage = img; drawScene(); log('Uploaded: ' + file.name + ' (' + img.naturalWidth + 'x' + img.naturalHeight + ')', 'info'); };
+  img.src = url;
+  e.target.value = '';
+});
+
 document.getElementById('btnFetchImage').addEventListener('click', async () => {
   try {
     const res = await fetch(API + '/esp/get');
@@ -716,10 +731,9 @@ document.getElementById('btnNewRoute').addEventListener('click', async () => {
   log('Running hold detection...', 'info');
 
   try {
-    // Fetch the current JPEG from ESP via proxy, then send to /detect
-    const imgRes = await fetch(API + '/esp/get');
-    if (!imgRes.ok) throw new Error('Failed to fetch image');
-    const blob = await imgRes.blob();
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas export failed')), 'image/jpeg', 0.95);
+    });
 
     const formData = new FormData();
     formData.append('image', blob, 'capture.jpg');
