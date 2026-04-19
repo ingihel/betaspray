@@ -38,6 +38,34 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+CALIB_FILE = Path(__file__).parent / "calibration.json"
+
+def load_calibration():
+    """Load calibration from calibration.json. Returns (K, dist, resolution) or (None, None, None)."""
+    if not HAS_CV2 or not CALIB_FILE.exists():
+        return None, None, None
+    try:
+        data = json.loads(CALIB_FILE.read_text())
+        K = np.array(data["K"])
+        dist = np.array(data["dist"])
+        res = tuple(data["resolution"])
+        return K, dist, res
+    except Exception:
+        return None, None, None
+
+def undistort_image(img, K, dist, calib_res):
+    """Apply lens undistortion, scaling K if image resolution differs from calibration."""
+    if K is None:
+        return img
+    h, w = img.shape[:2]
+    K_scaled = K.copy()
+    if w != calib_res[0] or h != calib_res[1]:
+        K_scaled[0, 0] *= w / calib_res[0]
+        K_scaled[1, 1] *= h / calib_res[1]
+        K_scaled[0, 2] *= w / calib_res[0]
+        K_scaled[1, 2] *= h / calib_res[1]
+    return cv2.undistort(img, K_scaled, dist)
+
 DEFAULT_HOST = "192.168.4.1"
 DEFAULT_PORT = 80
 
@@ -250,6 +278,12 @@ def detect_holds(image_path: str, min_area: int = 150) -> Tuple["np.ndarray", Li
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError(f"Could not load image: {image_path}")
+
+    # Undistort if calibration is available
+    K, dist, calib_res = load_calibration()
+    if K is not None:
+        img = undistort_image(img, K, dist, calib_res)
+        print("  Applied lens undistortion")
 
     original = img.copy()
     h, w = img.shape[:2]
