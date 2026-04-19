@@ -444,6 +444,51 @@ def calibrate_status():
     return jsonify(status)
 
 
+@app.route('/calibrate/set', methods=['POST'])
+def calibrate_set():
+    """Manually set calibration parameters.
+    JSON body: {fx, fy, cx, cy, k1, k2, p1, p2, k3, width, height}
+    """
+    global _calib_K, _calib_dist, _calib_res, _calib_status
+    data = request.get_json(force=True)
+    required = ["fx", "fy", "cx", "cy", "width", "height"]
+    missing = [k for k in required if k not in data]
+    if missing:
+        return jsonify({"error": f"Missing fields: {missing}"}), 400
+
+    K = np.array([
+        [data["fx"], 0, data["cx"]],
+        [0, data["fy"], data["cy"]],
+        [0, 0, 1],
+    ], dtype=np.float64)
+    dist = np.array([
+        data.get("k1", 0), data.get("k2", 0),
+        data.get("p1", 0), data.get("p2", 0),
+        data.get("k3", 0),
+    ], dtype=np.float64)
+
+    _calib_K = K
+    _calib_dist = dist
+    _calib_res = (int(data["width"]), int(data["height"]))
+
+    with _calib_lock:
+        _calib_status = {
+            "state": "done",
+            "rms": data.get("rms", None),
+            "frames_used": 0,
+            "resolution": list(_calib_res),
+            "fx": round(K[0, 0], 2),
+            "fy": round(K[1, 1], 2),
+            "cx": round(K[0, 2], 2),
+            "cy": round(K[1, 2], 2),
+            "manual": True,
+        }
+
+    _save_calibration()
+    slog(f"Manual calibration set: fx={data['fx']}, fy={data['fy']}, {_calib_res[0]}x{_calib_res[1]}")
+    return jsonify({"status": "ok"})
+
+
 @app.route('/calibrate/clear', methods=['POST'])
 def calibrate_clear():
     """Clear stored calibration."""
@@ -573,6 +618,9 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
   .canvas-wrap { position: relative; background: #0a0a1a; border-radius: 6px; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center; }
   .canvas-wrap canvas { display: block; max-width: 100%; cursor: crosshair; }
   .canvas-wrap .placeholder { color: #555; font-size: 0.9em; }
+  .canvas-wrap .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; color: #e94560; font-size: 0.9em; font-weight: bold; z-index: 10; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .canvas-wrap .loading-overlay span { animation: pulse 1.2s ease-in-out infinite; }
 
   .mode-banner { background: #e94560; color: #fff; text-align: center; padding: 6px; font-size: 0.85em; font-weight: bold; border-radius: 4px; margin-bottom: 10px; }
 
@@ -616,6 +664,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
     <div id="modeBanner" class="mode-banner" style="display:none;"></div>
 
     <div class="canvas-wrap" id="canvasWrap">
+      <div class="loading-overlay" id="canvasLoading" style="display:none;"><span>Loading...</span></div>
       <span class="placeholder" id="canvasPlaceholder">No image captured</span>
       <canvas id="wallCanvas" style="display:none;"></canvas>
     </div>
@@ -769,6 +818,25 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnCalibStart">Start Calibration</button>
         <button id="btnCalibClear" class="danger">Clear</button>
       </div>
+      <details style="margin-top:10px;">
+        <summary style="cursor:pointer; font-size:0.85em; color:#aaa;">Manual Parameters</summary>
+        <div style="margin-top:6px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <div class="control-group"><label>fx</label><input type="number" id="inputCalibFx" step="0.01" value="143.76" /></div>
+            <div class="control-group"><label>fy</label><input type="number" id="inputCalibFy" step="0.01" value="141.18" /></div>
+            <div class="control-group"><label>cx</label><input type="number" id="inputCalibCx" step="0.01" value="156.02" /></div>
+            <div class="control-group"><label>cy</label><input type="number" id="inputCalibCy" step="0.01" value="122.14" /></div>
+            <div class="control-group"><label>k1</label><input type="number" id="inputCalibK1" step="0.0001" value="-0.2381" /></div>
+            <div class="control-group"><label>k2</label><input type="number" id="inputCalibK2" step="0.0001" value="0.2381" /></div>
+            <div class="control-group"><label>p1</label><input type="number" id="inputCalibP1" step="0.0001" value="0.0073" /></div>
+            <div class="control-group"><label>p2</label><input type="number" id="inputCalibP2" step="0.0001" value="0.0013" /></div>
+            <div class="control-group"><label>k3</label><input type="number" id="inputCalibK3" step="0.0001" value="-0.1131" /></div>
+            <div class="control-group"><label>Width</label><input type="number" id="inputCalibW" value="320" /></div>
+            <div class="control-group"><label>Height</label><input type="number" id="inputCalibH" value="240" /></div>
+          </div>
+          <button id="btnCalibSet" style="margin-top:6px;">Set Manual</button>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -784,6 +852,9 @@ const ROUTE_LINE_COLOR = 'rgba(233, 69, 96, 0.5)';
 const API = '';  // same origin
 
 let wallImage = null;
+const loadingEl = document.getElementById('canvasLoading');
+function showLoading(msg) { loadingEl.querySelector('span').textContent = msg || 'Loading...'; loadingEl.style.display = 'flex'; }
+function hideLoading() { loadingEl.style.display = 'none'; }
 let allCentroids = [];
 let selectedHolds = [];
 let routeMode = null;
@@ -955,7 +1026,14 @@ document.getElementById('btnEnableCam').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('btnCapture').addEventListener('click', () => post('/esp/capture'));
+document.getElementById('btnCapture').addEventListener('click', async () => {
+  const btn = document.getElementById('btnCapture');
+  btn.disabled = true; btn.textContent = 'Capturing...';
+  showLoading('Capturing...');
+  await post('/esp/capture');
+  btn.disabled = false; btn.textContent = 'Capture';
+  hideLoading();
+});
 
 document.getElementById('btnUploadImage').addEventListener('click', () => {
   document.getElementById('fileInput').click();
@@ -971,6 +1049,9 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
 });
 
 document.getElementById('btnFetchImage').addEventListener('click', async () => {
+  const btn = document.getElementById('btnFetchImage');
+  btn.disabled = true; btn.textContent = 'Fetching...';
+  showLoading('Fetching image...');
   try {
     const res = await fetch(API + '/esp/get');
     if (!res.ok) { log('GET /esp/get failed: ' + res.status, 'err'); return; }
@@ -980,6 +1061,7 @@ document.getElementById('btnFetchImage').addEventListener('click', async () => {
     img.onload = () => { wallImage = img; drawScene(); log('Image loaded: ' + img.naturalWidth + 'x' + img.naturalHeight, 'info'); };
     img.src = url;
   } catch (e) { log('Fetch image failed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Fetch Image'; hideLoading(); }
 });
 
 // -- Route creation --
@@ -1169,14 +1251,18 @@ document.getElementById('btnLaserToggle').addEventListener('click', () => post('
 // -- Live view --
 let liveViewActive = false;
 let liveViewTimer = null;
+let liveFrameCount = 0;
 document.getElementById('btnLiveView').addEventListener('click', () => {
   liveViewActive = !liveViewActive;
   const btn = document.getElementById('btnLiveView');
   if (liveViewActive) {
     btn.textContent = 'Stop Live';
     btn.classList.add('active');
+    liveFrameCount = 0;
+    log('Live view started', 'info');
     liveViewTimer = setInterval(async () => {
       try {
+        showLoading('Live #' + (liveFrameCount + 1) + '...');
         await fetch(API + '/esp/capture', { method: 'POST' });
         await new Promise(r => setTimeout(r, 200));
         const res = await fetch(API + '/esp/get');
@@ -1184,14 +1270,16 @@ document.getElementById('btnLiveView').addEventListener('click', () => {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const img = new Image();
-        img.onload = () => { wallImage = img; drawScene(); };
+        img.onload = () => { wallImage = img; drawScene(); liveFrameCount++; hideLoading(); };
         img.src = url;
-      } catch (e) { /* ignore */ }
+      } catch (e) { hideLoading(); }
     }, 1500);
   } else {
     btn.textContent = 'Live View';
     btn.classList.remove('active');
     clearInterval(liveViewTimer);
+    hideLoading();
+    log('Live view stopped (' + liveFrameCount + ' frames)', 'info');
   }
 });
 
@@ -1254,6 +1342,27 @@ document.getElementById('btnCalibClear').addEventListener('click', async () => {
   document.getElementById('calibLoaded').textContent = 'No';
   document.getElementById('calibDetails').style.display = 'none';
   log('Calibration cleared');
+});
+
+document.getElementById('btnCalibSet').addEventListener('click', async () => {
+  const body = {
+    fx: parseFloat(document.getElementById('inputCalibFx').value),
+    fy: parseFloat(document.getElementById('inputCalibFy').value),
+    cx: parseFloat(document.getElementById('inputCalibCx').value),
+    cy: parseFloat(document.getElementById('inputCalibCy').value),
+    k1: parseFloat(document.getElementById('inputCalibK1').value),
+    k2: parseFloat(document.getElementById('inputCalibK2').value),
+    p1: parseFloat(document.getElementById('inputCalibP1').value),
+    p2: parseFloat(document.getElementById('inputCalibP2').value),
+    k3: parseFloat(document.getElementById('inputCalibK3').value),
+    width: parseInt(document.getElementById('inputCalibW').value),
+    height: parseInt(document.getElementById('inputCalibH').value),
+  };
+  const res = await post('/calibrate/set', body);
+  if (res.ok) {
+    log('Manual calibration set: fx=' + body.fx + ' fy=' + body.fy, 'info');
+    pollCalibStatus();
+  }
 });
 
 // Initial check for existing calibration
