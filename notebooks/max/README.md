@@ -141,3 +141,21 @@ Modified `app.py` to replace the DoG binary subprocess in `/detect` with a direc
 All work on branch `codev2`.
 
 Commits: `ac1fb4f` (pushed image quality jpeg=3, added hold recognition pipeline), `404f85c` (flask app now?), `32907e7` (app.py modified to run hold detection)
+
+---
+
+### Apr 19, 2026
+
+**App — Upload image feature for offline hold detection**
+
+Added an "Upload Image" button to the `app.py` web UI so wall images can be loaded without a live camera. A hidden `<input type="file">` accepts any JPEG/PNG; on selection the file is loaded into the canvas as `wallImage` via `URL.createObjectURL`. The existing "New Route (detect holds)" button then runs detection on the uploaded image using the same `canvas.toBlob` → `/detect` pipeline as live captures.
+
+**CV — Fixed hold detection pipeline in `client.py`**
+
+Two bugs in `detect_holds()` were causing only 1 centroid to be returned (always near the image center):
+
+1. **Background subtraction algebra error** — the first implementation simplified algebraically to `GaussianBlur(working)` rather than true background removal. Fixed to correctly mirror ImageJ "light background" rolling-ball: `inv = 255 - working; result_inv = clip(inv - GaussianBlur(inv), 0, 255); working = 255 - result_inv`.
+
+2. **Missing watershed step** — the port of `Betaspray-hold-extractor.ijm` omitted `run("Watershed")` (IJM line 67). Added OpenCV distance-transform watershed after the morphological open: local maxima of the distance transform seed markers, then `cv2.watershed()` splits touching blobs.
+
+After both fixes, detection on `test.jpg` (2560×1709) returns 200+ hold candidates spread across the full image, matching the IJM reference output.
