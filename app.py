@@ -19,7 +19,6 @@ import struct
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 import traceback
 from pathlib import Path
@@ -73,13 +72,11 @@ DOG_BINARY = "./differenceofgaussian"
 CALIB_FILE = Path(__file__).parent / "calibration.json"
 
 # ---------------------------------------------------------------------------
-# Calibration state
+# Calibration — store K matrix + distortion, apply undistort before CV
 # ---------------------------------------------------------------------------
 _calib_K = None       # 3x3 camera matrix (numpy)
 _calib_dist = None    # distortion coefficients (numpy)
 _calib_res = None     # (width, height) at which calibration was done
-_calib_lock = threading.Lock()
-_calib_status = {"state": "idle"}  # idle, capturing, calibrating, done, error
 
 
 def _load_calibration():
@@ -106,8 +103,6 @@ def _save_calibration():
         "K": _calib_K.tolist(),
         "dist": _calib_dist.tolist(),
         "resolution": list(_calib_res),
-        "rms": _calib_status.get("rms"),
-        "frames_used": _calib_status.get("frames_used"),
     }
     CALIB_FILE.write_text(json.dumps(data, indent=2))
 
@@ -117,7 +112,6 @@ def undistort_image(img):
     if _calib_K is None or _calib_dist is None:
         return img
     h, w = img.shape[:2]
-    # Scale calibration if image resolution differs
     K = _calib_K.copy()
     if _calib_res and (w != _calib_res[0] or h != _calib_res[1]):
         sx = w / _calib_res[0]
@@ -127,123 +121,6 @@ def undistort_image(img):
         K[0, 2] *= sx
         K[1, 2] *= sy
     return cv2.undistort(img, K, _calib_dist)
-
-
-CHESSBOARD_SIZE = (8, 6)  # inner corners of calibration board
-
-
-def _find_corners(img, board_size):
-    """Detect checkerboard corners. Returns corners or None."""
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
-    gray_clahe = clahe.apply(gray)
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    flags = (cv2.CALIB_CB_ADAPTIVE_THRESH |
-             cv2.CALIB_CB_NORMALIZE_IMAGE |
-             cv2.CALIB_CB_FILTER_QUADS)
-
-    for g in (gray, gray_clahe):
-        if hasattr(cv2, 'findChessboardCornersSB'):
-            found, corners = cv2.findChessboardCornersSB(g, board_size)
-            if found:
-                return corners
-        found, corners = cv2.findChessboardCorners(g, board_size, flags)
-        if found:
-            return cv2.cornerSubPix(g, corners, (11, 11), (-1, -1), criteria)
-    return None
-
-
-def _run_calibration_thread(num_frames, board_size, esp_base):
-    """Background thread: capture frames from ESP, detect checkerboard, calibrate."""
-    global _calib_K, _calib_dist, _calib_res, _calib_status
-
-    objp = np.zeros((board_size[0] * board_size[1], 3), np.float32)
-    objp[:, :2] = np.mgrid[0:board_size[0], 0:board_size[1]].T.reshape(-1, 2)
-
-    obj_points, img_points = [], []
-    img_shape = None
-    attempts = 0
-    max_attempts = num_frames * 3  # allow some failures
-
-    with _calib_lock:
-        _calib_status = {"state": "capturing", "accepted": 0, "target": num_frames, "attempts": 0}
-
-    slog(f"Calibration started: capturing {num_frames} frames")
-
-    while len(obj_points) < num_frames and attempts < max_attempts:
-        attempts += 1
-        with _calib_lock:
-            _calib_status["attempts"] = attempts
-
-        try:
-            # Capture
-            requests.post(f"{esp_base}/capture", timeout=10)
-            time.sleep(0.3)
-            resp = requests.get(f"{esp_base}/get", timeout=10)
-            if resp.status_code != 200 or resp.headers.get('content-type') != 'image/jpeg':
-                slog(f"Calibration: frame {attempts} fetch failed", "warn")
-                continue
-
-            arr = np.frombuffer(resp.content, dtype=np.uint8)
-            img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-            if img is None:
-                slog(f"Calibration: frame {attempts} decode failed", "warn")
-                continue
-
-            corners = _find_corners(img, board_size)
-            if corners is not None:
-                obj_points.append(objp)
-                img_points.append(corners)
-                img_shape = img.shape[:2]
-                with _calib_lock:
-                    _calib_status["accepted"] = len(obj_points)
-                slog(f"Calibration: frame {attempts} accepted ({len(obj_points)}/{num_frames})")
-            else:
-                slog(f"Calibration: frame {attempts} no board detected")
-
-            time.sleep(0.5)  # don't hammer the ESP
-
-        except Exception as e:
-            slog(f"Calibration: frame {attempts} error: {e}", "err")
-            time.sleep(1)
-
-    if len(obj_points) < 4:
-        with _calib_lock:
-            _calib_status = {"state": "error", "msg": f"Only {len(obj_points)} frames accepted, need at least 4"}
-        slog(f"Calibration failed: not enough frames", "err")
-        return
-
-    with _calib_lock:
-        _calib_status = {"state": "calibrating", "accepted": len(obj_points)}
-
-    slog(f"Running cv2.calibrateCamera on {len(obj_points)} frames...")
-
-    try:
-        rms, K, dist, _, _ = cv2.calibrateCamera(
-            obj_points, img_points, img_shape[::-1], None, None
-        )
-        _calib_K = K
-        _calib_dist = dist.flatten()
-        _calib_res = (img_shape[1], img_shape[0])
-        _save_calibration()
-
-        with _calib_lock:
-            _calib_status = {
-                "state": "done",
-                "rms": round(rms, 4),
-                "frames_used": len(obj_points),
-                "resolution": list(_calib_res),
-                "fx": round(K[0, 0], 2),
-                "fy": round(K[1, 1], 2),
-                "cx": round(K[0, 2], 2),
-                "cy": round(K[1, 2], 2),
-            }
-        slog(f"Calibration done: RMS={rms:.4f}, {_calib_res[0]}x{_calib_res[1]}")
-
-    except Exception as e:
-        with _calib_lock:
-            _calib_status = {"state": "error", "msg": str(e)}
-        slog(f"Calibration failed: {e}", "err")
 
 
 # Server-side log ring buffer (last 200 entries)
@@ -403,56 +280,66 @@ def esp_scan_save():
 # Calibration endpoints
 # ---------------------------------------------------------------------------
 
-@app.route('/calibrate/start', methods=['POST'])
-def calibrate_start():
-    """Start calibration capture in a background thread."""
+@app.route('/calibrate/set', methods=['POST'])
+def calibrate_set():
+    """Set calibration parameters manually.
+    JSON: {fx, fy, cx, cy, width, height, k1?, k2?, p1?, p2?, k3?}
+    """
+    global _calib_K, _calib_dist, _calib_res
     if not HAS_CV2:
         return jsonify({"error": "OpenCV not available"}), 500
 
-    with _calib_lock:
-        if _calib_status.get("state") in ("capturing", "calibrating"):
-            return jsonify({"error": "Calibration already in progress"}), 409
+    data = request.get_json(force=True)
+    required = ["fx", "fy", "cx", "cy", "width", "height"]
+    missing = [k for k in required if k not in data]
+    if missing:
+        return jsonify({"error": f"Missing: {missing}"}), 400
 
-    data = request.get_json(force=True) if request.content_length else {}
-    num_frames = data.get("frames", 15)
-    board = data.get("board", f"{CHESSBOARD_SIZE[0]}x{CHESSBOARD_SIZE[1]}")
-    try:
-        bw, bh = [int(x) for x in board.split("x")]
-    except ValueError:
-        return jsonify({"error": f"Invalid board format: {board}"}), 400
+    _calib_K = np.array([
+        [data["fx"], 0, data["cx"]],
+        [0, data["fy"], data["cy"]],
+        [0, 0, 1],
+    ], dtype=np.float64)
+    _calib_dist = np.array([
+        data.get("k1", 0), data.get("k2", 0),
+        data.get("p1", 0), data.get("p2", 0),
+        data.get("k3", 0),
+    ], dtype=np.float64)
+    _calib_res = (int(data["width"]), int(data["height"]))
 
-    t = threading.Thread(
-        target=_run_calibration_thread,
-        args=(num_frames, (bw, bh), ESP_BASE),
-        daemon=True,
-    )
-    t.start()
-    return jsonify({"status": "started", "target": num_frames, "board": f"{bw}x{bh}"})
+    _save_calibration()
+    slog(f"Calibration set: fx={data['fx']}, fy={data['fy']}, {_calib_res[0]}x{_calib_res[1]}")
+    return jsonify({"status": "ok"})
 
 
-@app.route('/calibrate/status', methods=['GET'])
-def calibrate_status():
-    """Poll calibration progress."""
-    with _calib_lock:
-        status = dict(_calib_status)
-    # Include whether calibration data is loaded
-    status["calibrated"] = _calib_K is not None
-    if _calib_K is not None and "fx" not in status:
-        status["resolution"] = list(_calib_res) if _calib_res else None
-        status["fx"] = round(_calib_K[0, 0], 2)
-        status["fy"] = round(_calib_K[1, 1], 2)
-    return jsonify(status)
+@app.route('/calibrate/get', methods=['GET'])
+def calibrate_get():
+    """Return current calibration values."""
+    if _calib_K is None:
+        return jsonify({"calibrated": False})
+    return jsonify({
+        "calibrated": True,
+        "fx": round(_calib_K[0, 0], 4),
+        "fy": round(_calib_K[1, 1], 4),
+        "cx": round(_calib_K[0, 2], 4),
+        "cy": round(_calib_K[1, 2], 4),
+        "k1": round(float(_calib_dist[0]), 6),
+        "k2": round(float(_calib_dist[1]), 6),
+        "p1": round(float(_calib_dist[2]), 6),
+        "p2": round(float(_calib_dist[3]), 6),
+        "k3": round(float(_calib_dist[4]), 6),
+        "width": _calib_res[0],
+        "height": _calib_res[1],
+    })
 
 
 @app.route('/calibrate/clear', methods=['POST'])
 def calibrate_clear():
     """Clear stored calibration."""
-    global _calib_K, _calib_dist, _calib_res, _calib_status
+    global _calib_K, _calib_dist, _calib_res
     _calib_K = None
     _calib_dist = None
     _calib_res = None
-    with _calib_lock:
-        _calib_status = {"state": "idle"}
     if CALIB_FILE.exists():
         CALIB_FILE.unlink()
     slog("Calibration cleared")
@@ -745,28 +632,23 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
     <div class="panel" style="margin-top:12px;">
       <h2>Calibration</h2>
       <div style="font-size:0.85em; margin-bottom:8px;">
-        <div><strong>Status:</strong> <span id="calibState">--</span></div>
-        <div><strong>Calibrated:</strong> <span id="calibLoaded">--</span></div>
-        <div id="calibDetails" style="display:none; margin-top:4px;">
-          <div>RMS: <span id="calibRms">--</span> &nbsp; Frames: <span id="calibFrames">--</span></div>
-          <div>fx: <span id="calibFx">--</span> &nbsp; fy: <span id="calibFy">--</span></div>
-          <div>Res: <span id="calibRes">--</span></div>
-        </div>
-        <div id="calibProgress" style="display:none; margin-top:4px;">
-          Accepted: <span id="calibAccepted">0</span> / <span id="calibTarget">0</span>
-          &nbsp; (attempt <span id="calibAttempts">0</span>)
-        </div>
+        <strong>Active:</strong> <span id="calibActive">--</span>
       </div>
-      <div class="control-group">
-        <label>Frames</label>
-        <input type="number" id="inputCalibFrames" value="15" min="4" max="50" />
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+        <div class="control-group"><label>fx</label><input type="number" id="inputCalibFx" step="0.01" value="143.76" /></div>
+        <div class="control-group"><label>fy</label><input type="number" id="inputCalibFy" step="0.01" value="141.18" /></div>
+        <div class="control-group"><label>cx</label><input type="number" id="inputCalibCx" step="0.01" value="156.02" /></div>
+        <div class="control-group"><label>cy</label><input type="number" id="inputCalibCy" step="0.01" value="122.14" /></div>
+        <div class="control-group"><label>k1</label><input type="number" id="inputCalibK1" step="0.0001" value="-0.2381" /></div>
+        <div class="control-group"><label>k2</label><input type="number" id="inputCalibK2" step="0.0001" value="0.2381" /></div>
+        <div class="control-group"><label>p1</label><input type="number" id="inputCalibP1" step="0.0001" value="0.0073" /></div>
+        <div class="control-group"><label>p2</label><input type="number" id="inputCalibP2" step="0.0001" value="0.0013" /></div>
+        <div class="control-group"><label>k3</label><input type="number" id="inputCalibK3" step="0.0001" value="-0.1131" /></div>
+        <div class="control-group"><label>Width</label><input type="number" id="inputCalibW" value="320" /></div>
+        <div class="control-group"><label>Height</label><input type="number" id="inputCalibH" value="240" /></div>
       </div>
-      <div class="control-group">
-        <label>Board (inner corners WxH)</label>
-        <input type="text" id="inputCalibBoard" value="8x6" />
-      </div>
-      <div class="btn-row">
-        <button id="btnCalibStart">Start Calibration</button>
+      <div class="btn-row" style="margin-top:6px;">
+        <button id="btnCalibSet">Apply</button>
         <button id="btnCalibClear" class="danger">Clear</button>
       </div>
     </div>
@@ -1196,68 +1078,58 @@ document.getElementById('btnLiveView').addEventListener('click', () => {
 });
 
 // -- Calibration --
-let calibPollTimer = null;
-
-async function pollCalibStatus() {
+async function loadCalibValues() {
   try {
-    const res = await fetch(API + '/calibrate/status');
+    const res = await fetch(API + '/calibrate/get');
     if (!res.ok) return;
     const s = await res.json();
-    document.getElementById('calibState').textContent = s.state || '--';
-    document.getElementById('calibLoaded').textContent = s.calibrated ? 'Yes' : 'No';
-
-    const details = document.getElementById('calibDetails');
-    const progress = document.getElementById('calibProgress');
-
-    if (s.state === 'capturing') {
-      progress.style.display = 'block';
-      details.style.display = 'none';
-      document.getElementById('calibAccepted').textContent = s.accepted || 0;
-      document.getElementById('calibTarget').textContent = s.target || 0;
-      document.getElementById('calibAttempts').textContent = s.attempts || 0;
+    if (s.calibrated) {
+      document.getElementById('calibActive').textContent = 'Yes (' + s.width + 'x' + s.height + ')';
+      document.getElementById('inputCalibFx').value = s.fx;
+      document.getElementById('inputCalibFy').value = s.fy;
+      document.getElementById('inputCalibCx').value = s.cx;
+      document.getElementById('inputCalibCy').value = s.cy;
+      document.getElementById('inputCalibK1').value = s.k1;
+      document.getElementById('inputCalibK2').value = s.k2;
+      document.getElementById('inputCalibP1').value = s.p1;
+      document.getElementById('inputCalibP2').value = s.p2;
+      document.getElementById('inputCalibK3').value = s.k3;
+      document.getElementById('inputCalibW').value = s.width;
+      document.getElementById('inputCalibH').value = s.height;
     } else {
-      progress.style.display = 'none';
-    }
-
-    if (s.calibrated || s.state === 'done') {
-      details.style.display = 'block';
-      document.getElementById('calibRms').textContent = s.rms ?? '--';
-      document.getElementById('calibFrames').textContent = s.frames_used ?? '--';
-      document.getElementById('calibFx').textContent = s.fx ?? '--';
-      document.getElementById('calibFy').textContent = s.fy ?? '--';
-      document.getElementById('calibRes').textContent = s.resolution ? s.resolution.join('x') : '--';
-    }
-
-    // Stop polling when done or error
-    if (calibPollTimer && (s.state === 'done' || s.state === 'error' || s.state === 'idle')) {
-      clearInterval(calibPollTimer);
-      calibPollTimer = null;
-      if (s.state === 'error') log('Calibration failed: ' + (s.msg || 'unknown'), 'err');
-      if (s.state === 'done') log('Calibration complete: RMS=' + s.rms, 'info');
+      document.getElementById('calibActive').textContent = 'No';
     }
   } catch (e) { /* ignore */ }
 }
 
-document.getElementById('btnCalibStart').addEventListener('click', async () => {
-  const frames = parseInt(document.getElementById('inputCalibFrames').value) || 15;
-  const board = document.getElementById('inputCalibBoard').value || '8x6';
-  const res = await post('/calibrate/start', { frames, board });
+document.getElementById('btnCalibSet').addEventListener('click', async () => {
+  const body = {
+    fx: parseFloat(document.getElementById('inputCalibFx').value),
+    fy: parseFloat(document.getElementById('inputCalibFy').value),
+    cx: parseFloat(document.getElementById('inputCalibCx').value),
+    cy: parseFloat(document.getElementById('inputCalibCy').value),
+    k1: parseFloat(document.getElementById('inputCalibK1').value),
+    k2: parseFloat(document.getElementById('inputCalibK2').value),
+    p1: parseFloat(document.getElementById('inputCalibP1').value),
+    p2: parseFloat(document.getElementById('inputCalibP2').value),
+    k3: parseFloat(document.getElementById('inputCalibK3').value),
+    width: parseInt(document.getElementById('inputCalibW').value),
+    height: parseInt(document.getElementById('inputCalibH').value),
+  };
+  const res = await post('/calibrate/set', body);
   if (res.ok) {
-    log('Calibration started: hold checkerboard in front of camera', 'info');
-    calibPollTimer = setInterval(pollCalibStatus, 1500);
+    document.getElementById('calibActive').textContent = 'Yes (' + body.width + 'x' + body.height + ')';
+    log('Calibration applied: fx=' + body.fx + ' fy=' + body.fy, 'info');
   }
 });
 
 document.getElementById('btnCalibClear').addEventListener('click', async () => {
   await post('/calibrate/clear');
-  document.getElementById('calibState').textContent = 'idle';
-  document.getElementById('calibLoaded').textContent = 'No';
-  document.getElementById('calibDetails').style.display = 'none';
+  document.getElementById('calibActive').textContent = 'No';
   log('Calibration cleared');
 });
 
-// Initial check for existing calibration
-pollCalibStatus();
+loadCalibValues();
 
 log('BetaSpray frontend loaded. Enable camera to begin.', 'info');
 </script>
@@ -1288,9 +1160,9 @@ def main():
 
     # Load saved calibration
     if HAS_CV2 and _load_calibration():
-        print(f"  Calibration: loaded from {CALIB_FILE} ({_calib_res[0]}x{_calib_res[1]}, RMS={_calib_status.get('rms', '?')})")
+        print(f"  Calibration: loaded ({_calib_res[0]}x{_calib_res[1]}, fx={_calib_K[0,0]:.1f})")
     else:
-        print(f"  Calibration: none (run from UI or place {CALIB_FILE.name})")
+        print(f"  Calibration: none (set from UI or place {CALIB_FILE.name})")
 
     print(f"BetaSpray Web App")
     print(f"  ESP32:     {ESP_BASE}")
