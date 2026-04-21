@@ -396,7 +396,7 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
     log_request("POST", "/route/play", "");
     FSM_GUARD("route/play");
     int len = req->content_len;
-    if (len <= 0 || len > 256) {
+    if (len <= 0 || len > 512) {
         httpd_resp_sendstr(req, "Invalid content length");
         return ESP_OK;
     }
@@ -433,9 +433,12 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
     int route_num = route_item->valueint;
 
     // Optional: "mode" = "sequential" (default) or "leapfrog"
-    // Optional: "gimbals" = active gimbal count for leapfrog (default 2, future: 4)
+    // Optional: "gimbals" = active gimbal count for leapfrog (default NUM_SERVOS/2)
+    // Optional: "interval_ms" = auto-advance interval in ms; 0 or absent = manual
     route_play_mode_t mode = ROUTE_MODE_SEQUENTIAL;
-    int leap_num = 2;
+    int leap_num = NUM_SERVOS / 2;
+    int interval_ms = 0;
+
     cJSON *mode_item = cJSON_GetObjectItem(json, "mode");
     if (mode_item && cJSON_IsString(mode_item)) {
         if (strcmp(mode_item->valuestring, "leapfrog") == 0) {
@@ -446,7 +449,34 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
             }
         }
     }
+
+    cJSON *interval_item = cJSON_GetObjectItem(json, "interval_ms");
+    if (interval_item && cJSON_IsNumber(interval_item)) {
+        interval_ms = (int)interval_item->valuedouble;
+        if (interval_ms < 0) interval_ms = 0;
+    }
+
+    // Optional: inline pixel-to-angle transform.  Must match the image dimensions
+    // used when the route was created.  hfov_deg/vfov_deg default to camera FOV.
+    cJSON *img_w = cJSON_GetObjectItem(json, "image_width");
+    cJSON *img_h = cJSON_GetObjectItem(json, "image_height");
+    if (img_w && cJSON_IsNumber(img_w) && img_h && cJSON_IsNumber(img_h)) {
+        route_transform_t t = {
+            .hfov_deg    = 120.0f,
+            .vfov_deg    = 60.0f,
+            .image_width  = (int)img_w->valuedouble,
+            .image_height = (int)img_h->valuedouble,
+            .distance_m  = 3.0f,
+        };
+        cJSON *hfov = cJSON_GetObjectItem(json, "hfov_deg");
+        cJSON *vfov = cJSON_GetObjectItem(json, "vfov_deg");
+        if (hfov && cJSON_IsNumber(hfov)) t.hfov_deg = (float)hfov->valuedouble;
+        if (vfov && cJSON_IsNumber(vfov)) t.vfov_deg = (float)vfov->valuedouble;
+        route_set_transform(&t);
+    }
+
     route_set_mode(mode, leap_num);
+    route_set_timed_interval(interval_ms);
     cJSON_Delete(json);
 
     // Load the route first
@@ -459,13 +489,16 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
         return ESP_OK;
     }
 
+    fsm_set_active_route(route_num);
+
     // Start playback
     route_play();
     char log_msg[128];
-    snprintf(log_msg, sizeof(log_msg), "route=%d mode=%s gimbals=%d",
+    snprintf(log_msg, sizeof(log_msg), "route=%d mode=%s gimbals=%d interval=%dms",
              route_num,
              mode == ROUTE_MODE_LEAPFROG ? "leapfrog" : "sequential",
-             mode == ROUTE_MODE_LEAPFROG ? leap_num : NUM_SERVOS / 2);
+             mode == ROUTE_MODE_LEAPFROG ? leap_num : NUM_SERVOS / 2,
+             interval_ms);
     log_response("/route/play", "OK", log_msg);
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;

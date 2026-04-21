@@ -11,14 +11,16 @@
 #define SERVO_PIN_7 10  // SERVO7
 
 // How many servos are being used in the current configuration
-#define NUM_SERVOS 8
+#define NUM_SERVOS 6
 
 // Time (ms) for a full 180° hardware fade.  Partial moves scale proportionally.
 // 2000 ms ≈ 4× the SG90's natural ~0.5 s traversal time.
 #define SERVO_FADE_TIME_MS 2000
 
-// How long to hold the final position before releasing the PWM signal (ms)
-#define SERVO_DURATION_MS 500
+// Brief settle time (ms) after a fade completes before releasing the PWM signal.
+// Keeps the signal active just long enough for the motor to stop oscillating.
+// Servo holds position mechanically once PWM is off — no sustained current draw.
+#define SERVO_DURATION_MS 50
 
 // Initialize all servo LEDC channels
 void servo_init(void);

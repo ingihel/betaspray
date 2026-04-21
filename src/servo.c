@@ -86,31 +86,47 @@ void servo_drive(int id, int angle) {
     int from = servo_current_angle[id];
 
     if (from == angle) {
-        // No movement needed: set duty directly.
+        // Already at target: re-apply duty directly and skip fade.
+        ESP_LOGI(TAG, "Servo %d: already at %d°, re-applying duty", id, angle);
         ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle));
         ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
     } else if (from < 0) {
-        // Unknown position: fade in from 0 duty with full ramp time
-        int fade_ms = SERVO_FADE_TIME_MS;  // Use full fade time for smooth ramp-in
-        ESP_LOGI(TAG, "Servo %d: unknown -> %d deg (fade %d ms)", id, angle, fade_ms);
-
-        // PWM is currently at 0, fade to target angle
-        ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle), fade_ms);
-        ledc_fade_start(LEDC_LOW_SPEED_MODE, ch, LEDC_FADE_WAIT_DONE);
+        // Position unknown (first move after boot). A fade from duty=0 would ramp
+        // through DUTY_MIN (0°) and drag the servo there before reaching the target.
+        // Instead, snap directly to the target duty and wait for the servo to arrive
+        // from wherever it physically is.
+        ESP_LOGI(TAG, "Servo %d: unknown -> %d° (snap, waiting %d ms)", id, angle, SERVO_FADE_TIME_MS);
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle));
+        ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
+        vTaskDelay(pdMS_TO_TICKS(SERVO_FADE_TIME_MS));
     } else {
-        // Known position: proportional fade time so shorter moves are faster.
+        // Known position, but PWM was released (hardware duty is 0).
+        // ledc_set_fade_with_time ramps from the *current hardware duty*, so starting
+        // from 0 sweeps through DUTY_MIN (0°) and causes the servo to home to 0°
+        // before reaching the target.  Restore the starting duty first, wait one PWM
+        // period for the hardware to latch it, then fade from there.
         int fade_ms = abs(angle - from) * SERVO_FADE_TIME_MS / 180;
         if (fade_ms < SERVO_PERIOD_MS)
-            fade_ms = SERVO_PERIOD_MS; // floor at one PWM period
+            fade_ms = SERVO_PERIOD_MS;
 
-        ESP_LOGI(TAG, "Servo %d: %d -> %d deg (fade %d ms)", id, from, angle, fade_ms);
+        ESP_LOGI(TAG, "Servo %d: %d° -> %d° (fade %d ms)", id, from, angle, fade_ms);
+
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(from));
+        ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
+        vTaskDelay(pdMS_TO_TICKS(SERVO_PERIOD_MS)); // one PWM period = 20 ms
 
         ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle), fade_ms);
         ledc_fade_start(LEDC_LOW_SPEED_MODE, ch, LEDC_FADE_WAIT_DONE);
     }
 
     servo_current_angle[id] = angle;
-    ESP_LOGI(TAG, "Servo %d holding at %d deg", id, angle);
+
+    // Hold briefly so the motor stops oscillating, then release the PWM signal.
+    // The servo's gearbox friction maintains position without sustained current draw.
+    vTaskDelay(pdMS_TO_TICKS(SERVO_DURATION_MS));
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, 0);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
+    ESP_LOGI(TAG, "Servo %d at %d deg, PWM released", id, angle);
 }
 
 void servo_testbench_x(int id) {

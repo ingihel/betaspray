@@ -802,6 +802,17 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnLoadRoute">Load</button>
         <button id="btnDeleteRoute" class="danger">Delete</button>
       </div>
+      <div class="control-group" style="margin-top:8px;">
+        <label>Play Mode</label>
+        <select id="selectPlayMode">
+          <option value="sequential">Sequential (all gimbals per step)</option>
+          <option value="leapfrog" selected>Leapfrog (one gimbal advances at a time)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Auto-advance interval (ms, 0 = manual Next)</label>
+        <input type="number" id="inputPlayInterval" value="3000" min="0" step="500" />
+      </div>
     </div>
 
     <div class="panel" style="margin-top:12px;display:none;">
@@ -861,7 +872,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
-const NUM_SERVOS = 2;
+const NUM_SERVOS = 6;
 const CENTROID_RADIUS = 8;
 const SELECTED_COLOR = '#e94560';
 const UNSELECTED_COLOR = 'rgba(0, 200, 255, 0.7)';
@@ -1152,7 +1163,21 @@ document.getElementById('btnDeleteRoute').addEventListener('click', () => {
 // -- Playback --
 
 document.getElementById('btnPlay').addEventListener('click', () => {
-  post('/esp/route/play', { route: parseInt(document.getElementById('inputRouteNum').value) });
+  const mode = document.getElementById('selectPlayMode').value;
+  const interval = parseInt(document.getElementById('inputPlayInterval').value) || 0;
+  const body = {
+    route: parseInt(document.getElementById('inputRouteNum').value),
+    mode,
+    interval_ms: interval,
+  };
+  if (mode === 'leapfrog') body.gimbals = NUM_SERVOS / 2;
+  // Always send image dimensions so the ESP32 maps pixel coordinates correctly.
+  // Falls back to the default 320x240 if no image is loaded.
+  body.image_width  = wallImage ? wallImage.naturalWidth  : 320;
+  body.image_height = wallImage ? wallImage.naturalHeight : 240;
+  body.hfov_deg = parseFloat(document.getElementById('inputHfov').value) || 120;
+  body.vfov_deg = parseFloat(document.getElementById('inputVfov').value) || 60;
+  post('/esp/route/play', body);
 });
 document.getElementById('btnPause').addEventListener('click', () => get('/esp/route/pause'));
 document.getElementById('btnNext').addEventListener('click', () => get('/esp/route/next'));

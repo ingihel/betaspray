@@ -21,9 +21,9 @@ static SemaphoreHandle_t s_next_sem = NULL;
 static SemaphoreHandle_t s_state_mutex = NULL;
 
 static volatile route_play_mode_t s_mode = ROUTE_MODE_SEQUENTIAL;
-static volatile int s_leap_num = 2;              // active gimbals in leapfrog (2 or 4)
-static volatile int s_leap_next = 0;             // which gimbal advances next
-static volatile int s_leap_hold[4] = {0,1,2,3}; // current hold index per gimbal
+static volatile int s_leap_num = NUM_SERVOS / 2;              // active gimbals in leapfrog
+static volatile int s_leap_next = 0;                          // which gimbal advances next
+static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2};   // current hold index per gimbal
 static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
 
 static route_transform_t s_transform = {
@@ -244,13 +244,19 @@ void route_set_timed_interval(int ms) {
 }
 
 // Drive one gimbal (X+Y servo pair) to a hold's pixel coordinates.
-static void drive_gimbal(int g, const route_hold_t *hold) {
+// 100 ms gap between X and Y lets the first servo's inrush settle before the
+// second one starts, reducing peak current draw on a shared supply.
+static void drive_gimbal(int g, int hold_idx, int total_holds, const route_hold_t *hold) {
     int angle_x = pixel_to_servo_x(hold->x);
     int angle_y = pixel_to_servo_y(hold->y);
-    ESP_LOGI(TAG, "[PLAYBACK] Gimbal %d: pixel(%.1f,%.1f) -> X=%d° Y=%d°",
-             g, hold->x, hold->y, angle_x, angle_y);
-    servo_drive(g * 2,     angle_x);
+    ESP_LOGI(TAG, "[GIMBAL] Gimbal %d -> hold %d/%d  pixel(%.1f, %.1f)  servo X=%d° Y=%d°",
+             g, hold_idx + 1, total_holds, hold->x, hold->y, angle_x, angle_y);
+    ESP_LOGI(TAG, "[GIMBAL]   Servo %d (X) driving to %d°", g * 2, angle_x);
+    servo_drive(g * 2, angle_x);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    ESP_LOGI(TAG, "[GIMBAL]   Servo %d (Y) driving to %d°", g * 2 + 1, angle_y);
     servo_drive(g * 2 + 1, angle_y);
+    ESP_LOGI(TAG, "[GIMBAL]   Gimbal %d at hold %d/%d done", g, hold_idx + 1, total_holds);
 }
 
 static void route_playback_task(void *arg) {
@@ -276,22 +282,36 @@ static void route_playback_task(void *arg) {
             // ---- LEAPFROG MODE ----
             // Init: send each gimbal to its starting hold (0..leap_num-1).
             if (!leapfrog_initialized) {
-                ESP_LOGI(TAG, "[LEAPFROG] Init: %d gimbals, %d holds", leap_num, num_holds);
+                ESP_LOGI(TAG, "[LEAPFROG] Init: %d gimbals, %d total holds", leap_num, num_holds);
                 for (int g = 0; g < leap_num; g++) {
                     s_leap_hold[g] = g;
                     if (g < num_holds) {
-                        ESP_LOGI(TAG, "[LEAPFROG] Gimbal %d -> hold %d", g, g);
-                        drive_gimbal(g, &s_holds[g]);
+                        drive_gimbal(g, g, num_holds, &s_holds[g]);
+                        // Stagger gimbals: let the PSU capacitors recover before
+                        // starting the next gimbal's inrush current.
+                        if (g < leap_num - 1)
+                            vTaskDelay(pdMS_TO_TICKS(300));
                     }
                 }
                 s_leap_next = 0;
                 leapfrog_initialized = true;
+                ESP_LOGI(TAG, "[LEAPFROG] Init complete. Gimbals 0-%d at holds 1-%d.",
+                         leap_num - 1, leap_num);
             }
 
             {
                 int interval = s_timed_interval_ms;
+                if (interval > 0) {
+                    ESP_LOGI(TAG, "[LEAPFROG] Waiting %d ms before advancing gimbal %d...",
+                             interval, s_leap_next);
+                } else {
+                    ESP_LOGI(TAG, "[LEAPFROG] Waiting for manual /route/next (gimbal %d next)...",
+                             s_leap_next);
+                }
                 TickType_t timeout = interval > 0 ? pdMS_TO_TICKS(interval) : portMAX_DELAY;
-                xSemaphoreTake(s_next_sem, timeout);
+                BaseType_t triggered = xSemaphoreTake(s_next_sem, timeout);
+                ESP_LOGI(TAG, "[LEAPFROG] Advance triggered (%s)",
+                         triggered == pdTRUE ? "manual" : "timed");
             }
 
             // Advance the next gimbal in rotation by leap_num holds.
@@ -299,48 +319,67 @@ static void route_playback_task(void *arg) {
             int g = s_leap_next;
             int next_hold = s_leap_hold[g] + leap_num;
             if (next_hold < s_num_holds) {
-                ESP_LOGI(TAG, "[LEAPFROG] Gimbal %d: hold %d -> hold %d",
-                         g, s_leap_hold[g], next_hold);
+                ESP_LOGI(TAG, "[LEAPFROG] Gimbal %d: hold %d -> hold %d (of %d)",
+                         g, s_leap_hold[g] + 1, next_hold + 1, s_num_holds);
                 s_leap_hold[g] = next_hold;
                 xSemaphoreGive(s_state_mutex);
-                drive_gimbal(g, &s_holds[next_hold]);
+                drive_gimbal(g, next_hold, num_holds, &s_holds[next_hold]);
             } else {
-                ESP_LOGI(TAG, "[LEAPFROG] Gimbal %d reached end (hold %d). Route complete.",
-                         g, s_leap_hold[g]);
+                ESP_LOGI(TAG, "[LEAPFROG] Gimbal %d: hold %d is last — route complete.",
+                         g, s_leap_hold[g] + 1);
                 s_playing = false;
                 xSemaphoreGive(s_state_mutex);
             }
 
             xSemaphoreTake(s_state_mutex, portMAX_DELAY);
             s_leap_next = (s_leap_next + 1) % leap_num;
+            ESP_LOGI(TAG, "[LEAPFROG] Next gimbal to advance: %d", s_leap_next);
             xSemaphoreGive(s_state_mutex);
 
         } else {
             // ---- SEQUENTIAL MODE (original behaviour) ----
             leapfrog_initialized = false;
             int num_gimbals = NUM_SERVOS / 2;
+            int total_steps = (num_holds + num_gimbals - 1) / num_gimbals;
+            int step_num = current_hold / num_gimbals + 1;
+            ESP_LOGI(TAG, "[SEQ] Step %d/%d: positioning gimbals at holds %d-%d",
+                     step_num, total_steps,
+                     current_hold + 1,
+                     current_hold + num_gimbals < num_holds
+                         ? current_hold + num_gimbals : num_holds);
             for (int g = 0; g < num_gimbals; g++) {
                 int hold_idx = current_hold + g;
                 if (hold_idx >= num_holds) break;
-                ESP_LOGI(TAG, "[PLAYBACK] Gimbal %d -> hold %d/%d", g, hold_idx, num_holds);
-                drive_gimbal(g, &s_holds[hold_idx]);
+                drive_gimbal(g, hold_idx, num_holds, &s_holds[hold_idx]);
+                if (g < num_gimbals - 1 && (hold_idx + 1) < num_holds)
+                    vTaskDelay(pdMS_TO_TICKS(300));
             }
+            ESP_LOGI(TAG, "[SEQ] Step %d/%d complete.", step_num, total_steps);
 
             {
                 int interval = s_timed_interval_ms;
+                if (interval > 0) {
+                    ESP_LOGI(TAG, "[SEQ] Waiting %d ms before step %d...",
+                             interval, step_num + 1);
+                } else {
+                    ESP_LOGI(TAG, "[SEQ] Waiting for manual /route/next (step %d done)...",
+                             step_num);
+                }
                 TickType_t timeout = interval > 0 ? pdMS_TO_TICKS(interval) : portMAX_DELAY;
-                xSemaphoreTake(s_next_sem, timeout);
+                BaseType_t triggered = xSemaphoreTake(s_next_sem, timeout);
+                ESP_LOGI(TAG, "[SEQ] Advance triggered (%s)",
+                         triggered == pdTRUE ? "manual" : "timed");
             }
 
             xSemaphoreTake(s_state_mutex, portMAX_DELAY);
             int old_hold = s_current_hold;
             s_current_hold += num_gimbals;
             if (s_current_hold >= s_num_holds) {
-                ESP_LOGI(TAG, "[PLAYBACK] End of route at hold %d. Looping.", old_hold);
+                ESP_LOGI(TAG, "[SEQ] End of route after step %d. Looping to step 1.", step_num);
                 s_current_hold = 0;
             } else {
-                ESP_LOGI(TAG, "[PLAYBACK] Advancing: hold %d -> hold %d",
-                         old_hold, s_current_hold);
+                ESP_LOGI(TAG, "[SEQ] Advancing to step %d (hold %d -> hold %d)",
+                         step_num + 1, old_hold + 1, s_current_hold + 1);
             }
             xSemaphoreGive(s_state_mutex);
         }
