@@ -19,6 +19,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -347,6 +348,195 @@ def calibrate_clear():
 
 
 # ---------------------------------------------------------------------------
+# AUTO mode — frame-diff based climber detection + hold advance
+# ---------------------------------------------------------------------------
+
+_auto_lock = threading.Lock()
+_auto_thread = None
+_auto_status = {"running": False}
+
+
+def _capture_frame_raw():
+    """Capture + download a JPEG from ESP, return as BGR numpy array or None."""
+    try:
+        requests.post(f"{ESP_BASE}/capture", timeout=10)
+        time.sleep(0.2)
+        resp = requests.get(f"{ESP_BASE}/get", timeout=10)
+        if resp.status_code != 200 or resp.headers.get("content-type") != "image/jpeg":
+            return None
+        arr = np.frombuffer(resp.content, dtype=np.uint8)
+        img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        if img is not None and _calib_K is not None:
+            img = undistort_image(img)
+        return img
+    except Exception as e:
+        slog(f"[AUTO] Frame capture failed: {e}", "err")
+        return None
+
+
+def _auto_advance_loop(holds, interval_ms, radius_px, threshold_pct):
+    """
+    Background loop:
+      1. Capture baseline frame (no climber)
+      2. Every interval_ms: capture frame, diff vs baseline near current hold
+      3. If enough pixels changed near hold → send /route/next, advance index
+      4. Stop when all holds visited or state changes
+    """
+    global _auto_status
+
+    current_idx = 0
+    num_holds = len(holds)
+
+    with _auto_lock:
+        _auto_status = {
+            "running": True,
+            "current_hold": current_idx,
+            "total_holds": num_holds,
+            "msg": "Capturing baseline...",
+        }
+
+    slog(f"[AUTO] Starting: {num_holds} holds, interval={interval_ms}ms, radius={radius_px}px, threshold={threshold_pct}%")
+
+    # Capture baseline
+    baseline = _capture_frame_raw()
+    if baseline is None:
+        with _auto_lock:
+            _auto_status = {"running": False, "msg": "Failed to capture baseline"}
+        slog("[AUTO] Failed to capture baseline frame", "err")
+        return
+
+    baseline_gray = cv2.cvtColor(baseline, cv2.COLOR_BGR2GRAY)
+    baseline_gray = cv2.GaussianBlur(baseline_gray, (21, 21), 0)
+    h, w = baseline_gray.shape
+
+    with _auto_lock:
+        _auto_status["msg"] = f"Running — hold {current_idx + 1}/{num_holds}"
+
+    slog(f"[AUTO] Baseline captured ({w}x{h}), monitoring hold 0")
+
+    interval_s = interval_ms / 1000.0
+
+    while current_idx < num_holds:
+        # Check if we should stop
+        with _auto_lock:
+            if not _auto_status.get("running"):
+                break
+
+        time.sleep(interval_s)
+
+        # Check ESP state is still RUNNING
+        try:
+            state = requests.get(f"{ESP_BASE}/state", timeout=5).json()
+            if state.get("climb_state") != "RUNNING":
+                slog("[AUTO] Climb no longer RUNNING, stopping")
+                break
+        except Exception:
+            pass
+
+        # Capture current frame
+        frame = _capture_frame_raw()
+        if frame is None:
+            continue
+
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame_gray = cv2.GaussianBlur(frame_gray, (21, 21), 0)
+
+        # Compute diff
+        diff = cv2.absdiff(baseline_gray, frame_gray)
+        _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+
+        # Check region around current hold
+        hx, hy = int(holds[current_idx][0]), int(holds[current_idx][1])
+        # Clamp ROI to image bounds
+        x1 = max(0, hx - radius_px)
+        y1 = max(0, hy - radius_px)
+        x2 = min(w, hx + radius_px)
+        y2 = min(h, hy + radius_px)
+
+        roi = thresh[y1:y2, x1:x2]
+        roi_area = roi.shape[0] * roi.shape[1]
+        if roi_area == 0:
+            continue
+
+        changed_pct = (cv2.countNonZero(roi) / roi_area) * 100
+
+        if changed_pct >= threshold_pct:
+            slog(f"[AUTO] Hold {current_idx}: {changed_pct:.1f}% change detected (>={threshold_pct}%), advancing")
+            try:
+                requests.get(f"{ESP_BASE}/route/next", timeout=5)
+            except Exception as e:
+                slog(f"[AUTO] Failed to send /route/next: {e}", "err")
+
+            current_idx += 1
+            with _auto_lock:
+                _auto_status["current_hold"] = current_idx
+                _auto_status["msg"] = f"Running — hold {current_idx + 1}/{num_holds}" if current_idx < num_holds else "Complete"
+
+    with _auto_lock:
+        _auto_status["running"] = False
+        if current_idx >= num_holds:
+            _auto_status["msg"] = f"Complete — all {num_holds} holds reached"
+        slog(f"[AUTO] Stopped at hold {current_idx}/{num_holds}")
+
+
+@app.route('/auto/start', methods=['POST'])
+def auto_start():
+    """Start AUTO advance mode.
+    JSON: {holds: [[x,y],...], interval_ms?: 500, radius_px?: 40, threshold_pct?: 15}
+    Or: {scan_id: N} to fetch holds from ESP centroids.
+    """
+    global _auto_thread
+    if not HAS_CV2:
+        return jsonify({"error": "OpenCV not available"}), 500
+
+    with _auto_lock:
+        if _auto_status.get("running"):
+            return jsonify({"error": "Already running"}), 409
+
+    data = request.get_json(force=True) if request.content_length else {}
+    interval_ms = data.get("interval_ms", 500)
+    radius_px = data.get("radius_px", 40)
+    threshold_pct = data.get("threshold_pct", 15)
+
+    # Get holds
+    holds = data.get("holds")
+    if not holds and "scan_id" in data:
+        try:
+            resp = requests.get(f"{ESP_BASE}/centroids?scan_id={data['scan_id']}", timeout=10)
+            if resp.ok:
+                holds = resp.json().get("centroids", [])
+        except Exception as e:
+            return jsonify({"error": f"Failed to fetch centroids: {e}"}), 502
+
+    if not holds or len(holds) < 1:
+        return jsonify({"error": "No holds provided"}), 400
+
+    _auto_thread = threading.Thread(
+        target=_auto_advance_loop,
+        args=(holds, interval_ms, radius_px, threshold_pct),
+        daemon=True,
+    )
+    _auto_thread.start()
+    return jsonify({"status": "started", "holds": len(holds)})
+
+
+@app.route('/auto/stop', methods=['POST'])
+def auto_stop():
+    """Stop AUTO advance mode."""
+    with _auto_lock:
+        _auto_status["running"] = False
+    slog("[AUTO] Stop requested")
+    return jsonify({"status": "stopping"})
+
+
+@app.route('/auto/status', methods=['GET'])
+def auto_status():
+    """Get AUTO mode status."""
+    with _auto_lock:
+        return jsonify(dict(_auto_status))
+
+
+# ---------------------------------------------------------------------------
 # Hold detection
 # ---------------------------------------------------------------------------
 
@@ -534,6 +724,21 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnNext">Next</button>
         <button id="btnRestart">Restart</button>
         <button id="btnStop" class="danger">Stop</button>
+      </div>
+
+      <h2 style="margin-top:12px;">Auto Advance</h2>
+      <div style="font-size:0.85em; margin-bottom:6px;">
+        <span id="autoStatus">Idle</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+        <div class="control-group"><label>Interval (ms)</label><input type="number" id="inputAutoInterval" value="500" min="100" step="100" /></div>
+        <div class="control-group"><label>Radius (px)</label><input type="number" id="inputAutoRadius" value="40" min="10" /></div>
+        <div class="control-group"><label>Threshold (%)</label><input type="number" id="inputAutoThreshold" value="15" min="1" max="100" /></div>
+        <div class="control-group"><label>Scan ID</label><input type="number" id="inputAutoScanId" value="0" min="0" /></div>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button id="btnAutoStart">Start Auto</button>
+        <button id="btnAutoStop" class="danger">Stop Auto</button>
       </div>
     </div>
 
@@ -1130,6 +1335,46 @@ document.getElementById('btnCalibClear').addEventListener('click', async () => {
 });
 
 loadCalibValues();
+
+// -- Auto Advance --
+let autoPollTimer = null;
+
+async function pollAutoStatus() {
+  try {
+    const res = await fetch(API + '/auto/status');
+    if (!res.ok) return;
+    const s = await res.json();
+    const el = document.getElementById('autoStatus');
+    if (s.running) {
+      el.textContent = s.msg || ('Hold ' + (s.current_hold + 1) + '/' + s.total_holds);
+      el.style.color = '#8f8';
+    } else {
+      el.textContent = s.msg || 'Idle';
+      el.style.color = '#e0e0e0';
+      if (autoPollTimer) { clearInterval(autoPollTimer); autoPollTimer = null; }
+    }
+  } catch (e) { /* ignore */ }
+}
+
+document.getElementById('btnAutoStart').addEventListener('click', async () => {
+  const body = {
+    scan_id: parseInt(document.getElementById('inputAutoScanId').value) || 0,
+    interval_ms: parseInt(document.getElementById('inputAutoInterval').value) || 500,
+    radius_px: parseInt(document.getElementById('inputAutoRadius').value) || 40,
+    threshold_pct: parseInt(document.getElementById('inputAutoThreshold').value) || 15,
+  };
+  const res = await post('/auto/start', body);
+  if (res.ok) {
+    log('Auto advance started', 'info');
+    autoPollTimer = setInterval(pollAutoStatus, 1000);
+  }
+});
+
+document.getElementById('btnAutoStop').addEventListener('click', async () => {
+  await post('/auto/stop');
+  log('Auto advance stopped');
+  pollAutoStatus();
+});
 
 log('BetaSpray frontend loaded. Enable camera to begin.', 'info');
 </script>
