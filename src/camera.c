@@ -96,6 +96,12 @@ esp_err_t camera_init(void) {
         s->set_reg(s, 0x460C, 0xFF, 0x35); // manual PCLK period mode
         s->set_reg(s, 0x3824, 0xFF, 0x04); // PCLK divider = 4
         ESP_LOGI(TAG, "PCLK divider set to 4");
+
+        // The OV5640 is mounted upside-down — flip the image so the
+        // JPEG received by the host comes out right-side-up.
+        s->set_vflip(s, 1);
+        s->set_hmirror(s, 1);
+        ESP_LOGI(TAG, "Sensor vflip + hmirror enabled");
     }
 
     s_initialized = true;
