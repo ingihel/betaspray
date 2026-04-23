@@ -37,7 +37,7 @@ static route_transform_t s_transform = {
 static int pixel_to_servo_x(float px) {
     // Center coordinates: image center = 0°, edges = ±FOV/2
     float center_x = s_transform.image_width / 2.0f;
-    float angle_deg = (px - center_x) * (s_transform.hfov_deg / s_transform.image_width);
+    float angle_deg = (center_x - px) * (s_transform.hfov_deg / s_transform.image_width);
 
     // Offset to servo range (0-180°, center at 90°)
     int servo_angle = (int)(angle_deg + 90.0f);
@@ -45,11 +45,10 @@ static int pixel_to_servo_x(float px) {
 }
 
 static int pixel_to_servo_y(float py) {
-    // Y axis: py=0 (top) maps to angle=FOV, py=240 (bottom) maps to angle=0
-    float angle_deg = (s_transform.image_height - py) * (s_transform.vfov_deg / s_transform.image_height);
-
-    // Servo range: 90° at bottom, 90+FOV at top
-    int servo_angle = (int)(90.0f + angle_deg);
+    // Y axis: py=0 (top) → 135° (sky), py=image_height (bottom) → 45° (flat/forward)
+    // Hardware mounting has a 45° offset: physical sky = 135° signal, not 180°
+    float angle_deg = (s_transform.image_height - py) * (90.0f / s_transform.image_height);
+    int servo_angle = (int)(45.0f + angle_deg);
     return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
@@ -159,6 +158,11 @@ esp_err_t route_load(int n) {
 }
 
 void route_play(void) {
+    ESP_LOGI(TAG, "[PLAYBACK] Zeroing all %d servos before route start", NUM_SERVOS);
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        servo_drive(i, 0);
+    }
+
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
     s_playing = true;
     int current = s_current_hold;

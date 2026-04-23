@@ -13,7 +13,7 @@ static int servo_current_angle[8];
 // Must match NUM_SERVOS - index maps channel to GPIO
 static const int servo_pins[8] = {
     SERVO_PIN_0, SERVO_PIN_1, SERVO_PIN_2, SERVO_PIN_3,
-    SERVO_PIN_4, SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7,
+    SERVO_PIN_6, SERVO_PIN_7, SERVO_PIN_5, SERVO_PIN_6,
 };
 
 // SG90: 50 Hz, 14-bit resolution (16384 ticks per 20 ms period)

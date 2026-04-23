@@ -100,7 +100,7 @@ esp_err_t camera_init(void) {
         // The OV5640 is mounted upside-down — flip the image so the
         // JPEG received by the host comes out right-side-up.
         s->set_vflip(s, 1);
-        s->set_hmirror(s, 1);
+        //s->set_hmirror(s, 1);
         ESP_LOGI(TAG, "Sensor vflip + hmirror enabled");
     }
 
