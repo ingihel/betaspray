@@ -56,5 +56,9 @@ void route_set_mode(route_play_mode_t mode, int leap_num);
 void route_set_transform(const route_transform_t *t);
 void route_set_distance(float distance_m);
 
+// Per-gimbal pointing correction applied on top of pixel→angle conversion.
+// dx/dy are signed degree offsets clamped so final angle stays in [0,180].
+void route_set_gimbal_offset(int gimbal, int dx, int dy);
+
 // Init — call once from app_main; starts playback FreeRTOS task
 void route_init(void);

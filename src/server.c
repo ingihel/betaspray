@@ -1055,6 +1055,57 @@ static esp_err_t scan_save_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// POST /gimbal/zero — zeros all gimbals in collision-safe order (g1 before g0)
+static esp_err_t gimbal_zero_handler(httpd_req_t *req) {
+    log_request("POST", "/gimbal/zero", "");
+    servo_drive(2, 0); servo_drive(3, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(0, 0); servo_drive(1, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(4, 0); servo_drive(5, 0);
+    log_response("/gimbal/zero", "OK", "");
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
+// POST /gimbal/offset — {"gimbal":0,"dx":5,"dy":-3}
+static esp_err_t gimbal_offset_handler(httpd_req_t *req) {
+    log_request("POST", "/gimbal/offset", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 128) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+    char buf[len + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) { httpd_resp_sendstr(req, "Invalid JSON"); return ESP_OK; }
+
+    cJSON *g_j  = cJSON_GetObjectItem(json, "gimbal");
+    cJSON *dx_j = cJSON_GetObjectItem(json, "dx");
+    cJSON *dy_j = cJSON_GetObjectItem(json, "dy");
+    if (!g_j || !cJSON_IsNumber(g_j)) {
+        cJSON_Delete(json);
+        httpd_resp_sendstr(req, "Required: gimbal");
+        return ESP_OK;
+    }
+    int g  = g_j->valueint;
+    int dx = dx_j && cJSON_IsNumber(dx_j) ? dx_j->valueint : 0;
+    int dy = dy_j && cJSON_IsNumber(dy_j) ? dy_j->valueint : 0;
+    cJSON_Delete(json);
+
+    route_set_gimbal_offset(g, dx, dy);
+    char detail[64];
+    snprintf(detail, sizeof(detail), "gimbal=%d dx=%d dy=%d", g, dx, dy);
+    log_response("/gimbal/offset", "OK", detail);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
 // POST /test - echo back the request body prefixed with "ECHO: "
 static esp_err_t test_handler(httpd_req_t *req) {
     log_request("POST", "/test", "");
@@ -1199,9 +1250,21 @@ static const httpd_uri_t uri_scan_save = {
     .handler = scan_save_handler,
 };
 
+static const httpd_uri_t uri_gimbal_zero = {
+    .uri = "/gimbal/zero",
+    .method = HTTP_POST,
+    .handler = gimbal_zero_handler,
+};
+
+static const httpd_uri_t uri_gimbal_offset = {
+    .uri = "/gimbal/offset",
+    .method = HTTP_POST,
+    .handler = gimbal_offset_handler,
+};
+
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 24;
+    config.max_uri_handlers = 26;
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -1230,6 +1293,8 @@ httpd_handle_t server_start(void) {
     httpd_register_uri_handler(server, &uri_centroids_upload);
     httpd_register_uri_handler(server, &uri_centroids_get);
     httpd_register_uri_handler(server, &uri_scan_save);
+    httpd_register_uri_handler(server, &uri_gimbal_zero);
+    httpd_register_uri_handler(server, &uri_gimbal_offset);
 
     ESP_LOGI(TAG, "HTTP server started");
     return server;

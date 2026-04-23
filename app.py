@@ -277,6 +277,14 @@ def esp_centroids_get():
 def esp_scan_save():
     return proxy_post('/scan/save', json=request.get_json(force=True))
 
+@app.route('/esp/gimbal/zero', methods=['POST'])
+def esp_gimbal_zero():
+    return proxy_post('/gimbal/zero')
+
+@app.route('/esp/gimbal/offset', methods=['POST'])
+def esp_gimbal_offset():
+    return proxy_post('/gimbal/offset', json=request.get_json(force=True))
+
 # ---------------------------------------------------------------------------
 # Calibration endpoints
 # ---------------------------------------------------------------------------
@@ -345,6 +353,142 @@ def calibrate_clear():
         CALIB_FILE.unlink()
     slog("Calibration cleared")
     return jsonify({"status": "cleared"})
+
+
+# ---------------------------------------------------------------------------
+# Gimbal pointing calibration
+# ---------------------------------------------------------------------------
+
+IMAGE_WIDTH  = 2560
+IMAGE_HEIGHT = 1920
+HFOV_DEG     = 120.0
+GIMCAL_FILE  = Path(__file__).parent / "gimbal_offsets.json"
+
+# In-memory offsets: list of {"dx": int, "dy": int} per gimbal
+_gimbal_offsets: List[dict] = [{"dx": 0, "dy": 0} for _ in range(3)]
+
+
+def _load_gimbal_offsets():
+    if not GIMCAL_FILE.exists():
+        return
+    try:
+        data = json.loads(GIMCAL_FILE.read_text())
+        for i, entry in enumerate(data):
+            if i < len(_gimbal_offsets):
+                _gimbal_offsets[i] = entry
+        slog(f"Gimbal offsets loaded from {GIMCAL_FILE.name}")
+    except Exception as e:
+        slog(f"Warning: failed to load gimbal offsets: {e}", "warn")
+
+
+def _save_gimbal_offsets():
+    GIMCAL_FILE.write_text(json.dumps(_gimbal_offsets, indent=2))
+
+
+def _pixel_to_servo_x(px: float, image_width: int = IMAGE_WIDTH, hfov_deg: float = HFOV_DEG) -> int:
+    """Must match pixel_to_servo_x() in route.c exactly."""
+    center_x = image_width / 2.0
+    angle_deg = (center_x - px) * (hfov_deg / image_width)
+    return max(0, min(180, round(angle_deg + 90.0)))
+
+
+def _pixel_to_servo_y(py: float, image_height: int = IMAGE_HEIGHT) -> int:
+    """Must match pixel_to_servo_y() in route.c exactly."""
+    angle_deg = (image_height - py) * (30.0 / image_height)
+    return max(0, min(180, round(90.0 + angle_deg)))
+
+
+@app.route('/gimcal/start', methods=['POST'])
+def gimcal_start():
+    """Zero all gimbals in safe order (g1 before g0) to begin calibration."""
+    try:
+        r = requests.post(f"{ESP_BASE}/gimbal/zero", timeout=15)
+        slog("[GIMCAL] Gimbals zeroed for calibration")
+        return jsonify({"status": "ok"})
+    except requests.RequestException as e:
+        slog(f"[GIMCAL] Zero failed: {e}", "err")
+        return jsonify({"error": str(e)}), 502
+
+
+@app.route('/gimcal/point', methods=['POST'])
+def gimcal_point():
+    """Drive a gimbal to the servo angles computed from a pixel coordinate.
+    JSON: {gimbal, x, y, image_width?, image_height?, hfov_deg?}
+    Returns computed angles so the UI can track the baseline for offset calculation.
+    Click near image edges for maximum angular resolution and minimum error.
+    """
+    data = request.get_json(force=True)
+    g           = int(data.get("gimbal", 0))
+    px          = float(data["x"])
+    py          = float(data["y"])
+    img_w       = int(data.get("image_width",  IMAGE_WIDTH))
+    img_h       = int(data.get("image_height", IMAGE_HEIGHT))
+    hfov        = float(data.get("hfov_deg",   HFOV_DEG))
+    dx          = _gimbal_offsets[g]["dx"] if g < len(_gimbal_offsets) else 0
+    dy          = _gimbal_offsets[g]["dy"] if g < len(_gimbal_offsets) else 0
+
+    angle_x = max(0, min(180, _pixel_to_servo_x(px, img_w, hfov) + dx))
+    angle_y = max(0, min(180, _pixel_to_servo_y(py, img_h)       + dy))
+
+    x_servo = g * 2
+    y_servo = g * 2 + 1
+    try:
+        requests.post(f"{ESP_BASE}/servo", json={"servo": x_servo, "angle": angle_x}, timeout=10)
+        time.sleep(0.15)
+        requests.post(f"{ESP_BASE}/servo", json={"servo": y_servo, "angle": angle_y}, timeout=10)
+        slog(f"[GIMCAL] Gimbal {g} -> pixel({px:.0f},{py:.0f}) X={angle_x}° Y={angle_y}°")
+        return jsonify({"angle_x": angle_x, "angle_y": angle_y, "x_servo": x_servo, "y_servo": y_servo})
+    except requests.RequestException as e:
+        slog(f"[GIMCAL] Point drive failed: {e}", "err")
+        return jsonify({"error": str(e)}), 502
+
+
+@app.route('/gimcal/offset', methods=['POST'])
+def gimcal_offset():
+    """Store and apply per-gimbal angle offsets.
+    JSON: {gimbal, dx, dy}   — dx/dy are signed integer degrees.
+    """
+    data = request.get_json(force=True)
+    g  = int(data.get("gimbal", 0))
+    dx = int(data.get("dx", 0))
+    dy = int(data.get("dy", 0))
+    if g < 0 or g >= len(_gimbal_offsets):
+        return jsonify({"error": "invalid gimbal"}), 400
+
+    _gimbal_offsets[g] = {"dx": dx, "dy": dy}
+    _save_gimbal_offsets()
+
+    try:
+        requests.post(f"{ESP_BASE}/gimbal/offset", json={"gimbal": g, "dx": dx, "dy": dy}, timeout=10)
+        slog(f"[GIMCAL] Offset saved: gimbal {g} dx={dx:+d}° dy={dy:+d}°")
+    except requests.RequestException as e:
+        slog(f"[GIMCAL] Offset send to ESP failed: {e}", "warn")
+
+    return jsonify({"status": "ok", "gimbal": g, "dx": dx, "dy": dy})
+
+
+@app.route('/gimcal/drive', methods=['POST'])
+def gimcal_drive():
+    """Drive both servos of one gimbal directly, bypassing the rate limiter.
+    JSON: {gimbal, angle_x, angle_y}
+    """
+    data = request.get_json(force=True)
+    g   = int(data['gimbal'])
+    ax  = max(0, min(180, int(data['angle_x'])))
+    ay  = max(0, min(180, int(data['angle_y'])))
+    try:
+        requests.post(f"{ESP_BASE}/servo", json={"servo": g * 2,     "angle": ax}, timeout=10)
+        time.sleep(0.15)
+        requests.post(f"{ESP_BASE}/servo", json={"servo": g * 2 + 1, "angle": ay}, timeout=10)
+        return jsonify({"ok": True, "angle_x": ax, "angle_y": ay})
+    except requests.RequestException as e:
+        slog(f"[GIMCAL] Drive failed: {e}", "err")
+        return jsonify({"error": str(e)}), 502
+
+
+@app.route('/gimcal/offsets', methods=['GET'])
+def gimcal_offsets_get():
+    return jsonify(_gimbal_offsets)
 
 
 # ---------------------------------------------------------------------------
@@ -831,7 +975,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
       </div>
       <div class="control-group">
         <label>Image Height (px)</label>
-        <input type="number" id="inputHeight" value="240" />
+        <input type="number" id="inputHeight" value="1920" />
       </div>
       <div class="control-group">
         <label>Distance (m)</label>
@@ -860,13 +1004,61 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <div class="control-group"><label>p1</label><input type="number" id="inputCalibP1" step="0.0001" value="0.0073" /></div>
         <div class="control-group"><label>p2</label><input type="number" id="inputCalibP2" step="0.0001" value="0.0013" /></div>
         <div class="control-group"><label>k3</label><input type="number" id="inputCalibK3" step="0.0001" value="-0.1131" /></div>
-        <div class="control-group"><label>Width</label><input type="number" id="inputCalibW" value="320" /></div>
-        <div class="control-group"><label>Height</label><input type="number" id="inputCalibH" value="240" /></div>
+        <div class="control-group"><label>Width</label><input type="number" id="inputCalibW" value="2560" /></div>
+        <div class="control-group"><label>Height</label><input type="number" id="inputCalibH" value="1920" /></div>
       </div>
       <div class="btn-row" style="margin-top:6px;">
         <button id="btnCalibSet">Apply</button>
         <button id="btnCalibClear" class="danger">Clear</button>
       </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+      <h2>Gimbal Calibration</h2>
+      <div style="font-size:0.8em;color:#aaa;margin-bottom:8px;">
+        Zero gimbals, click a point on the image to drive the selected gimbal there,
+        then fine-tune offsets until laser/nozzle hits the correct spot.
+        <strong>Click near image edges for lowest error.</strong>
+      </div>
+      <div class="btn-row">
+        <button id="btnGimCalEnter">Enter Cal Mode</button>
+        <button id="btnGimCalExit" class="danger" disabled>Exit Cal Mode</button>
+      </div>
+      <div class="control-group">
+        <label>Gimbal to calibrate</label>
+        <select id="selectGimbal"><option value="0">Gimbal 0</option><option value="1">Gimbal 1</option><option value="2">Gimbal 2</option></select>
+      </div>
+      <div id="gimCalBaseAngles" style="font-size:0.8em;margin-bottom:8px;display:none;">
+        Base: X=<span id="gimCalBaseX">--</span>°  Y=<span id="gimCalBaseY">--</span>°
+        &nbsp;|&nbsp; Current: X=<span id="gimCalCurX">--</span>°  Y=<span id="gimCalCurY">--</span>°
+      </div>
+      <div class="control-group">
+        <label>Step size (°)</label>
+        <select id="gimCalStep" style="width:80px;">
+          <option value="1" selected>1°</option>
+          <option value="2">2°</option>
+          <option value="5">5°</option>
+        </select>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:0.8em;color:#aaa;margin-bottom:4px;">X axis &nbsp; offset: <span id="gimCalDxVal">0</span>°</div>
+        <div class="btn-row">
+          <button id="btnGimCalXLeft">◄ Left</button>
+          <button id="btnGimCalXRight">Right ►</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.8em;color:#aaa;margin-bottom:4px;">Y axis &nbsp; offset: <span id="gimCalDyVal">0</span>°</div>
+        <div class="btn-row">
+          <button id="btnGimCalYUp">▲ Up</button>
+          <button id="btnGimCalYDown">▼ Down</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btnGimCalSave">Save Offset</button>
+        <button id="btnGimCalClearAll" class="danger">Clear All Offsets</button>
+      </div>
+      <div id="gimCalOffsetDisplay" style="font-size:0.78em;color:#aaa;margin-top:6px;"></div>
     </div>
   </div>
 </div>
@@ -1004,6 +1196,7 @@ function updateHoldList() {
 // -- Canvas clicks --
 
 canvas.addEventListener('click', (e) => {
+  if (gimCalMode) return;
   if (!routeMode) return;
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -1173,8 +1366,8 @@ document.getElementById('btnPlay').addEventListener('click', () => {
   if (mode === 'leapfrog') body.gimbals = NUM_SERVOS / 2;
   // Always send image dimensions so the ESP32 maps pixel coordinates correctly.
   // Falls back to the default 320x240 if no image is loaded.
-  body.image_width  = wallImage ? wallImage.naturalWidth  : 320;
-  body.image_height = wallImage ? wallImage.naturalHeight : 240;
+  body.image_width  = wallImage ? wallImage.naturalWidth  : 2560;
+  body.image_height = wallImage ? wallImage.naturalHeight : 1920;
   body.hfov_deg = parseFloat(document.getElementById('inputHfov').value) || 120;
   body.vfov_deg = parseFloat(document.getElementById('inputVfov').value) || 60;
   post('/esp/route/play', body);
@@ -1402,6 +1595,136 @@ document.getElementById('btnAutoStop').addEventListener('click', async () => {
 });
 
 log('BetaSpray frontend loaded. Enable camera to begin.', 'info');
+
+// ---------------------------------------------------------------------------
+// Gimbal Calibration
+// ---------------------------------------------------------------------------
+let gimCalMode = false;
+let gimCalBaseX = null, gimCalBaseY = null;
+let gimCalDx = 0, gimCalDy = 0;
+
+async function loadGimCalOffsets() {
+  try {
+    const res = await fetch(API + '/gimcal/offsets');
+    if (!res.ok) return;
+    const offsets = await res.json();
+    let s = '';
+    offsets.forEach((o, i) => { s += `G${i}: dx=${o.dx>=0?'+':''}${o.dx}° dy=${o.dy>=0?'+':''}${o.dy}°  `; });
+    document.getElementById('gimCalOffsetDisplay').textContent = s.trim();
+  } catch (e) { /* ignore */ }
+}
+
+function gimCalUpdateDisplay() {
+  document.getElementById('gimCalDxVal').textContent = (gimCalDx >= 0 ? '+' : '') + gimCalDx;
+  document.getElementById('gimCalDyVal').textContent = (gimCalDy >= 0 ? '+' : '') + gimCalDy;
+  if (gimCalBaseX !== null) {
+    document.getElementById('gimCalCurX').textContent = Math.max(0, Math.min(180, gimCalBaseX + gimCalDx));
+    document.getElementById('gimCalCurY').textContent = Math.max(0, Math.min(180, gimCalBaseY + gimCalDy));
+  }
+}
+
+async function gimCalDrive() {
+  if (!gimCalMode || gimCalBaseX === null) return;
+  const g  = parseInt(document.getElementById('selectGimbal').value);
+  const ax = Math.max(0, Math.min(180, gimCalBaseX + gimCalDx));
+  const ay = Math.max(0, Math.min(180, gimCalBaseY + gimCalDy));
+  // Use /gimcal/drive which bypasses rate limiting and drives both servos atomically
+  await fetch(API + '/gimcal/drive', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ gimbal: g, angle_x: ax, angle_y: ay }),
+  });
+  gimCalUpdateDisplay();
+}
+
+document.getElementById('btnGimCalEnter').addEventListener('click', async () => {
+  log('[GIMCAL] Zeroing gimbals...', 'info');
+  await post('/gimcal/start');
+  gimCalMode = true;
+  gimCalBaseX = null; gimCalBaseY = null;
+  gimCalDx = 0; gimCalDy = 0;
+  gimCalUpdateDisplay();
+  document.getElementById('gimCalBaseAngles').style.display = 'none';
+  document.getElementById('btnGimCalEnter').disabled = true;
+  document.getElementById('btnGimCalExit').disabled = false;
+  document.getElementById('modeBanner').textContent = 'GIMBAL CALIBRATION — Click near image edges to drive selected gimbal';
+  document.getElementById('modeBanner').style.display = 'block';
+  await loadGimCalOffsets();
+  log('[GIMCAL] Ready — click image to point gimbal', 'info');
+});
+
+document.getElementById('btnGimCalExit').addEventListener('click', () => {
+  gimCalMode = false;
+  document.getElementById('btnGimCalEnter').disabled = false;
+  document.getElementById('btnGimCalExit').disabled = true;
+  document.getElementById('modeBanner').style.display = 'none';
+  document.getElementById('gimCalBaseAngles').style.display = 'none';
+  log('[GIMCAL] Exited calibration mode');
+});
+
+document.getElementById('btnGimCalXLeft').addEventListener('click', () => {
+  gimCalDx -= parseInt(document.getElementById('gimCalStep').value);
+  gimCalDrive();
+});
+document.getElementById('btnGimCalXRight').addEventListener('click', () => {
+  gimCalDx += parseInt(document.getElementById('gimCalStep').value);
+  gimCalDrive();
+});
+document.getElementById('btnGimCalYUp').addEventListener('click', () => {
+  gimCalDy += parseInt(document.getElementById('gimCalStep').value);
+  gimCalDrive();
+});
+document.getElementById('btnGimCalYDown').addEventListener('click', () => {
+  gimCalDy -= parseInt(document.getElementById('gimCalStep').value);
+  gimCalDrive();
+});
+
+document.getElementById('btnGimCalSave').addEventListener('click', async () => {
+  const g = parseInt(document.getElementById('selectGimbal').value);
+  const res = await post('/gimcal/offset', { gimbal: g, dx: gimCalDx, dy: gimCalDy });
+  if (res.ok) {
+    log(`[GIMCAL] Offset saved: gimbal ${g} dx=${gimCalDx>=0?'+':''}${gimCalDx}° dy=${gimCalDy>=0?'+':''}${gimCalDy}°`, 'info');
+    await loadGimCalOffsets();
+  }
+});
+
+document.getElementById('btnGimCalClearAll').addEventListener('click', async () => {
+  for (let g = 0; g < 3; g++) await post('/gimcal/offset', { gimbal: g, dx: 0, dy: 0 });
+  gimCalDx = 0; gimCalDy = 0;
+  gimCalUpdateDisplay();
+  log('[GIMCAL] All offsets cleared', 'info');
+  await loadGimCalOffsets();
+});
+
+// Intercept canvas clicks in calibration mode
+canvas.addEventListener('click', async (e) => {
+  if (!gimCalMode) return;
+  if (!wallImage) { log('[GIMCAL] Load an image first', 'err'); return; }
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top)  * (canvas.height / rect.height);
+  const g  = parseInt(document.getElementById('selectGimbal').value);
+  const res = await fetch(API + '/gimcal/point', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ gimbal: g, x: Math.round(px), y: Math.round(py),
+                           image_width: canvas.width, image_height: canvas.height }),
+  });
+  if (!res.ok) { log('[GIMCAL] Point drive failed', 'err'); return; }
+  const data = await res.json();
+  gimCalBaseX = data.angle_x;
+  gimCalBaseY = data.angle_y;
+  gimCalDx = 0; gimCalDy = 0;
+  gimCalUpdateDisplay();
+  document.getElementById('gimCalBaseX').textContent = data.angle_x;
+  document.getElementById('gimCalBaseY').textContent = data.angle_y;
+  document.getElementById('gimCalCurX').textContent  = data.angle_x;
+  document.getElementById('gimCalCurY').textContent  = data.angle_y;
+  document.getElementById('gimCalBaseAngles').style.display = 'block';
+  log(`[GIMCAL] G${g} -> pixel(${Math.round(px)},${Math.round(py)}) X=${data.angle_x}° Y=${data.angle_y}°`, 'info');
+}, true);
+
+loadGimCalOffsets();
 </script>
 </body>
 </html>
@@ -1433,6 +1756,9 @@ def main():
         print(f"  Calibration: loaded ({_calib_res[0]}x{_calib_res[1]}, fx={_calib_K[0,0]:.1f})")
     else:
         print(f"  Calibration: none (set from UI or place {CALIB_FILE.name})")
+
+    _load_gimbal_offsets()
+    print(f"  Gimbal offsets: {_gimbal_offsets}")
 
     print(f"BetaSpray Web App")
     print(f"  ESP32:     {ESP_BASE}")

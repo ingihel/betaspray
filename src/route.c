@@ -25,6 +25,9 @@ static volatile int s_leap_num = NUM_SERVOS / 2;              // active gimbals 
 static volatile int s_leap_next = 0;                          // which gimbal advances next
 static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2};   // current hold index per gimbal
 static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
+static int s_gimbal_x_angle[NUM_SERVOS / 2];    // last driven X angle per gimbal, for collision checks
+static int s_gimbal_offset_x[NUM_SERVOS / 2];  // signed degree correction applied to X servo
+static int s_gimbal_offset_y[NUM_SERVOS / 2];  // signed degree correction applied to Y servo
 
 static route_transform_t s_transform = {
     .hfov_deg = 120.0f,
@@ -45,10 +48,10 @@ static int pixel_to_servo_x(float px) {
 }
 
 static int pixel_to_servo_y(float py) {
-    // Y axis: py=0 (top) → 135° (sky), py=image_height (bottom) → 45° (flat/forward)
-    // Hardware mounting has a 45° offset: physical sky = 135° signal, not 180°
-    float angle_deg = (s_transform.image_height - py) * (90.0f / s_transform.image_height);
-    int servo_angle = (int)(45.0f + angle_deg);
+    // 90° = flat/forward, 135° = straight vertical (observed on hardware).
+    // Map the full image height to a 30° arc: bottom pixel → 90°, top pixel → 120°.
+    float angle_deg = (s_transform.image_height - py) * (30.0f / s_transform.image_height);
+    int servo_angle = (int)(90.0f + angle_deg);
     return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
 }
 
@@ -158,10 +161,14 @@ esp_err_t route_load(int n) {
 }
 
 void route_play(void) {
-    ESP_LOGI(TAG, "[PLAYBACK] Zeroing all %d servos before route start", NUM_SERVOS);
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        servo_drive(i, 0);
-    }
+    ESP_LOGI(TAG, "[PLAYBACK] Zeroing all servos before route start");
+    // Zero gimbal 1 first to avoid clashing with gimbal 0 during retract.
+    servo_drive(2, 0); servo_drive(3, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(0, 0); servo_drive(1, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(4, 0); servo_drive(5, 0);
+    for (int i = 0; i < NUM_SERVOS / 2; i++) s_gimbal_x_angle[i] = 0;
 
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
     s_playing = true;
@@ -221,6 +228,16 @@ void route_set_distance(float distance_m) {
     xSemaphoreGive(s_state_mutex);
 }
 
+void route_set_gimbal_offset(int gimbal, int dx, int dy) {
+    if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
+        ESP_LOGW(TAG, "route_set_gimbal_offset: invalid gimbal %d", gimbal);
+        return;
+    }
+    s_gimbal_offset_x[gimbal] = dx;
+    s_gimbal_offset_y[gimbal] = dy;
+    ESP_LOGI(TAG, "Gimbal %d offset: X%+d° Y%+d°", gimbal, dx, dy);
+}
+
 void route_set_mode(route_play_mode_t mode, int leap_num) {
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
     s_mode = mode;
@@ -251,8 +268,10 @@ void route_set_timed_interval(int ms) {
 // 100 ms gap between X and Y lets the first servo's inrush settle before the
 // second one starts, reducing peak current draw on a shared supply.
 static void drive_gimbal(int g, int hold_idx, int total_holds, const route_hold_t *hold) {
-    int angle_x = pixel_to_servo_x(hold->x);
-    int angle_y = pixel_to_servo_y(hold->y);
+    int angle_x = pixel_to_servo_x(hold->x) + s_gimbal_offset_x[g];
+    int angle_y = pixel_to_servo_y(hold->y) + s_gimbal_offset_y[g];
+    angle_x = angle_x < 0 ? 0 : angle_x > 180 ? 180 : angle_x;
+    angle_y = angle_y < 0 ? 0 : angle_y > 180 ? 180 : angle_y;
     ESP_LOGI(TAG, "[GIMBAL] Gimbal %d -> hold %d/%d  pixel(%.1f, %.1f)  servo X=%d° Y=%d°",
              g, hold_idx + 1, total_holds, hold->x, hold->y, angle_x, angle_y);
     ESP_LOGI(TAG, "[GIMBAL]   Servo %d (X) driving to %d°", g * 2, angle_x);
