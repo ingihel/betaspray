@@ -285,6 +285,18 @@ def esp_gimbal_zero():
 def esp_gimbal_offset():
     return proxy_post('/gimbal/offset', json=request.get_json(force=True))
 
+@app.route('/esp/gimbal/poly', methods=['POST'])
+def esp_gimbal_poly_set():
+    return proxy_post('/gimbal/poly', json=request.get_json(force=True))
+
+@app.route('/esp/gimbal/poly', methods=['GET'])
+def esp_gimbal_poly_get():
+    return proxy_get('/gimbal/poly', throttle=False)
+
+@app.route('/esp/gimbal/point', methods=['POST'])
+def esp_gimbal_point():
+    return proxy_post('/gimbal/point', json=request.get_json(force=True))
+
 # ---------------------------------------------------------------------------
 # Calibration endpoints
 # ---------------------------------------------------------------------------
@@ -412,32 +424,27 @@ def gimcal_start():
 
 @app.route('/gimcal/point', methods=['POST'])
 def gimcal_point():
-    """Drive a gimbal to the servo angles computed from a pixel coordinate.
-    JSON: {gimbal, x, y, image_width?, image_height?, hfov_deg?}
-    Returns computed angles so the UI can track the baseline for offset calculation.
-    Click near image edges for maximum angular resolution and minimum error.
+    """Drive a gimbal to raw (uncorrected) servo angles computed from a pixel.
+    Proxies to ESP /gimbal/point so the geometric computation matches route playback.
+    JSON: {gimbal, x, y, image_width?, image_height?}
+    Returns: {angle_x, angle_y}
     """
     data = request.get_json(force=True)
-    g           = int(data.get("gimbal", 0))
-    px          = float(data["x"])
-    py          = float(data["y"])
-    img_w       = int(data.get("image_width",  IMAGE_WIDTH))
-    img_h       = int(data.get("image_height", IMAGE_HEIGHT))
-    hfov        = float(data.get("hfov_deg",   HFOV_DEG))
-    dx          = _gimbal_offsets[g]["dx"] if g < len(_gimbal_offsets) else 0
-    dy          = _gimbal_offsets[g]["dy"] if g < len(_gimbal_offsets) else 0
-
-    angle_x = max(0, min(180, _pixel_to_servo_x(px, img_w, hfov) + dx))
-    angle_y = max(0, min(180, _pixel_to_servo_y(py, img_h)       + dy))
-
-    x_servo = g * 2
-    y_servo = g * 2 + 1
+    body = {
+        "gimbal": int(data.get("gimbal", 0)),
+        "px": float(data["x"]),
+        "py": float(data["y"]),
+    }
+    if "image_width" in data:
+        body["image_width"] = int(data["image_width"])
+    if "image_height" in data:
+        body["image_height"] = int(data["image_height"])
     try:
-        requests.post(f"{ESP_BASE}/servo", json={"servo": x_servo, "angle": angle_x}, timeout=10)
-        time.sleep(0.15)
-        requests.post(f"{ESP_BASE}/servo", json={"servo": y_servo, "angle": angle_y}, timeout=10)
-        slog(f"[GIMCAL] Gimbal {g} -> pixel({px:.0f},{py:.0f}) X={angle_x}° Y={angle_y}°")
-        return jsonify({"angle_x": angle_x, "angle_y": angle_y, "x_servo": x_servo, "y_servo": y_servo})
+        r = requests.post(f"{ESP_BASE}/gimbal/point", json=body, timeout=15)
+        result = r.json()
+        slog(f"[GIMCAL] Gimbal {body['gimbal']} -> pixel({body['px']:.0f},{body['py']:.0f}) "
+             f"X={result.get('angle_x')}° Y={result.get('angle_y')}°")
+        return jsonify(result)
     except requests.RequestException as e:
         slog(f"[GIMCAL] Point drive failed: {e}", "err")
         return jsonify({"error": str(e)}), 502
@@ -489,6 +496,156 @@ def gimcal_drive():
 @app.route('/gimcal/offsets', methods=['GET'])
 def gimcal_offsets_get():
     return jsonify(_gimbal_offsets)
+
+
+# ---------------------------------------------------------------------------
+# Polynomial calibration — collect points, fit bilinear model, send to ESP
+# ---------------------------------------------------------------------------
+
+# In-memory calibration points per gimbal (cleared each session).
+# Each entry: {"computed_x": float, "computed_y": float, "actual_x": float, "actual_y": float}
+_polycal_points: List[List[dict]] = [[] for _ in range(4)]
+
+
+@app.route('/gimcal/poly/collect', methods=['POST'])
+def gimcal_poly_collect():
+    """Record a calibration data point.
+    JSON: {gimbal, computed_x, computed_y, actual_x, actual_y}
+    """
+    data = request.get_json(force=True)
+    g = int(data["gimbal"])
+    if g < 0 or g >= 4:
+        return jsonify({"error": "invalid gimbal"}), 400
+    point = {
+        "computed_x": float(data["computed_x"]),
+        "computed_y": float(data["computed_y"]),
+        "actual_x": float(data["actual_x"]),
+        "actual_y": float(data["actual_y"]),
+    }
+    _polycal_points[g].append(point)
+    slog(f"[POLYCAL] G{g} point #{len(_polycal_points[g])}: "
+         f"computed=({point['computed_x']},{point['computed_y']}) "
+         f"actual=({point['actual_x']},{point['actual_y']})")
+    return jsonify({"status": "ok", "gimbal": g, "count": len(_polycal_points[g])})
+
+
+@app.route('/gimcal/poly/fit', methods=['POST'])
+def gimcal_poly_fit():
+    """Fit bilinear polynomial from collected points and send to ESP.
+    JSON: {} or {gimbal: N} to fit just one.
+    Requires numpy and at least 4 points per gimbal.
+    """
+    if not HAS_CV2:
+        return jsonify({"error": "numpy not available"}), 500
+
+    data = request.get_json(force=True) if request.content_length else {}
+    target_gimbal = data.get("gimbal")  # None = fit all
+
+    results = {}
+    all_coeffs = []
+
+    for g in range(4):
+        if target_gimbal is not None and g != int(target_gimbal):
+            # Keep existing coefficients for non-targeted gimbals.
+            all_coeffs.append(None)
+            continue
+
+        pts = _polycal_points[g]
+        if len(pts) < 4:
+            results[f"g{g}"] = {"error": f"need >= 4 points, have {len(pts)}"}
+            all_coeffs.append(None)
+            continue
+
+        # Build design matrix: [1, cx, cy, cx*cy]
+        cx = np.array([p["computed_x"] for p in pts])
+        cy = np.array([p["computed_y"] for p in pts])
+        ax = np.array([p["actual_x"] for p in pts])
+        ay = np.array([p["actual_y"] for p in pts])
+
+        A = np.column_stack([np.ones_like(cx), cx, cy, cx * cy])
+        err_x = ax - cx  # residual to fit
+        err_y = ay - cy
+
+        # Least-squares fit
+        coeff_x, res_x, _, _ = np.linalg.lstsq(A, err_x, rcond=None)
+        coeff_y, res_y, _, _ = np.linalg.lstsq(A, err_y, rcond=None)
+
+        coeffs = list(coeff_x) + list(coeff_y)  # [a0,a1,a2,a3,b0,b1,b2,b3]
+        all_coeffs.append([float(c) for c in coeffs])
+
+        # Compute RMS residual for reporting
+        pred_x = cx + A @ coeff_x
+        pred_y = cy + A @ coeff_y
+        rms_x = float(np.sqrt(np.mean((ax - pred_x) ** 2)))
+        rms_y = float(np.sqrt(np.mean((ay - pred_y) ** 2)))
+
+        results[f"g{g}"] = {
+            "coeffs": [round(float(c), 6) for c in coeffs],
+            "rms_x": round(rms_x, 3),
+            "rms_y": round(rms_y, 3),
+            "points": len(pts),
+        }
+        slog(f"[POLYCAL] G{g} fit: rms_x={rms_x:.3f}° rms_y={rms_y:.3f}° ({len(pts)} pts)")
+
+    # Send fitted coefficients to ESP.
+    # For gimbals we didn't fit, fetch current coefficients from ESP.
+    try:
+        esp_resp = requests.get(f"{ESP_BASE}/gimbal/poly", timeout=10)
+        current = esp_resp.json().get("gimbals", [[0]*8]*4)
+    except Exception:
+        current = [[0]*8]*4
+
+    bulk = []
+    for g in range(4):
+        if all_coeffs[g] is not None:
+            bulk.append(all_coeffs[g])
+        else:
+            bulk.append(current[g] if g < len(current) else [0]*8)
+
+    try:
+        requests.post(f"{ESP_BASE}/gimbal/poly",
+                      json={"all": bulk, "save": True}, timeout=10)
+        slog("[POLYCAL] Coefficients sent to ESP and saved")
+    except requests.RequestException as e:
+        slog(f"[POLYCAL] Failed to send coefficients to ESP: {e}", "err")
+        return jsonify({"error": str(e), "results": results}), 502
+
+    return jsonify({"status": "ok", "results": results})
+
+
+@app.route('/gimcal/poly/points', methods=['GET'])
+def gimcal_poly_points():
+    """Return collected calibration points."""
+    return jsonify({f"g{g}": pts for g, pts in enumerate(_polycal_points)})
+
+
+@app.route('/gimcal/poly/clear', methods=['POST'])
+def gimcal_poly_clear():
+    """Clear collected calibration points.
+    JSON: {} for all, or {gimbal: N} for one.
+    """
+    data = request.get_json(force=True) if request.content_length else {}
+    g = data.get("gimbal")
+    if g is not None:
+        g = int(g)
+        if 0 <= g < 4:
+            _polycal_points[g] = []
+            slog(f"[POLYCAL] Cleared points for gimbal {g}")
+    else:
+        for i in range(4):
+            _polycal_points[i] = []
+        slog("[POLYCAL] Cleared all calibration points")
+    return jsonify({"status": "ok"})
+
+
+@app.route('/gimcal/poly/coeffs', methods=['GET'])
+def gimcal_poly_coeffs():
+    """Proxy to ESP GET /gimbal/poly — return current polynomial coefficients."""
+    try:
+        r = requests.get(f"{ESP_BASE}/gimbal/poly", timeout=10)
+        return jsonify(r.json())
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 502
 
 
 # ---------------------------------------------------------------------------
@@ -1063,6 +1220,17 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnGimCalClearAll" class="danger">Clear All Offsets</button>
       </div>
       <div id="gimCalOffsetDisplay" style="font-size:0.78em;color:#aaa;margin-top:6px;"></div>
+
+      <h2 style="margin-top:12px;">Polynomial Calibration</h2>
+      <div style="font-size:0.8em;color:#aaa;margin-bottom:6px;">
+        Points: <span id="polyCalPoints">G0:0 G1:0 G2:0 G3:0</span>
+      </div>
+      <div class="btn-row">
+        <button id="btnPolyCollect">Record Point</button>
+        <button id="btnPolyFit">Fit &amp; Apply</button>
+        <button id="btnPolyClear" class="danger">Clear Points</button>
+      </div>
+      <div id="polyCalCoeffs" style="font-size:0.72em;color:#888;margin-top:6px;white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
     </div>
   </div>
 </div>
@@ -1749,6 +1917,91 @@ canvas.addEventListener('click', async (e) => {
 }, true);
 
 loadGimCalOffsets();
+
+// ---------------------------------------------------------------------------
+// Polynomial Calibration
+// ---------------------------------------------------------------------------
+let polyCalCounts = [0, 0, 0, 0];
+
+async function polyCalUpdatePoints() {
+  try {
+    const res = await fetch(API + '/gimcal/poly/points');
+    if (!res.ok) return;
+    const data = await res.json();
+    let s = '';
+    for (let g = 0; g < 4; g++) {
+      const pts = data['g' + g] || [];
+      polyCalCounts[g] = pts.length;
+      s += `G${g}:${pts.length} `;
+    }
+    document.getElementById('polyCalPoints').textContent = s.trim();
+  } catch (e) { /* ignore */ }
+}
+
+async function polyCalUpdateCoeffs() {
+  try {
+    const res = await fetch(API + '/gimcal/poly/coeffs');
+    if (!res.ok) return;
+    const data = await res.json();
+    const gimbals = data.gimbals || [];
+    let s = '';
+    gimbals.forEach((c, g) => {
+      const allZero = c.every(v => Math.abs(v) < 1e-9);
+      if (!allZero) {
+        s += `G${g} X: ${c.slice(0,4).map(v=>v.toFixed(4)).join(', ')}\n`;
+        s += `G${g} Y: ${c.slice(4,8).map(v=>v.toFixed(4)).join(', ')}\n`;
+      }
+    });
+    document.getElementById('polyCalCoeffs').textContent = s || '(no polynomial set)';
+  } catch (e) { /* ignore */ }
+}
+
+document.getElementById('btnPolyCollect').addEventListener('click', async () => {
+  if (!gimCalMode || gimCalBaseX === null) {
+    log('[POLYCAL] Enter cal mode and click a target point first', 'err');
+    return;
+  }
+  const g = parseInt(document.getElementById('selectGimbal').value);
+  const body = {
+    gimbal: g,
+    computed_x: gimCalBaseX,
+    computed_y: gimCalBaseY,
+    actual_x: Math.max(0, Math.min(180, gimCalBaseX + gimCalDx)),
+    actual_y: Math.max(0, Math.min(180, gimCalBaseY + gimCalDy)),
+  };
+  const res = await post('/gimcal/poly/collect', body);
+  if (res.ok) {
+    log(`[POLYCAL] G${g} point recorded: computed(${body.computed_x},${body.computed_y}) actual(${body.actual_x},${body.actual_y})`, 'info');
+    polyCalUpdatePoints();
+  }
+});
+
+document.getElementById('btnPolyFit').addEventListener('click', async () => {
+  log('[POLYCAL] Fitting polynomial...', 'info');
+  const res = await post('/gimcal/poly/fit', {});
+  if (res.ok) {
+    try {
+      const data = JSON.parse(res.text);
+      for (const [key, val] of Object.entries(data.results || {})) {
+        if (val.rms_x !== undefined) {
+          log(`[POLYCAL] ${key}: rms_x=${val.rms_x}° rms_y=${val.rms_y}° (${val.points} pts)`, 'info');
+        } else if (val.error) {
+          log(`[POLYCAL] ${key}: ${val.error}`, 'warn');
+        }
+      }
+    } catch (e) { /* ok */ }
+    polyCalUpdateCoeffs();
+  }
+});
+
+document.getElementById('btnPolyClear').addEventListener('click', async () => {
+  await post('/gimcal/poly/clear', {});
+  log('[POLYCAL] Calibration points cleared');
+  polyCalUpdatePoints();
+});
+
+polyCalUpdatePoints();
+polyCalUpdateCoeffs();
 </script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 
 #define ROUTE_MAX_HOLDS 64
 #define ROUTE_FILE_PATH "/fatfs/route%d.xy"
+#define GIMBAL_POLY_FILE "/fatfs/gimcal.bin"
 
 typedef enum {
     ROUTE_MODE_SEQUENTIAL = 0, // all gimbals advance together each step (default)
@@ -63,6 +64,18 @@ void route_set_gimbal_offset(int gimbal, int dx, int dy);
 // Set the physical XYZ position of a gimbal relative to the camera (meters).
 // +X = right, +Y = behind camera, +Z = up.
 void route_set_gimbal_position(int gimbal, float x, float y, float z);
+
+// Per-gimbal bilinear polynomial correction (8 floats per gimbal):
+//   coeffs[0..3] = a0,a1,a2,a3 for X:  corrected_x = raw_x + a0 + a1*rx + a2*ry + a3*rx*ry
+//   coeffs[4..7] = b0,b1,b2,b3 for Y:  corrected_y = raw_y + b0 + b1*rx + b2*ry + b3*rx*ry
+void route_set_gimbal_poly(int gimbal, const float coeffs[8]);
+void route_get_gimbal_poly(int gimbal, float coeffs[8]);
+esp_err_t route_save_gimbal_poly(void);
+esp_err_t route_load_gimbal_poly(void);
+
+// Compute raw (uncorrected) servo angles for a pixel + gimbal.
+// Used by calibration so computed angles match route playback exactly.
+void route_compute_angles(float px, float py, int gimbal, int *out_x, int *out_y);
 
 // Init — call once from app_main; starts playback FreeRTOS task
 void route_init(void);

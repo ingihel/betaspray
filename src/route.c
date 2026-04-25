@@ -28,8 +28,14 @@ static volatile int s_leap_next = 0;                          // which gimbal ad
 static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2,3}; // current hold index per gimbal
 static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
 static int s_gimbal_x_angle[NUM_SERVOS / 2];    // last driven X angle per gimbal, for collision checks
-static int s_gimbal_offset_x[NUM_SERVOS / 2];  // signed degree correction applied to X servo
-static int s_gimbal_offset_y[NUM_SERVOS / 2];  // signed degree correction applied to Y servo
+static int s_gimbal_offset_x[NUM_SERVOS / 2];  // legacy — mapped into poly[g][0]/[4]
+static int s_gimbal_offset_y[NUM_SERVOS / 2];
+
+// Per-gimbal bilinear polynomial correction coefficients.
+// Layout: [a0, a1, a2, a3, b0, b1, b2, b3]
+//   corrected_x = raw_x + a0 + a1*raw_x + a2*raw_y + a3*raw_x*raw_y
+//   corrected_y = raw_y + b0 + b1*raw_x + b2*raw_y + b3*raw_x*raw_y
+static float s_gimbal_poly[NUM_SERVOS / 2][8] = {{0}};
 
 // Physical position of each gimbal relative to camera (meters).
 // +X = right, +Y = behind camera (depth), +Z = up.
@@ -281,14 +287,83 @@ void route_set_gimbal_position(int gimbal, float x, float y, float z) {
     ESP_LOGI(TAG, "Gimbal %d position: (%.4f, %.4f, %.4f) m", gimbal, x, y, z);
 }
 
+// Apply bilinear polynomial correction to raw servo angles.
+static void apply_poly_correction(int gimbal, int raw_x, int raw_y,
+                                   int *out_x, int *out_y) {
+    float *c = s_gimbal_poly[gimbal];
+    float rx = (float)raw_x;
+    float ry = (float)raw_y;
+    float cx = rx + (c[0] + c[1] * rx + c[2] * ry + c[3] * rx * ry);
+    float cy = ry + (c[4] + c[5] * rx + c[6] * ry + c[7] * rx * ry);
+    int ix = (int)(cx + 0.5f);
+    int iy = (int)(cy + 0.5f);
+    *out_x = ix < 0 ? 0 : ix > 180 ? 180 : ix;
+    *out_y = iy < 0 ? 0 : iy > 180 ? 180 : iy;
+}
+
+void route_set_gimbal_poly(int gimbal, const float coeffs[8]) {
+    if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
+        ESP_LOGW(TAG, "route_set_gimbal_poly: invalid gimbal %d", gimbal);
+        return;
+    }
+    memcpy(s_gimbal_poly[gimbal], coeffs, 8 * sizeof(float));
+    s_gimbal_offset_x[gimbal] = (int)coeffs[0];
+    s_gimbal_offset_y[gimbal] = (int)coeffs[4];
+    ESP_LOGI(TAG, "Gimbal %d poly: a=[%.4f,%.4f,%.4f,%.4f] b=[%.4f,%.4f,%.4f,%.4f]",
+             gimbal, coeffs[0], coeffs[1], coeffs[2], coeffs[3],
+             coeffs[4], coeffs[5], coeffs[6], coeffs[7]);
+}
+
+void route_get_gimbal_poly(int gimbal, float coeffs[8]) {
+    if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
+        memset(coeffs, 0, 8 * sizeof(float));
+        return;
+    }
+    memcpy(coeffs, s_gimbal_poly[gimbal], 8 * sizeof(float));
+}
+
+esp_err_t route_save_gimbal_poly(void) {
+    esp_err_t err = fatfs_create(GIMBAL_POLY_FILE);
+    if (err != ESP_OK) return err;
+    err = fatfs_write(GIMBAL_POLY_FILE, s_gimbal_poly, 0, sizeof(s_gimbal_poly));
+    if (err == ESP_OK)
+        ESP_LOGI(TAG, "Poly calibration saved to %s (%d bytes)", GIMBAL_POLY_FILE, (int)sizeof(s_gimbal_poly));
+    else
+        ESP_LOGE(TAG, "Failed to save poly calibration");
+    return err;
+}
+
+esp_err_t route_load_gimbal_poly(void) {
+    float buf[NUM_SERVOS / 2][8];
+    size_t bytes_read = 0;
+    esp_err_t err = fatfs_read(GIMBAL_POLY_FILE, buf, 0, sizeof(buf), &bytes_read);
+    if (err != ESP_OK || bytes_read != sizeof(buf)) {
+        ESP_LOGW(TAG, "No poly calibration found, using defaults");
+        return ESP_ERR_NOT_FOUND;
+    }
+    for (int g = 0; g < NUM_SERVOS / 2; g++)
+        route_set_gimbal_poly(g, buf[g]);
+    ESP_LOGI(TAG, "Poly calibration loaded from %s", GIMBAL_POLY_FILE);
+    return ESP_OK;
+}
+
+// Public: compute raw (uncorrected) servo angles — used by calibration endpoint.
+void route_compute_angles(float px, float py, int gimbal, int *out_x, int *out_y) {
+    pixel_to_servo_angles(px, py, gimbal, out_x, out_y);
+}
+
 void route_set_gimbal_offset(int gimbal, int dx, int dy) {
     if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
         ESP_LOGW(TAG, "route_set_gimbal_offset: invalid gimbal %d", gimbal);
         return;
     }
+    // Write into polynomial as constant-only correction (backward compat).
+    memset(s_gimbal_poly[gimbal], 0, sizeof(s_gimbal_poly[gimbal]));
+    s_gimbal_poly[gimbal][0] = (float)dx;
+    s_gimbal_poly[gimbal][4] = (float)dy;
     s_gimbal_offset_x[gimbal] = dx;
     s_gimbal_offset_y[gimbal] = dy;
-    ESP_LOGI(TAG, "Gimbal %d offset: X%+d° Y%+d°", gimbal, dx, dy);
+    ESP_LOGI(TAG, "Gimbal %d offset: X%+d° Y%+d° (poly reset to constant)", gimbal, dx, dy);
 }
 
 void route_set_mode(route_play_mode_t mode, int leap_num) {
@@ -323,10 +398,8 @@ void route_set_timed_interval(int ms) {
 static void drive_gimbal(int g, int hold_idx, int total_holds, const route_hold_t *hold) {
     int raw_x, raw_y;
     pixel_to_servo_angles(hold->x, hold->y, g, &raw_x, &raw_y);
-    int angle_x = raw_x + s_gimbal_offset_x[g];
-    int angle_y = raw_y + s_gimbal_offset_y[g];
-    angle_x = angle_x < 0 ? 0 : angle_x > 180 ? 180 : angle_x;
-    angle_y = angle_y < 0 ? 0 : angle_y > 180 ? 180 : angle_y;
+    int angle_x, angle_y;
+    apply_poly_correction(g, raw_x, raw_y, &angle_x, &angle_y);
     ESP_LOGI(TAG, "[GIMBAL] Gimbal %d -> hold %d/%d  pixel(%.1f, %.1f)  servo X=%d° Y=%d°",
              g, hold_idx + 1, total_holds, hold->x, hold->y, angle_x, angle_y);
     ESP_LOGI(TAG, "[GIMBAL]   Servo %d (X) driving to %d°", g * 2, angle_x);
@@ -472,6 +545,8 @@ void route_init(void) {
         ESP_LOGE(TAG, "Failed to create semaphores");
         return;
     }
+
+    route_load_gimbal_poly();
 
     xTaskCreate(route_playback_task, "route_play", 4096, NULL, 5, NULL);
     ESP_LOGI(TAG, "Route system initialized");

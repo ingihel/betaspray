@@ -1110,6 +1110,152 @@ static esp_err_t gimbal_offset_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// POST /gimbal/poly — set polynomial correction coefficients
+// {"gimbal":0,"coeffs":[a0,a1,a2,a3,b0,b1,b2,b3],"save":true}
+// or {"all":[[8 floats],[8 floats],[8 floats],[8 floats]],"save":true}
+static esp_err_t gimbal_poly_set_handler(httpd_req_t *req) {
+    log_request("POST", "/gimbal/poly", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 1024) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+    char buf[len + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) { httpd_resp_sendstr(req, "Invalid JSON"); return ESP_OK; }
+
+    bool do_save = false;
+    cJSON *save_j = cJSON_GetObjectItem(json, "save");
+    if (save_j && cJSON_IsTrue(save_j)) do_save = true;
+
+    // Bulk mode: {"all": [[8],[8],[8],[8]]}
+    cJSON *all_j = cJSON_GetObjectItem(json, "all");
+    if (all_j && cJSON_IsArray(all_j)) {
+        int n = cJSON_GetArraySize(all_j);
+        for (int g = 0; g < n && g < NUM_SERVOS / 2; g++) {
+            cJSON *arr = cJSON_GetArrayItem(all_j, g);
+            if (!arr || cJSON_GetArraySize(arr) != 8) continue;
+            float coeffs[8];
+            for (int i = 0; i < 8; i++)
+                coeffs[i] = (float)cJSON_GetArrayItem(arr, i)->valuedouble;
+            route_set_gimbal_poly(g, coeffs);
+        }
+    } else {
+        // Single gimbal: {"gimbal":0, "coeffs":[...]}
+        cJSON *g_j = cJSON_GetObjectItem(json, "gimbal");
+        cJSON *c_j = cJSON_GetObjectItem(json, "coeffs");
+        if (!g_j || !c_j || cJSON_GetArraySize(c_j) != 8) {
+            cJSON_Delete(json);
+            httpd_resp_sendstr(req, "Required: gimbal + coeffs[8] or all[[8]x4]");
+            return ESP_OK;
+        }
+        float coeffs[8];
+        for (int i = 0; i < 8; i++)
+            coeffs[i] = (float)cJSON_GetArrayItem(c_j, i)->valuedouble;
+        route_set_gimbal_poly(g_j->valueint, coeffs);
+    }
+
+    cJSON_Delete(json);
+    if (do_save) route_save_gimbal_poly();
+
+    log_response("/gimbal/poly", "OK", "");
+    httpd_resp_sendstr(req, "{\"status\":\"ok\"}");
+    return ESP_OK;
+}
+
+// GET /gimbal/poly — return all polynomial coefficients
+static esp_err_t gimbal_poly_get_handler(httpd_req_t *req) {
+    log_request("GET", "/gimbal/poly", "");
+    int num_gimbals = NUM_SERVOS / 2;
+    char resp[512];
+    int pos = 0;
+    pos += snprintf(resp + pos, sizeof(resp) - pos, "{\"gimbals\":[");
+    for (int g = 0; g < num_gimbals; g++) {
+        float c[8];
+        route_get_gimbal_poly(g, c);
+        if (g > 0) pos += snprintf(resp + pos, sizeof(resp) - pos, ",");
+        pos += snprintf(resp + pos, sizeof(resp) - pos,
+                        "[%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f]",
+                        c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+    }
+    pos += snprintf(resp + pos, sizeof(resp) - pos, "]}");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, resp);
+    return ESP_OK;
+}
+
+// POST /gimbal/point — compute raw angles for a pixel + drive (no poly correction)
+// {"gimbal":0, "px":100.0, "py":200.0, "image_width":2560, "image_height":1920}
+static esp_err_t gimbal_point_handler(httpd_req_t *req) {
+    log_request("POST", "/gimbal/point", "");
+    int len = req->content_len;
+    if (len <= 0 || len > 256) {
+        httpd_resp_sendstr(req, "Invalid content length");
+        return ESP_OK;
+    }
+    char buf[len + 1];
+    if (httpd_req_recv(req, buf, len) != len) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    buf[len] = '\0';
+    cJSON *json = cJSON_Parse(buf);
+    if (!json) { httpd_resp_sendstr(req, "Invalid JSON"); return ESP_OK; }
+
+    cJSON *g_j  = cJSON_GetObjectItem(json, "gimbal");
+    cJSON *px_j = cJSON_GetObjectItem(json, "px");
+    cJSON *py_j = cJSON_GetObjectItem(json, "py");
+    cJSON *iw_j = cJSON_GetObjectItem(json, "image_width");
+    cJSON *ih_j = cJSON_GetObjectItem(json, "image_height");
+
+    if (!g_j || !px_j || !py_j) {
+        cJSON_Delete(json);
+        httpd_resp_sendstr(req, "Required: gimbal, px, py");
+        return ESP_OK;
+    }
+
+    // Temporarily set transform image dimensions if provided.
+    if (iw_j && ih_j && cJSON_IsNumber(iw_j) && cJSON_IsNumber(ih_j)) {
+        route_transform_t t = {
+            .hfov_deg = 120.0f, .vfov_deg = 60.0f,
+            .image_width = (int)iw_j->valuedouble,
+            .image_height = (int)ih_j->valuedouble,
+            .distance_m = 3.0f,
+        };
+        cJSON *dist_j = cJSON_GetObjectItem(json, "distance_m");
+        if (dist_j && cJSON_IsNumber(dist_j)) t.distance_m = (float)dist_j->valuedouble;
+        route_set_transform(&t);
+    }
+
+    int g = g_j->valueint;
+    float px = (float)px_j->valuedouble;
+    float py = (float)py_j->valuedouble;
+    cJSON_Delete(json);
+
+    int angle_x, angle_y;
+    route_compute_angles(px, py, g, &angle_x, &angle_y);
+
+    // Drive servos without polynomial correction.
+    servo_drive(g * 2, angle_x);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    servo_drive(g * 2 + 1, angle_y);
+
+    char resp[128];
+    snprintf(resp, sizeof(resp), "{\"angle_x\":%d,\"angle_y\":%d}", angle_x, angle_y);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, resp);
+
+    char detail[64];
+    snprintf(detail, sizeof(detail), "g=%d px=%.0f py=%.0f -> X=%d Y=%d", g, px, py, angle_x, angle_y);
+    log_response("/gimbal/point", "OK", detail);
+    return ESP_OK;
+}
+
 // POST /test - echo back the request body prefixed with "ECHO: "
 static esp_err_t test_handler(httpd_req_t *req) {
     log_request("POST", "/test", "");
@@ -1266,9 +1412,27 @@ static const httpd_uri_t uri_gimbal_offset = {
     .handler = gimbal_offset_handler,
 };
 
+static const httpd_uri_t uri_gimbal_poly_set = {
+    .uri = "/gimbal/poly",
+    .method = HTTP_POST,
+    .handler = gimbal_poly_set_handler,
+};
+
+static const httpd_uri_t uri_gimbal_poly_get = {
+    .uri = "/gimbal/poly",
+    .method = HTTP_GET,
+    .handler = gimbal_poly_get_handler,
+};
+
+static const httpd_uri_t uri_gimbal_point = {
+    .uri = "/gimbal/point",
+    .method = HTTP_POST,
+    .handler = gimbal_point_handler,
+};
+
 httpd_handle_t server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 26;
+    config.max_uri_handlers = 29;
     httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -1299,6 +1463,9 @@ httpd_handle_t server_start(void) {
     httpd_register_uri_handler(server, &uri_scan_save);
     httpd_register_uri_handler(server, &uri_gimbal_zero);
     httpd_register_uri_handler(server, &uri_gimbal_offset);
+    httpd_register_uri_handler(server, &uri_gimbal_poly_set);
+    httpd_register_uri_handler(server, &uri_gimbal_poly_get);
+    httpd_register_uri_handler(server, &uri_gimbal_point);
 
     ESP_LOGI(TAG, "HTTP server started");
     return server;
