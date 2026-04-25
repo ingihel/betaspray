@@ -365,7 +365,7 @@ HFOV_DEG     = 120.0
 GIMCAL_FILE  = Path(__file__).parent / "gimbal_offsets.json"
 
 # In-memory offsets: list of {"dx": int, "dy": int} per gimbal
-_gimbal_offsets: List[dict] = [{"dx": 0, "dy": 0} for _ in range(3)]
+_gimbal_offsets: List[dict] = [{"dx": 0, "dy": 0} for _ in range(4)]
 
 
 def _load_gimbal_offsets():
@@ -1026,7 +1026,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
       </div>
       <div class="control-group">
         <label>Gimbal to calibrate</label>
-        <select id="selectGimbal"><option value="0">Gimbal 0</option><option value="1">Gimbal 1</option><option value="2">Gimbal 2</option></select>
+        <select id="selectGimbal"><option value="0">Gimbal 0</option><option value="1">Gimbal 1</option><option value="2">Gimbal 2</option><option value="3">Gimbal 3</option></select>
       </div>
       <div id="gimCalBaseAngles" style="font-size:0.8em;margin-bottom:8px;display:none;">
         Base: X=<span id="gimCalBaseX">--</span>°  Y=<span id="gimCalBaseY">--</span>°
@@ -1064,7 +1064,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
-const NUM_SERVOS = 6;
+const NUM_SERVOS = 8;
 const CENTROID_RADIUS = 8;
 const SELECTED_COLOR = '#e94560';
 const UNSELECTED_COLOR = 'rgba(0, 200, 255, 0.7)';
@@ -1689,7 +1689,7 @@ document.getElementById('btnGimCalSave').addEventListener('click', async () => {
 });
 
 document.getElementById('btnGimCalClearAll').addEventListener('click', async () => {
-  for (let g = 0; g < 3; g++) await post('/gimcal/offset', { gimbal: g, dx: 0, dy: 0 });
+  for (let g = 0; g < 4; g++) await post('/gimcal/offset', { gimbal: g, dx: 0, dy: 0 });
   gimCalDx = 0; gimCalDy = 0;
   gimCalUpdateDisplay();
   log('[GIMCAL] All offsets cleared', 'info');

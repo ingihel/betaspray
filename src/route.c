@@ -23,7 +23,7 @@ static SemaphoreHandle_t s_state_mutex = NULL;
 static volatile route_play_mode_t s_mode = ROUTE_MODE_SEQUENTIAL;
 static volatile int s_leap_num = NUM_SERVOS / 2;              // active gimbals in leapfrog
 static volatile int s_leap_next = 0;                          // which gimbal advances next
-static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2};   // current hold index per gimbal
+static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2,3}; // current hold index per gimbal
 static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
 static int s_gimbal_x_angle[NUM_SERVOS / 2];    // last driven X angle per gimbal, for collision checks
 static int s_gimbal_offset_x[NUM_SERVOS / 2];  // signed degree correction applied to X servo
@@ -168,6 +168,8 @@ void route_play(void) {
     servo_drive(0, 0); servo_drive(1, 0);
     vTaskDelay(pdMS_TO_TICKS(300));
     servo_drive(4, 0); servo_drive(5, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(6, 0); servo_drive(7, 0);
     for (int i = 0; i < NUM_SERVOS / 2; i++) s_gimbal_x_angle[i] = 0;
 
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);

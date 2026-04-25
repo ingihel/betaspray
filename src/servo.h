@@ -11,7 +11,7 @@
 #define SERVO_PIN_7 10  // SERVO7
 
 // How many servos are being used in the current configuration
-#define NUM_SERVOS 6
+#define NUM_SERVOS 8
 
 // Time (ms) for a full 180° hardware fade.  Partial moves scale proportionally.
 // 2000 ms ≈ 4× the SG90's natural ~0.5 s traversal time.

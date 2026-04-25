@@ -1063,6 +1063,8 @@ static esp_err_t gimbal_zero_handler(httpd_req_t *req) {
     servo_drive(0, 0); servo_drive(1, 0);
     vTaskDelay(pdMS_TO_TICKS(300));
     servo_drive(4, 0); servo_drive(5, 0);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    servo_drive(6, 0); servo_drive(7, 0);
     log_response("/gimbal/zero", "OK", "");
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
