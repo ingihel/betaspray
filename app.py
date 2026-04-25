@@ -1078,10 +1078,29 @@ const ROUTE_LINE_COLOR = 'rgba(233, 69, 96, 0.5)';
 const API = '';  // same origin
 
 let wallImage = null;
+let wallImageOriginalHeight = null;  // full sensor height before bottom-crop
+const CROP_KEEP = 2 / 3;            // keep the top 2/3 of every loaded image
 let allCentroids = [];
 let selectedHolds = [];
 let routeMode = null;
 let cameraEnabled = false;
+
+// Crop the bottom (1 - CROP_KEEP) fraction of an Image object.
+// Sets wallImageOriginalHeight and returns a Promise<Image> of the cropped result.
+function cropImage(img) {
+  const origW = img.naturalWidth;
+  const origH = img.naturalHeight;
+  const keepH = Math.round(origH * CROP_KEEP);
+  wallImageOriginalHeight = origH;
+  const tmp = document.createElement('canvas');
+  tmp.width = origW; tmp.height = keepH;
+  tmp.getContext('2d').drawImage(img, 0, 0);
+  return new Promise(resolve => {
+    const out = new Image();
+    out.onload = () => resolve(out);
+    out.src = tmp.toDataURL('image/jpeg', 0.92);
+  });
+}
 
 const canvas = document.getElementById('wallCanvas');
 const ctx = canvas.getContext('2d');
@@ -1260,7 +1279,7 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   if (!file) return;
   const url = URL.createObjectURL(file);
   const img = new Image();
-  img.onload = () => { wallImage = img; drawScene(); log('Uploaded: ' + file.name + ' (' + img.naturalWidth + 'x' + img.naturalHeight + ')', 'info'); };
+  img.onload = async () => { wallImage = await cropImage(img); drawScene(); log('Uploaded: ' + file.name + ' (' + img.naturalWidth + 'x' + img.naturalHeight + ', cropped to ' + wallImage.naturalHeight + 'px tall)', 'info'); };
   img.src = url;
   e.target.value = '';
 });
@@ -1272,7 +1291,7 @@ document.getElementById('btnFetchImage').addEventListener('click', async () => {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const img = new Image();
-    img.onload = () => { wallImage = img; drawScene(); log('Image loaded: ' + img.naturalWidth + 'x' + img.naturalHeight, 'info'); };
+    img.onload = async () => { wallImage = await cropImage(img); drawScene(); log('Image loaded: ' + img.naturalWidth + 'x' + img.naturalHeight + ', cropped to ' + wallImage.naturalHeight + 'px tall', 'info'); };
     img.src = url;
   } catch (e) { log('Fetch image failed: ' + e.message, 'err'); }
 });
@@ -1370,8 +1389,8 @@ document.getElementById('btnPlay').addEventListener('click', () => {
   if (mode === 'leapfrog') body.gimbals = NUM_SERVOS / 2;
   // Always send image dimensions so the ESP32 maps pixel coordinates correctly.
   // Falls back to the default 320x240 if no image is loaded.
-  body.image_width  = wallImage ? wallImage.naturalWidth  : 2560;
-  body.image_height = wallImage ? wallImage.naturalHeight : 1920;
+  body.image_width  = wallImage ? wallImage.naturalWidth           : 2560;
+  body.image_height = wallImageOriginalHeight ?? (wallImage ? wallImage.naturalHeight : 1920);
   body.hfov_deg = parseFloat(document.getElementById('inputHfov').value) || 120;
   body.vfov_deg = parseFloat(document.getElementById('inputVfov').value) || 60;
   body.distance_m = parseFloat(document.getElementById('inputDistance').value) || 3.0;
@@ -1494,7 +1513,7 @@ document.getElementById('btnLiveView').addEventListener('click', () => {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const img = new Image();
-        img.onload = () => { wallImage = img; drawScene(); };
+        img.onload = async () => { wallImage = await cropImage(img); drawScene(); };
         img.src = url;
       } catch (e) { /* ignore */ }
     }, 1500);
@@ -1713,7 +1732,7 @@ canvas.addEventListener('click', async (e) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ gimbal: g, x: Math.round(px), y: Math.round(py),
-                           image_width: canvas.width, image_height: canvas.height }),
+                           image_width: canvas.width, image_height: wallImageOriginalHeight ?? canvas.height }),
   });
   if (!res.ok) { log('[GIMCAL] Point drive failed', 'err'); return; }
   const data = await res.json();

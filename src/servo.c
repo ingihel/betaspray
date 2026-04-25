@@ -16,6 +16,20 @@ static const int servo_pins[8] = {
     SERVO_PIN_4, SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7,
 };
 
+// Mechanical mounting offset per servo (degrees).  Applied to the commanded
+// angle before converting to PWM duty so all callers can treat 90° as flat.
+// Servos 1 and 3 (Y-axis, gimbals 0-1) are mounted 45° off from servos 5/7.
+static const int servo_offset[8] = {
+    0,   // servo 0 — X axis, gimbal 0
+   -45,  // servo 1 — Y axis, gimbal 0 (flat at 45° PWM)
+    0,   // servo 2 — X axis, gimbal 1
+   -45,  // servo 3 — Y axis, gimbal 1 (flat at 45° PWM)
+    0,   // servo 4 — X axis, gimbal 2
+    0,   // servo 5 — Y axis, gimbal 2 (flat at 90° PWM)
+    0,   // servo 6 — X axis, gimbal 3
+    0,   // servo 7 — Y axis, gimbal 3 (flat at 90° PWM)
+};
+
 // SG90: 50 Hz, 14-bit resolution (16384 ticks per 20 ms period)
 // Full travel requires the extended pulse range, not just 1-2 ms:
 //   0.5 ms (0°)   = 16384 * 0.5 / 20  =  410 counts
@@ -33,6 +47,14 @@ static const int servo_pins[8] = {
 
 static uint32_t angle_to_duty(int angle) {
     return DUTY_MIN + ((uint32_t)angle * (DUTY_MAX - DUTY_MIN)) / 180;
+}
+
+// Apply per-servo mounting offset and clamp to [0, 180].
+static int physical_angle(int id, int commanded) {
+    int a = commanded + servo_offset[id];
+    if (a < 0) a = 0;
+    if (a > 180) a = 180;
+    return a;
 }
 
 void servo_init(void) {
@@ -88,7 +110,7 @@ void servo_drive(int id, int angle) {
     if (from == angle) {
         // Already at target: re-apply duty directly and skip fade.
         ESP_LOGI(TAG, "Servo %d: already at %d°, re-applying duty", id, angle);
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle));
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(physical_angle(id, angle)));
         ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
     } else if (from < 0) {
         // Position unknown (first move after boot). A fade from duty=0 would ramp
@@ -96,7 +118,7 @@ void servo_drive(int id, int angle) {
         // Instead, snap directly to the target duty and wait for the servo to arrive
         // from wherever it physically is.
         ESP_LOGI(TAG, "Servo %d: unknown -> %d° (snap, waiting %d ms)", id, angle, SERVO_FADE_TIME_MS);
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle));
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(physical_angle(id, angle)));
         ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
         vTaskDelay(pdMS_TO_TICKS(SERVO_FADE_TIME_MS));
     } else {
@@ -111,11 +133,11 @@ void servo_drive(int id, int angle) {
 
         ESP_LOGI(TAG, "Servo %d: %d° -> %d° (fade %d ms)", id, from, angle, fade_ms);
 
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(from));
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(physical_angle(id, from)));
         ledc_update_duty(LEDC_LOW_SPEED_MODE, ch);
         vTaskDelay(pdMS_TO_TICKS(SERVO_PERIOD_MS)); // one PWM period = 20 ms
 
-        ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(angle), fade_ms);
+        ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, ch, angle_to_duty(physical_angle(id, angle)), fade_ms);
         ledc_fade_start(LEDC_LOW_SPEED_MODE, ch, LEDC_FADE_WAIT_DONE);
     }
 

@@ -29,22 +29,22 @@
  * Coordinate frame: +X = right, +Y = behind camera (toward wall), +Z = up.
  *
  *   Camera sits at the front of the enclosure (origin).
- *   Front row: 3.5 cm behind camera, 3.5 cm above.
- *   Back  row: 7.0 cm behind camera, 7.0 cm above.
+ *   Front row: 6.0 cm behind camera, 3.5 cm above.
+ *   Back  row: 13.0 cm behind camera, 13.0 cm above.
  *   Columns are ±1.75 cm from center horizontally.
  */
 #define GIMBAL0_X  0.0175f   /* Front-Right */
-#define GIMBAL0_Y  0.035f
+#define GIMBAL0_Y  0.06f
 #define GIMBAL0_Z  0.035f
 
 #define GIMBAL1_X (-0.0175f) /* Front-Left */
-#define GIMBAL1_Y  0.035f
+#define GIMBAL1_Y  0.06f
 #define GIMBAL1_Z  0.035f
 
 #define GIMBAL2_X  0.0175f   /* Back-Right */
-#define GIMBAL2_Y  0.070f
-#define GIMBAL2_Z  0.070f
+#define GIMBAL2_Y  0.13f
+#define GIMBAL2_Z  0.13f
 
 #define GIMBAL3_X (-0.0175f) /* Back-Left */
-#define GIMBAL3_Y  0.070f
-#define GIMBAL3_Z  0.070f
+#define GIMBAL3_Y  0.13f
+#define GIMBAL3_Z  0.13f
