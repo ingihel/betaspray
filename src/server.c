@@ -470,8 +470,10 @@ static esp_err_t route_play_handler(httpd_req_t *req) {
         };
         cJSON *hfov = cJSON_GetObjectItem(json, "hfov_deg");
         cJSON *vfov = cJSON_GetObjectItem(json, "vfov_deg");
+        cJSON *dist = cJSON_GetObjectItem(json, "distance_m");
         if (hfov && cJSON_IsNumber(hfov)) t.hfov_deg = (float)hfov->valuedouble;
         if (vfov && cJSON_IsNumber(vfov)) t.vfov_deg = (float)vfov->valuedouble;
+        if (dist && cJSON_IsNumber(dist)) t.distance_m = (float)dist->valuedouble;
         route_set_transform(&t);
     }
 

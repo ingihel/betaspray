@@ -1,4 +1,5 @@
 #include "route.h"
+#include "conf.h"
 #include "fatfs.h"
 #include "servo.h"
 #include "esp_log.h"
@@ -6,6 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -29,6 +31,15 @@ static int s_gimbal_x_angle[NUM_SERVOS / 2];    // last driven X angle per gimba
 static int s_gimbal_offset_x[NUM_SERVOS / 2];  // signed degree correction applied to X servo
 static int s_gimbal_offset_y[NUM_SERVOS / 2];  // signed degree correction applied to Y servo
 
+// Physical position of each gimbal relative to camera (meters).
+// +X = right, +Y = behind camera (depth), +Z = up.
+static float s_gimbal_pos[NUM_SERVOS / 2][3] = {
+    { GIMBAL0_X, GIMBAL0_Y, GIMBAL0_Z },  // Gimbal 0 — Front-Right
+    { GIMBAL1_X, GIMBAL1_Y, GIMBAL1_Z },  // Gimbal 1 — Front-Left
+    { GIMBAL2_X, GIMBAL2_Y, GIMBAL2_Z },  // Gimbal 2 — Back-Right
+    { GIMBAL3_X, GIMBAL3_Y, GIMBAL3_Z },  // Gimbal 3 — Back-Left
+};
+
 static route_transform_t s_transform = {
     .hfov_deg = 120.0f,
     .vfov_deg = 60.0f,
@@ -37,22 +48,51 @@ static route_transform_t s_transform = {
     .distance_m = 3.0f,
 };
 
-static int pixel_to_servo_x(float px) {
-    // Center coordinates: image center = 0°, edges = ±FOV/2
-    float center_x = s_transform.image_width / 2.0f;
-    float angle_deg = (center_x - px) * (s_transform.hfov_deg / s_transform.image_width);
+// Convert a pixel coordinate to servo angles for a specific gimbal.
+//
+// 1. Project pixel onto the wall plane using camera intrinsics + wall distance.
+// 2. Compute the vector from the gimbal's physical position to that wall point.
+// 3. Convert the vector to pan (X servo) and tilt (Y servo) angles.
+static void pixel_to_servo_angles(float px, float py, int gimbal,
+                                   int *out_x, int *out_y) {
+    float dist = s_transform.distance_m;
 
-    // Offset to servo range (0-180°, center at 90°)
-    int servo_angle = (int)(angle_deg + 90.0f);
-    return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
-}
+    // Scale intrinsics if the current image resolution differs from calibration.
+    float scale_x = (float)s_transform.image_width  / (float)CALIB_WIDTH;
+    float scale_y = (float)s_transform.image_height / (float)CALIB_HEIGHT;
+    float fx = CALIB_FX * scale_x;
+    float fy = CALIB_FY * scale_y;
+    float cx = CALIB_CX * scale_x;
+    float cy = CALIB_CY * scale_y;
 
-static int pixel_to_servo_y(float py) {
-    // 90° = flat/forward, 135° = straight vertical (observed on hardware).
-    // Map the full image height to a 30° arc: bottom pixel → 90°, top pixel → 120°.
-    float angle_deg = (s_transform.image_height - py) * (30.0f / s_transform.image_height);
-    int servo_angle = (int)(90.0f + angle_deg);
-    return servo_angle < 0 ? 0 : servo_angle > 180 ? 180 : servo_angle;
+    // Step 1: pixel -> 3D point on the wall (camera frame).
+    // Camera looks along +Y (forward toward wall). +X = right, +Z = up.
+    float wall_x = (px - cx) / fx * dist;
+    float wall_z = (cy - py) / fy * dist;   // image Y-down -> world Z-up
+    float wall_y = dist;
+
+    // Step 2: vector from gimbal to wall point.
+    float gx = s_gimbal_pos[gimbal][0];
+    float gy = s_gimbal_pos[gimbal][1];
+    float gz = s_gimbal_pos[gimbal][2];
+
+    float dx = wall_x - gx;
+    float dy = wall_y + gy;   // gimbal is *behind* camera, so effective forward distance increases
+    float dz = wall_z - gz;
+
+    // Step 3: convert to servo angles.
+    // Pan: atan2(dx, dy).  0 = straight ahead, positive = right.
+    // Servo X: 90° = straight ahead. Camera-left pixel -> servo > 90.
+    float pan_rad  = atan2f(dx, dy);
+    int servo_x = (int)(90.0f - pan_rad * (180.0f / (float)M_PI));
+
+    // Tilt: atan2(dz, dy).  0 = horizontal, positive = up.
+    // Servo Y: 90° = horizontal/flat, increasing = tilting up.
+    float tilt_rad = atan2f(dz, dy);
+    int servo_y = (int)(90.0f + tilt_rad * (180.0f / (float)M_PI));
+
+    *out_x = servo_x < 0 ? 0 : servo_x > 180 ? 180 : servo_x;
+    *out_y = servo_y < 0 ? 0 : servo_y > 180 ? 180 : servo_y;
 }
 
 esp_err_t route_create(int n, const route_hold_t *holds, int num_holds) {
@@ -230,6 +270,17 @@ void route_set_distance(float distance_m) {
     xSemaphoreGive(s_state_mutex);
 }
 
+void route_set_gimbal_position(int gimbal, float x, float y, float z) {
+    if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
+        ESP_LOGW(TAG, "route_set_gimbal_position: invalid gimbal %d", gimbal);
+        return;
+    }
+    s_gimbal_pos[gimbal][0] = x;
+    s_gimbal_pos[gimbal][1] = y;
+    s_gimbal_pos[gimbal][2] = z;
+    ESP_LOGI(TAG, "Gimbal %d position: (%.4f, %.4f, %.4f) m", gimbal, x, y, z);
+}
+
 void route_set_gimbal_offset(int gimbal, int dx, int dy) {
     if (gimbal < 0 || gimbal >= NUM_SERVOS / 2) {
         ESP_LOGW(TAG, "route_set_gimbal_offset: invalid gimbal %d", gimbal);
@@ -270,8 +321,10 @@ void route_set_timed_interval(int ms) {
 // 100 ms gap between X and Y lets the first servo's inrush settle before the
 // second one starts, reducing peak current draw on a shared supply.
 static void drive_gimbal(int g, int hold_idx, int total_holds, const route_hold_t *hold) {
-    int angle_x = pixel_to_servo_x(hold->x) + s_gimbal_offset_x[g];
-    int angle_y = pixel_to_servo_y(hold->y) + s_gimbal_offset_y[g];
+    int raw_x, raw_y;
+    pixel_to_servo_angles(hold->x, hold->y, g, &raw_x, &raw_y);
+    int angle_x = raw_x + s_gimbal_offset_x[g];
+    int angle_y = raw_y + s_gimbal_offset_y[g];
     angle_x = angle_x < 0 ? 0 : angle_x > 180 ? 180 : angle_x;
     angle_y = angle_y < 0 ? 0 : angle_y > 180 ? 180 : angle_y;
     ESP_LOGI(TAG, "[GIMBAL] Gimbal %d -> hold %d/%d  pixel(%.1f, %.1f)  servo X=%d° Y=%d°",

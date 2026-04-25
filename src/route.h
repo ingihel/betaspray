@@ -60,5 +60,9 @@ void route_set_distance(float distance_m);
 // dx/dy are signed degree offsets clamped so final angle stays in [0,180].
 void route_set_gimbal_offset(int gimbal, int dx, int dy);
 
+// Set the physical XYZ position of a gimbal relative to the camera (meters).
+// +X = right, +Y = behind camera, +Z = up.
+void route_set_gimbal_position(int gimbal, float x, float y, float z);
+
 // Init — call once from app_main; starts playback FreeRTOS task
 void route_init(void);

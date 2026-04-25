@@ -957,6 +957,10 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <label>Auto-advance interval (ms, 0 = manual Next)</label>
         <input type="number" id="inputPlayInterval" value="3000" min="0" step="500" />
       </div>
+      <div class="control-group">
+        <label>Distance to wall (m)</label>
+        <input type="number" id="inputDistance" value="3.0" min="0.1" step="0.1" />
+      </div>
     </div>
 
     <div class="panel" style="margin-top:12px;display:none;">
@@ -1370,6 +1374,7 @@ document.getElementById('btnPlay').addEventListener('click', () => {
   body.image_height = wallImage ? wallImage.naturalHeight : 1920;
   body.hfov_deg = parseFloat(document.getElementById('inputHfov').value) || 120;
   body.vfov_deg = parseFloat(document.getElementById('inputVfov').value) || 60;
+  body.distance_m = parseFloat(document.getElementById('inputDistance').value) || 3.0;
   post('/esp/route/play', body);
 });
 document.getElementById('btnPause').addEventListener('click', () => get('/esp/route/pause'));
