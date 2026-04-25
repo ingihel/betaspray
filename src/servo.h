@@ -10,8 +10,10 @@
 #define SERVO_PIN_6  7  // SERVO6
 #define SERVO_PIN_7 10  // SERVO7
 
-// How many servos are being used in the current configuration
-#define NUM_SERVOS 8
+// How many servos are being used in the current configuration.
+// Gimbal 0 (old servos 0,1) is disabled due to mechanical failure.
+// Active servos are the old 2–7, now renumbered 0–5.
+#define NUM_SERVOS 6
 
 // Time (ms) for a full 180° hardware fade.  Partial moves scale proportionally.
 // 2000 ms ≈ 4× the SG90's natural ~0.5 s traversal time.

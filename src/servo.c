@@ -8,26 +8,24 @@ static const char *TAG = "servo";
 
 // Tracks the last commanded angle per servo so servo_drive can step from
 // the current position rather than jumping.  -1 = position unknown (first move).
-static int servo_current_angle[8];
+static int servo_current_angle[NUM_SERVOS];
 
-// Must match NUM_SERVOS - index maps channel to GPIO
-static const int servo_pins[8] = {
-    SERVO_PIN_0, SERVO_PIN_1, SERVO_PIN_2, SERVO_PIN_3,
-    SERVO_PIN_4, SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7,
+// Must match NUM_SERVOS - index maps channel to GPIO.
+// Gimbal 0 (old SERVO_PIN_0/1) is excluded; active servos start from old servo 2.
+static const int servo_pins[6] = {
+    SERVO_PIN_2, SERVO_PIN_3, SERVO_PIN_4, SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7,
 };
 
 // Mechanical mounting offset per servo (degrees).  Applied to the commanded
 // angle before converting to PWM duty so all callers can treat 90° as flat.
-// Servos 1 and 3 (Y-axis, gimbals 0-1) are mounted 45° off from servos 5/7.
-static const int servo_offset[8] = {
-    0,   // servo 0 — X axis, gimbal 0
-   -45,  // servo 1 — Y axis, gimbal 0 (flat at 45° PWM)
-    0,   // servo 2 — X axis, gimbal 1
-   -45,  // servo 3 — Y axis, gimbal 1 (flat at 45° PWM)
-    0,   // servo 4 — X axis, gimbal 2
-    0,   // servo 5 — Y axis, gimbal 2 (flat at 90° PWM)
-    0,   // servo 6 — X axis, gimbal 3
-    0,   // servo 7 — Y axis, gimbal 3 (flat at 90° PWM)
+// Servo 1 (new id, Y-axis of new gimbal 0) retains the -45° offset it had as old servo 3.
+static const int servo_offset[6] = {
+    0,   // servo 0 (old 2) — X axis, new gimbal 0 (was gimbal 1)
+   -45,  // servo 1 (old 3) — Y axis, new gimbal 0 (flat at 45° PWM)
+    0,   // servo 2 (old 4) — X axis, new gimbal 1 (was gimbal 2)
+    0,   // servo 3 (old 5) — Y axis, new gimbal 1 (flat at 90° PWM)
+    0,   // servo 4 (old 6) — X axis, new gimbal 2 (was gimbal 3)
+    0,   // servo 5 (old 7) — Y axis, new gimbal 2 (flat at 90° PWM)
 };
 
 // SG90: 50 Hz, 14-bit resolution (16384 ticks per 20 ms period)

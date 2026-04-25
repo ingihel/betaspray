@@ -1,6 +1,7 @@
 #include "route.h"
 #include "conf.h"
 #include "fatfs.h"
+#include "laser.h"
 #include "servo.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
@@ -25,7 +26,7 @@ static SemaphoreHandle_t s_state_mutex = NULL;
 static volatile route_play_mode_t s_mode = ROUTE_MODE_SEQUENTIAL;
 static volatile int s_leap_num = NUM_SERVOS / 2;              // active gimbals in leapfrog
 static volatile int s_leap_next = 0;                          // which gimbal advances next
-static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2,3}; // current hold index per gimbal
+static volatile int s_leap_hold[NUM_SERVOS / 2] = {0,1,2}; // current hold index per gimbal
 static volatile int s_timed_interval_ms = 0;     // 0 = manual (wait for next), >0 = auto-advance
 static int s_gimbal_x_angle[NUM_SERVOS / 2];    // last driven X angle per gimbal, for collision checks
 static int s_gimbal_offset_x[NUM_SERVOS / 2];  // legacy — mapped into poly[g][0]/[4]
@@ -39,11 +40,11 @@ static float s_gimbal_poly[NUM_SERVOS / 2][8] = {{0}};
 
 // Physical position of each gimbal relative to camera (meters).
 // +X = right, +Y = behind camera (depth), +Z = up.
+// Gimbal 0 (Front-Right) is disabled; indices here correspond to old gimbals 1–3.
 static float s_gimbal_pos[NUM_SERVOS / 2][3] = {
-    { GIMBAL0_X, GIMBAL0_Y, GIMBAL0_Z },  // Gimbal 0 — Front-Right
-    { GIMBAL1_X, GIMBAL1_Y, GIMBAL1_Z },  // Gimbal 1 — Front-Left
-    { GIMBAL2_X, GIMBAL2_Y, GIMBAL2_Z },  // Gimbal 2 — Back-Right
-    { GIMBAL3_X, GIMBAL3_Y, GIMBAL3_Z },  // Gimbal 3 — Back-Left
+    { GIMBAL1_X, GIMBAL1_Y, GIMBAL1_Z },  // Gimbal 0 (was Gimbal 1) — Front-Left
+    { GIMBAL2_X, GIMBAL2_Y, GIMBAL2_Z },  // Gimbal 1 (was Gimbal 2) — Back-Right
+    { GIMBAL3_X, GIMBAL3_Y, GIMBAL3_Z },  // Gimbal 2 (was Gimbal 3) — Back-Left
 };
 
 static route_transform_t s_transform = {
@@ -207,15 +208,15 @@ esp_err_t route_load(int n) {
 }
 
 void route_play(void) {
+    laser_set(false);
     ESP_LOGI(TAG, "[PLAYBACK] Zeroing all servos before route start");
-    // Zero gimbal 1 first to avoid clashing with gimbal 0 during retract.
-    servo_drive(2, 0); servo_drive(3, 0);
-    vTaskDelay(pdMS_TO_TICKS(300));
+    // New gimbal 0 (Front-Left) is alone in the front row — zero it first.
+    // Back row: zero new gimbal 2 (Back-Left) before new gimbal 1 (Back-Right).
     servo_drive(0, 0); servo_drive(1, 0);
     vTaskDelay(pdMS_TO_TICKS(300));
     servo_drive(4, 0); servo_drive(5, 0);
     vTaskDelay(pdMS_TO_TICKS(300));
-    servo_drive(6, 0); servo_drive(7, 0);
+    servo_drive(2, 0); servo_drive(3, 0);
     for (int i = 0; i < NUM_SERVOS / 2; i++) s_gimbal_x_angle[i] = 0;
 
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
@@ -446,6 +447,7 @@ static void route_playback_task(void *arg) {
                 }
                 s_leap_next = 0;
                 leapfrog_initialized = true;
+                laser_set(true);
                 ESP_LOGI(TAG, "[LEAPFROG] Init complete. Gimbals 0-%d at holds 1-%d.",
                          leap_num - 1, leap_num);
             }
@@ -505,6 +507,8 @@ static void route_playback_task(void *arg) {
                 if (g < num_gimbals - 1 && (hold_idx + 1) < num_holds)
                     vTaskDelay(pdMS_TO_TICKS(300));
             }
+            if (current_hold == 0)
+                laser_set(true);
             ESP_LOGI(TAG, "[SEQ] Step %d/%d complete.", step_num, total_steps);
 
             {

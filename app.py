@@ -377,7 +377,54 @@ HFOV_DEG     = 120.0
 GIMCAL_FILE  = Path(__file__).parent / "gimbal_offsets.json"
 
 # In-memory offsets: list of {"dx": int, "dy": int} per gimbal
-_gimbal_offsets: List[dict] = [{"dx": 0, "dy": 0} for _ in range(4)]
+_gimbal_offsets: List[dict] = [{"dx": 0, "dy": 0} for _ in range(3)]
+
+# Camera intrinsics — must match conf.h exactly.
+_CALIB_FX    = 143.755937
+_CALIB_FY    = 141.176552
+_CALIB_CX    = 156.018487
+_CALIB_CY    = 122.142135
+_CALIB_WIDTH  = 320
+_CALIB_HEIGHT = 240
+
+# Gimbal physical positions [x, y, z] metres — mirrors s_gimbal_pos in route.c.
+# Gimbal 0 (Front-Left), 1 (Back-Right), 2 (Back-Left); old Gimbal 0 is disabled.
+_GIMBAL_POS = [
+    [-0.0175,  0.06,  0.035],   # Gimbal 0 (old gimbal 1) Front-Left
+    [ 0.0175,  0.13,  0.13 ],   # Gimbal 1 (old gimbal 2) Back-Right
+    [-0.0175,  0.13,  0.13 ],   # Gimbal 2 (old gimbal 3) Back-Left
+]
+
+
+def _pixel_to_servo_angles_geometric(gimbal: int, px: float, py: float,
+                                      img_w: int, img_h: int,
+                                      dist: float = 3.0) -> Tuple[int, int]:
+    """Mirror of pixel_to_servo_angles() in route.c.
+    Returns (angle_x, angle_y) clamped to [0, 180].
+    """
+    import math
+    scale_x = img_w / _CALIB_WIDTH
+    scale_y = img_h / _CALIB_HEIGHT
+    fx = _CALIB_FX * scale_x
+    fy = _CALIB_FY * scale_y
+    cx = _CALIB_CX * scale_x
+    cy = _CALIB_CY * scale_y
+
+    wall_x = (px - cx) / fx * dist
+    wall_z = (cy - py) / fy * dist
+    wall_y = dist
+
+    gx, gy, gz = _GIMBAL_POS[gimbal]
+    dx = wall_x - gx
+    dy = wall_y + gy
+    dz = wall_z - gz
+
+    pan_rad  = math.atan2(dx, dy)
+    tilt_rad = math.atan2(dz, dy)
+
+    servo_x = int(90.0 - math.degrees(pan_rad))
+    servo_y = int(90.0 + math.degrees(tilt_rad))
+    return max(0, min(180, servo_x)), max(0, min(180, servo_y))
 
 
 def _load_gimbal_offsets():
@@ -504,29 +551,48 @@ def gimcal_offsets_get():
 
 # In-memory calibration points per gimbal (cleared each session).
 # Each entry: {"computed_x": float, "computed_y": float, "actual_x": float, "actual_y": float}
-_polycal_points: List[List[dict]] = [[] for _ in range(4)]
+_polycal_points: List[List[dict]] = [[] for _ in range(3)]
 
 
 @app.route('/gimcal/poly/collect', methods=['POST'])
 def gimcal_poly_collect():
-    """Record a calibration data point.
-    JSON: {gimbal, computed_x, computed_y, actual_x, actual_y}
+    """Record a poly-cal data point from pixel coordinates.
+    JSON: {gimbal, target_px, target_py, actual_px, actual_py, img_w, img_h, dist?}
+    Computes geometric angles for both the target pixel (where we drove to) and the
+    actual pixel (where the laser dot appeared), then stores the angular deviation.
     """
     data = request.get_json(force=True)
     g = int(data["gimbal"])
-    if g < 0 or g >= 4:
+    if g < 0 or g >= 3:
         return jsonify({"error": "invalid gimbal"}), 400
+
+    img_w = int(data.get("img_w", IMAGE_WIDTH))
+    img_h = int(data.get("img_h", IMAGE_HEIGHT))
+    dist  = float(data.get("dist", 3.0))
+
+    tpx = float(data["target_px"])
+    tpy = float(data["target_py"])
+    apx = float(data["actual_px"])
+    apy = float(data["actual_py"])
+
+    target_ax, target_ay = _pixel_to_servo_angles_geometric(g, tpx, tpy, img_w, img_h, dist)
+    actual_ax, actual_ay = _pixel_to_servo_angles_geometric(g, apx, apy, img_w, img_h, dist)
+
     point = {
-        "computed_x": float(data["computed_x"]),
-        "computed_y": float(data["computed_y"]),
-        "actual_x": float(data["actual_x"]),
-        "actual_y": float(data["actual_y"]),
+        "target_px": tpx, "target_py": tpy,
+        "actual_px": apx, "actual_py": apy,
+        "target_angle_x": target_ax, "target_angle_y": target_ay,
+        "actual_angle_x": actual_ax, "actual_angle_y": actual_ay,
     }
     _polycal_points[g].append(point)
     slog(f"[POLYCAL] G{g} point #{len(_polycal_points[g])}: "
-         f"computed=({point['computed_x']},{point['computed_y']}) "
-         f"actual=({point['actual_x']},{point['actual_y']})")
-    return jsonify({"status": "ok", "gimbal": g, "count": len(_polycal_points[g])})
+         f"target({target_ax},{target_ay})° actual({actual_ax},{actual_ay})° "
+         f"err({target_ax - actual_ax:+d},{target_ay - actual_ay:+d})°")
+    return jsonify({
+        "status": "ok", "gimbal": g, "count": len(_polycal_points[g]),
+        "target_angle_x": target_ax, "target_angle_y": target_ay,
+        "actual_angle_x": actual_ax, "actual_angle_y": actual_ay,
+    })
 
 
 @app.route('/gimcal/poly/fit', methods=['POST'])
@@ -544,7 +610,7 @@ def gimcal_poly_fit():
     results = {}
     all_coeffs = []
 
-    for g in range(4):
+    for g in range(3):
         if target_gimbal is not None and g != int(target_gimbal):
             # Keep existing coefficients for non-targeted gimbals.
             all_coeffs.append(None)
@@ -556,15 +622,16 @@ def gimcal_poly_fit():
             all_coeffs.append(None)
             continue
 
-        # Build design matrix: [1, cx, cy, cx*cy]
-        cx = np.array([p["computed_x"] for p in pts])
-        cy = np.array([p["computed_y"] for p in pts])
-        ax = np.array([p["actual_x"] for p in pts])
-        ay = np.array([p["actual_y"] for p in pts])
+        # Build design matrix: [1, rx, ry, rx*ry] where rx/ry = target (raw) angles.
+        # err = target - actual: the correction to add to make the laser hit the target.
+        rx = np.array([p["target_angle_x"] for p in pts], dtype=float)
+        ry = np.array([p["target_angle_y"] for p in pts], dtype=float)
+        ax = np.array([p["actual_angle_x"] for p in pts], dtype=float)
+        ay = np.array([p["actual_angle_y"] for p in pts], dtype=float)
 
-        A = np.column_stack([np.ones_like(cx), cx, cy, cx * cy])
-        err_x = ax - cx  # residual to fit
-        err_y = ay - cy
+        A = np.column_stack([np.ones_like(rx), rx, ry, rx * ry])
+        err_x = rx - ax  # correction = target - actual
+        err_y = ry - ay
 
         # Least-squares fit
         coeff_x, res_x, _, _ = np.linalg.lstsq(A, err_x, rcond=None)
@@ -574,8 +641,8 @@ def gimcal_poly_fit():
         all_coeffs.append([float(c) for c in coeffs])
 
         # Compute RMS residual for reporting
-        pred_x = cx + A @ coeff_x
-        pred_y = cy + A @ coeff_y
+        pred_x = rx + A @ coeff_x
+        pred_y = ry + A @ coeff_y
         rms_x = float(np.sqrt(np.mean((ax - pred_x) ** 2)))
         rms_y = float(np.sqrt(np.mean((ay - pred_y) ** 2)))
 
@@ -591,12 +658,12 @@ def gimcal_poly_fit():
     # For gimbals we didn't fit, fetch current coefficients from ESP.
     try:
         esp_resp = requests.get(f"{ESP_BASE}/gimbal/poly", timeout=10)
-        current = esp_resp.json().get("gimbals", [[0]*8]*4)
+        current = esp_resp.json().get("gimbals", [[0]*8]*3)
     except Exception:
-        current = [[0]*8]*4
+        current = [[0]*8]*3
 
     bulk = []
-    for g in range(4):
+    for g in range(3):
         if all_coeffs[g] is not None:
             bulk.append(all_coeffs[g])
         else:
@@ -628,11 +695,11 @@ def gimcal_poly_clear():
     g = data.get("gimbal")
     if g is not None:
         g = int(g)
-        if 0 <= g < 4:
+        if 0 <= g < 3:
             _polycal_points[g] = []
             slog(f"[POLYCAL] Cleared points for gimbal {g}")
     else:
-        for i in range(4):
+        for i in range(3):
             _polycal_points[i] = []
         slog("[POLYCAL] Cleared all calibration points")
     return jsonify({"status": "ok"})
@@ -1289,7 +1356,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
       </div>
       <div class="control-group">
         <label>Gimbal to calibrate</label>
-        <select id="selectGimbal"><option value="0">Gimbal 0</option><option value="1">Gimbal 1</option><option value="2">Gimbal 2</option><option value="3">Gimbal 3</option></select>
+        <select id="selectGimbal"><option value="0">Gimbal 0</option><option value="1">Gimbal 1</option><option value="2">Gimbal 2</option></select>
       </div>
       <div id="gimCalBaseAngles" style="font-size:0.8em;margin-bottom:8px;display:none;">
         Base: X=<span id="gimCalBaseX">--</span>°  Y=<span id="gimCalBaseY">--</span>°
@@ -1325,10 +1392,18 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
 
       <h2 style="margin-top:12px;">Polynomial Calibration</h2>
       <div style="font-size:0.8em;color:#aaa;margin-bottom:6px;">
-        Points: <span id="polyCalPoints">G0:0 G1:0 G2:0 G3:0</span>
+        Drive gimbal to a target, capture, click where the laser dot actually appears.
+        Fit once you have &ge;4 points per gimbal.
       </div>
       <div class="btn-row">
-        <button id="btnPolyCollect">Record Point</button>
+        <button id="btnPolyCalEnter">Enter Poly Cal</button>
+        <button id="btnPolyCalExit" class="danger" disabled>Exit Poly Cal</button>
+      </div>
+      <div id="polyCalStatus" style="font-size:0.8em;color:#aaa;margin:6px 0;display:none;"></div>
+      <div style="font-size:0.8em;color:#aaa;margin-bottom:6px;">
+        Points: <span id="polyCalPoints">G0:0 G1:0 G2:0</span>
+      </div>
+      <div class="btn-row">
         <button id="btnPolyFit">Fit &amp; Apply</button>
         <button id="btnPolyClear" class="danger">Clear Points</button>
       </div>
@@ -1338,7 +1413,7 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
-const NUM_SERVOS = 8;
+const NUM_SERVOS = 6;  // gimbal 0 disabled; active servos are old 2–7
 const CENTROID_RADIUS = 8;
 const SELECTED_COLOR = '#e94560';
 const UNSELECTED_COLOR = 'rgba(0, 200, 255, 0.7)';
@@ -1414,6 +1489,41 @@ async function get(path) {
 
 // -- Canvas drawing --
 
+// 3×3 grid of target points at 25/50/75% of canvas dimensions.
+function polyCalGridPoints() {
+  const pts = [];
+  for (const fx of [0.25, 0.5, 0.75])
+    for (const fy of [0.25, 0.5, 0.75])
+      pts.push({ x: canvas.width * fx, y: canvas.height * fy });
+  return pts;
+}
+
+function drawPolyCalOverlay() {
+  if (polyCalState === 'idle') {
+    const pts = polyCalGridPoints();
+    pts.forEach((p, i) => {
+      const hit = polyCalRecordedTargets.some(t => t.idx === i);
+      ctx.strokeStyle = hit ? '#00e676' : '#ffeb3b';
+      ctx.lineWidth = 2;
+      const r = 18;
+      ctx.beginPath(); ctx.moveTo(p.x - r, p.y); ctx.lineTo(p.x + r, p.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x, p.y + r); ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.stroke();
+    });
+  } else if (polyCalState === 'awaiting_dot') {
+    // Mark the target position with a yellow crosshair ring
+    const p = polyCalCurrentTarget;
+    if (p) {
+      ctx.strokeStyle = '#ffeb3b';
+      ctx.lineWidth = 2;
+      const r = 22;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x - r, p.y); ctx.lineTo(p.x + r, p.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x, p.y + r); ctx.stroke();
+    }
+  }
+}
+
 function drawScene() {
   if (!wallImage) return;
   canvas.width = wallImage.naturalWidth;
@@ -1465,6 +1575,8 @@ function drawScene() {
     ctx.textBaseline = 'middle';
     ctx.fillText(String(i + 1), h.x, h.y);
   }
+
+  if (polyCalMode) drawPolyCalOverlay();
 }
 
 function updateHoldList() {
@@ -2018,7 +2130,7 @@ document.getElementById('btnGimCalSave').addEventListener('click', async () => {
 });
 
 document.getElementById('btnGimCalClearAll').addEventListener('click', async () => {
-  for (let g = 0; g < 4; g++) await post('/gimcal/offset', { gimbal: g, dx: 0, dy: 0 });
+  for (let g = 0; g < 3; g++) await post('/gimcal/offset', { gimbal: g, dx: 0, dy: 0 });
   gimCalDx = 0; gimCalDy = 0;
   gimCalUpdateDisplay();
   log('[GIMCAL] All offsets cleared', 'info');
@@ -2058,7 +2170,19 @@ loadGimCalOffsets();
 // ---------------------------------------------------------------------------
 // Polynomial Calibration
 // ---------------------------------------------------------------------------
-let polyCalCounts = [0, 0, 0, 0];
+
+// polyCalMode: true while poly-cal UI is active
+// polyCalState: 'idle' (showing grid) | 'awaiting_dot' (user must click laser dot)
+let polyCalMode = false;
+let polyCalState = 'idle';
+let polyCalCurrentTarget = null;   // {x, y} canvas coords of the current target
+let polyCalRecordedTargets = [];   // [{idx}] grid points already recorded this session
+
+function polyCalSetStatus(msg) {
+  const el = document.getElementById('polyCalStatus');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
 
 async function polyCalUpdatePoints() {
   try {
@@ -2066,9 +2190,8 @@ async function polyCalUpdatePoints() {
     if (!res.ok) return;
     const data = await res.json();
     let s = '';
-    for (let g = 0; g < 4; g++) {
+    for (let g = 0; g < 3; g++) {
       const pts = data['g' + g] || [];
-      polyCalCounts[g] = pts.length;
       s += `G${g}:${pts.length} `;
     }
     document.getElementById('polyCalPoints').textContent = s.trim();
@@ -2093,25 +2216,148 @@ async function polyCalUpdateCoeffs() {
   } catch (e) { /* ignore */ }
 }
 
-document.getElementById('btnPolyCollect').addEventListener('click', async () => {
-  if (!gimCalMode || gimCalBaseX === null) {
-    log('[POLYCAL] Enter cal mode and click a target point first', 'err');
-    return;
-  }
-  const g = parseInt(document.getElementById('selectGimbal').value);
-  const body = {
-    gimbal: g,
-    computed_x: gimCalBaseX,
-    computed_y: gimCalBaseY,
-    actual_x: Math.max(0, Math.min(180, gimCalBaseX + gimCalDx)),
-    actual_y: Math.max(0, Math.min(180, gimCalBaseY + gimCalDy)),
-  };
-  const res = await post('/gimcal/poly/collect', body);
-  if (res.ok) {
-    log(`[POLYCAL] G${g} point recorded: computed(${body.computed_x},${body.computed_y}) actual(${body.actual_x},${body.actual_y})`, 'info');
-    polyCalUpdatePoints();
-  }
+document.getElementById('btnPolyCalEnter').addEventListener('click', async () => {
+  if (!wallImage) { log('[POLYCAL] Load an image first', 'err'); return; }
+  polyCalMode = true;
+  polyCalState = 'idle';
+  polyCalRecordedTargets = [];
+  polyCalCurrentTarget = null;
+  document.getElementById('btnPolyCalEnter').disabled = true;
+  document.getElementById('btnPolyCalExit').disabled = false;
+  document.getElementById('modeBanner').textContent =
+    'POLY CAL — Click a crosshair on the image to drive the laser there, then click the actual dot';
+  document.getElementById('modeBanner').style.display = 'block';
+  polyCalSetStatus('Click a crosshair target on the image');
+  drawScene();
+  log('[POLYCAL] Poly cal mode entered — click crosshairs to collect points', 'info');
 });
+
+document.getElementById('btnPolyCalExit').addEventListener('click', () => {
+  polyCalMode = false;
+  polyCalState = 'idle';
+  polyCalCurrentTarget = null;
+  document.getElementById('btnPolyCalEnter').disabled = false;
+  document.getElementById('btnPolyCalExit').disabled = true;
+  document.getElementById('modeBanner').style.display = 'none';
+  polyCalSetStatus('');
+  drawScene();
+  log('[POLYCAL] Exited poly cal mode');
+});
+
+// Handle canvas clicks in poly cal mode (registered with capture=true so it runs before normal handlers).
+canvas.addEventListener('click', async (e) => {
+  if (!polyCalMode) return;
+  e.stopPropagation();
+
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width  / rect.width);
+  const py = (e.clientY - rect.top)  * (canvas.height / rect.height);
+  const g  = parseInt(document.getElementById('selectGimbal').value);
+
+  if (polyCalState === 'idle') {
+    // Find nearest grid point (snap to it for repeatability).
+    const pts = polyCalGridPoints();
+    let nearest = pts[0], nearestIdx = 0, bestDist = Infinity;
+    pts.forEach((p, i) => {
+      const d = Math.hypot(p.x - px, p.y - py);
+      if (d < bestDist) { bestDist = d; nearest = p; nearestIdx = i; }
+    });
+
+    polyCalCurrentTarget = { x: nearest.x, y: nearest.y, gridIdx: nearestIdx };
+    polyCalState = 'awaiting_dot';
+    polyCalSetStatus('Driving laser to target… please wait');
+    drawScene();
+
+    // Drive gimbal to the target pixel.
+    const imgH = wallImageOriginalHeight ?? canvas.height;
+    try {
+      const driveRes = await fetch(API + '/gimcal/point', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gimbal: g,
+          x: Math.round(nearest.x),
+          y: Math.round(nearest.y),
+          image_width: canvas.width,
+          image_height: imgH,
+        }),
+      });
+      if (!driveRes.ok) throw new Error('drive failed');
+      const angles = await driveRes.json();
+      log(`[POLYCAL] G${g} driven to pixel(${Math.round(nearest.x)},${Math.round(nearest.y)}) `
+        + `X=${angles.angle_x}° Y=${angles.angle_y}°`, 'info');
+    } catch (err) {
+      log('[POLYCAL] Drive failed: ' + err.message, 'err');
+      polyCalState = 'idle';
+      polyCalCurrentTarget = null;
+      polyCalSetStatus('Drive failed — try again');
+      drawScene();
+      return;
+    }
+
+    // Auto-capture a fresh image so user sees where the laser dot actually is.
+    polyCalSetStatus('Capturing image…');
+    try {
+      await fetch(API + '/esp/capture', { method: 'POST' });
+      await new Promise(r => setTimeout(r, 400));
+      const imgRes = await fetch(API + '/esp/get');
+      if (imgRes.ok) {
+        const blob = await imgRes.blob();
+        const url  = URL.createObjectURL(blob);
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = async () => { wallImage = await cropImage(img); resolve(); };
+          img.onerror = reject;
+          img.src = url;
+        });
+      }
+    } catch (err) {
+      log('[POLYCAL] Capture failed: ' + err.message, 'warn');
+    }
+
+    polyCalSetStatus('Click where the laser dot appears on the image');
+    drawScene();
+
+  } else if (polyCalState === 'awaiting_dot') {
+    // User clicked actual laser dot position.
+    const tgt = polyCalCurrentTarget;
+    const imgH = wallImageOriginalHeight ?? canvas.height;
+
+    const body = {
+      gimbal: g,
+      target_px: tgt.x,
+      target_py: tgt.y,
+      actual_px: px,
+      actual_py: py,
+      img_w: canvas.width,
+      img_h: imgH,
+    };
+
+    const res = await fetch(API + '/gimcal/poly/collect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      const d = await res.json();
+      log(`[POLYCAL] G${g} point #${d.count} recorded: `
+        + `target(${d.target_angle_x}°,${d.target_angle_y}°) `
+        + `actual(${d.actual_angle_x}°,${d.actual_angle_y}°) `
+        + `err(${d.target_angle_x - d.actual_angle_x > 0 ? '+' : ''}${d.target_angle_x - d.actual_angle_x}°,`
+        + `${d.target_angle_y - d.actual_angle_y > 0 ? '+' : ''}${d.target_angle_y - d.actual_angle_y}°)`, 'info');
+      polyCalRecordedTargets.push({ idx: tgt.gridIdx });
+      await polyCalUpdatePoints();
+    } else {
+      log('[POLYCAL] Collect failed', 'err');
+    }
+
+    polyCalState = 'idle';
+    polyCalCurrentTarget = null;
+    polyCalSetStatus('Point recorded — click another crosshair or Fit & Apply');
+    drawScene();
+  }
+}, true);
 
 document.getElementById('btnPolyFit').addEventListener('click', async () => {
   log('[POLYCAL] Fitting polynomial...', 'info');
@@ -2133,6 +2379,8 @@ document.getElementById('btnPolyFit').addEventListener('click', async () => {
 
 document.getElementById('btnPolyClear').addEventListener('click', async () => {
   await post('/gimcal/poly/clear', {});
+  polyCalRecordedTargets = [];
+  if (polyCalMode) { polyCalState = 'idle'; polyCalCurrentTarget = null; drawScene(); }
   log('[POLYCAL] Calibration points cleared');
   polyCalUpdatePoints();
 });
