@@ -898,6 +898,105 @@ def detect_holds():
         Path(tmp_path).unlink(missing_ok=True)
 
 # ---------------------------------------------------------------------------
+# Video recording — capture frames from ESP at ~2 fps and write to .avi
+# ---------------------------------------------------------------------------
+
+_rec_lock = threading.Lock()
+_rec_thread = None
+_rec_status = {"recording": False, "frames": 0, "file": ""}
+
+
+def _record_loop(output_path: str, interval: float):
+    global _rec_status
+    if not HAS_CV2:
+        with _rec_lock:
+            _rec_status = {"recording": False, "frames": 0, "file": "", "error": "OpenCV not available"}
+        return
+
+    writer = None
+    frame_count = 0
+
+    try:
+        while True:
+            with _rec_lock:
+                if not _rec_status["recording"]:
+                    break
+
+            try:
+                requests.post(f"{ESP_BASE}/capture", timeout=10)
+                time.sleep(0.2)
+                resp = requests.get(f"{ESP_BASE}/get", timeout=10)
+                if resp.status_code != 200:
+                    continue
+                arr = np.frombuffer(resp.content, dtype=np.uint8)
+                img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                if img is None:
+                    continue
+            except Exception as e:
+                slog(f"[REC] Frame grab failed: {e}", "warn")
+                continue
+
+            if writer is None:
+                h, w = img.shape[:2]
+                fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                fps = 1.0 / interval
+                writer = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
+                slog(f"[REC] Recording to {output_path} ({w}x{h} @ {fps:.1f} fps)")
+
+            writer.write(img)
+            frame_count += 1
+            with _rec_lock:
+                _rec_status["frames"] = frame_count
+
+            time.sleep(max(0, interval - 0.2))
+
+    finally:
+        if writer:
+            writer.release()
+        with _rec_lock:
+            _rec_status["recording"] = False
+            _rec_status["frames"] = frame_count
+        slog(f"[REC] Stopped — {frame_count} frames saved to {output_path}")
+
+
+@app.route('/record/start', methods=['POST'])
+def record_start():
+    global _rec_thread
+    if not HAS_CV2:
+        return jsonify({"error": "OpenCV not available"}), 500
+
+    with _rec_lock:
+        if _rec_status["recording"]:
+            return jsonify({"error": "Already recording"}), 409
+
+    data = request.get_json(force=True) if request.content_length else {}
+    interval = float(data.get("interval", 0.5))
+    filename = data.get("filename", f"recording_{int(time.time())}.avi")
+    output_path = str(Path(__file__).parent / filename)
+
+    with _rec_lock:
+        _rec_status.update({"recording": True, "frames": 0, "file": filename})
+
+    _rec_thread = threading.Thread(target=_record_loop, args=(output_path, interval), daemon=True)
+    _rec_thread.start()
+    return jsonify({"status": "recording", "file": filename})
+
+
+@app.route('/record/stop', methods=['POST'])
+def record_stop():
+    with _rec_lock:
+        _rec_status["recording"] = False
+    slog("[REC] Stop requested")
+    return jsonify({"status": "stopping", "frames": _rec_status["frames"], "file": _rec_status["file"]})
+
+
+@app.route('/record/status', methods=['GET'])
+def record_status():
+    with _rec_lock:
+        return jsonify(dict(_rec_status))
+
+
+# ---------------------------------------------------------------------------
 # Server log endpoint
 # ---------------------------------------------------------------------------
 
@@ -1006,8 +1105,11 @@ FRONTEND_HTML = r"""<!DOCTYPE html>
         <button id="btnFetchImage" disabled>Fetch Image</button>
         <button id="btnLiveView" disabled>Live View</button>
         <button id="btnUploadImage">Upload Image</button>
+        <button id="btnRecordStart">Record</button>
+        <button id="btnRecordStop" disabled>Stop Record</button>
         <input type="file" id="fileInput" accept="image/*" style="display:none;">
       </div>
+      <div id="recStatus" style="font-size:0.8em;color:#aaa;display:none;"></div>
 
       <h2 style="margin-top:12px;">Route Creation</h2>
       <div class="btn-row">
@@ -1690,6 +1792,41 @@ document.getElementById('btnLiveView').addEventListener('click', () => {
     btn.classList.remove('active');
     clearInterval(liveViewTimer);
   }
+});
+
+// -- Recording --
+let recPollTimer = null;
+
+document.getElementById('btnRecordStart').addEventListener('click', async () => {
+  const res = await post('/record/start', { interval: 0.5 });
+  if (res.ok) {
+    document.getElementById('btnRecordStart').disabled = true;
+    document.getElementById('btnRecordStop').disabled = false;
+    document.getElementById('recStatus').style.display = 'block';
+    document.getElementById('recStatus').textContent = 'Recording...';
+    recPollTimer = setInterval(async () => {
+      try {
+        const r = await fetch(API + '/record/status');
+        if (!r.ok) return;
+        const s = await r.json();
+        document.getElementById('recStatus').textContent = s.recording
+          ? `Recording: ${s.frames} frames — ${s.file}`
+          : `Stopped: ${s.frames} frames — ${s.file}`;
+        if (!s.recording) {
+          clearInterval(recPollTimer);
+          document.getElementById('btnRecordStart').disabled = false;
+          document.getElementById('btnRecordStop').disabled = true;
+        }
+      } catch (e) { /* ignore */ }
+    }, 1000);
+  }
+});
+
+document.getElementById('btnRecordStop').addEventListener('click', async () => {
+  await post('/record/stop');
+  document.getElementById('btnRecordStart').disabled = false;
+  document.getElementById('btnRecordStop').disabled = true;
+  if (recPollTimer) { clearInterval(recPollTimer); recPollTimer = null; }
 });
 
 // -- Calibration --
