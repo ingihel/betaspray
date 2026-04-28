@@ -124,6 +124,12 @@ esp_err_t camera_init(void) {
 }
 
 camera_fb_t *camera_capture_frame(void) {
+    // Discard the frame already queued in the DMA buffer — it was captured before
+    // this call and may predate recent servo/laser state changes.  The next get
+    // blocks until the sensor delivers a genuinely fresh frame.
+    camera_fb_t *stale = esp_camera_fb_get();
+    if (stale) esp_camera_fb_return(stale);
+
     camera_fb_t *fb = esp_camera_fb_get();
     if (!fb) {
         ESP_LOGE(TAG, "Frame capture failed");

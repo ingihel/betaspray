@@ -2299,7 +2299,6 @@ canvas.addEventListener('click', async (e) => {
     polyCalSetStatus('Capturing image…');
     try {
       await fetch(API + '/esp/capture', { method: 'POST' });
-      await new Promise(r => setTimeout(r, 400));
       const imgRes = await fetch(API + '/esp/get');
       if (imgRes.ok) {
         const blob = await imgRes.blob();
